@@ -1,0 +1,12 @@
+CREATE TABLE `categories` IF NOT EXISTS (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    `display_name` VARCHAR(255) NOT NULL CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    `description` VARCHAR(500) NOT NULL CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    `sort` SMALLINT(4) NOT NULL DEFAULT '0',
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `union_name` (`name`)
+);
+

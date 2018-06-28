@@ -12,6 +12,7 @@ extern crate serde_json;
 extern crate futures;
 extern crate actix;
 extern crate actix_web;
+extern crate actix_web_httpauth;
 extern crate dotenv;
 extern crate chrono;
 extern crate http;
@@ -24,6 +25,7 @@ mod state;
 mod models;
 mod schema;
 mod util;
+mod middlewares;
 
 use actix::*;
 use actix_web::*;
@@ -52,7 +54,8 @@ fn start_server() {
     server::HttpServer::new(
         move || App::with_state(state::AppState { database: addr.clone() })
             .scope("/api.admin", |scope| {
-                scope.route("/authentication", Method::POST, admin::authorization::authorization)
+                scope
+                    .route("/authentication", Method::POST, admin::authorization::authorization)
             })
     ).bind(server_bind).unwrap().start();
 

@@ -1,17 +1,23 @@
+use std::collections::HashMap;
+
 use actix::prelude::*;
 use actix_web::*;
-use actix_web::middleware::session::SessionBackend;
-use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
+use actix_web::http::header::Header;
+use actix_web::middleware::Response;
+use actix_web::middleware::session::{SessionBackend, SessionImpl};
+use actix_web_httpauth::headers::authorization::{Authorization as ActixAuthorization, Bearer};
 use diesel::MysqlConnection;
 use diesel::r2d2::{PooledConnection, ConnectionManager};
 use djangohashers::check_password;
 use futures::future::{err as FutErr, ok as FutOk, FutureResult};
 use futures::Future;
 use biscuit::*;
+use biscuit::Empty as JWTEmpty;
 use biscuit::jws::*;
 use biscuit::jwa::*;
 use chrono::{Utc, Duration};
 use dotenv;
+use serde_json;
 
 use models::user::{User, AuthenticationUser};
 use database::DatabaseExecutor;
@@ -120,22 +126,80 @@ macro_rules! authentication_handler {
 
 authentication_handler!(Email);
 
-//pub struct JWTSession {
-//    token: Option<PrivateClaims>,
-//}
-//
-//impl JWTSession {
-//
-//}
-//
-//pub struct JWTSessionBackend(JWTSession);
-//
-//impl<S> SessionBackend<S> for JWTSessionBackend {
-//    type Session = JWTSession;
-//    type ReadFuture = FutureResult<JWTSession, Error>;
-//
-//    fn from_request(&self, req: &mut HttpRequest<S>) -> Self::ReadFuture {
-//        let auth = Authorization::<Bearer>::parse(&req)?;
-//
-//    }
-//}
+pub struct JWTSession {
+    pub state: HashMap<String, String>,
+    pub claims: Option<PrivateClaims>,
+}
+
+impl SessionImpl for JWTSession {
+    fn get(&self, key: &str) -> Option<&str> {
+        if let Some(s) = self.state.get(key) {
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    fn set(&mut self, key: &str, value: String) {
+        self.state.insert(key.to_owned(), value);
+    }
+
+    fn remove(&mut self, key: &str) {
+        self.state.remove(key);
+    }
+
+    fn clear(&mut self) {
+        self.state.clear()
+    }
+
+    fn write(&self, mut resp: HttpResponse) -> Result<Response> {
+        Ok(Response::Done(resp))
+    }
+}
+
+pub struct JWTSessionBackend;
+
+impl JWTSessionBackend {
+    pub fn parse_token<S>(&self, req: &mut HttpRequest<S>) -> Result<PrivateClaims, Error> {
+        let auth = ActixAuthorization::<Bearer>::parse(req)?;
+        let token = auth.token.clone();
+
+        let secret = Secret::Bytes(
+            dotenv::var("TOKEN_SECRET")
+                .map_err(error::ErrorInternalServerError)?
+                .into_bytes()
+        );
+
+        let wd = JWT::<PrivateClaims, JWTEmpty>::new_encoded(&token);
+        let token = wd.into_decoded(&secret, SignatureAlgorithm::HS256).map_err(error::ErrorForbidden)?;
+
+        let payload = token.payload().map_err(error::ErrorInternalServerError)?;
+        let claims = (*payload).private.clone();
+
+        Ok(claims)
+    }
+}
+
+impl<S> SessionBackend<S> for JWTSessionBackend {
+    type Session = JWTSession;
+    type ReadFuture = FutureResult<JWTSession, Error>;
+
+    fn from_request(&self, req: &mut HttpRequest<S>) -> Self::ReadFuture {
+        let claims = self.parse_token(req);
+        match claims {
+            Ok(real) => {
+                let mut hash_map: HashMap<String, String> = HashMap::new();
+                hash_map.insert("chaims".to_owned(), serde_json::to_string(&real).unwrap());
+                FutOk(JWTSession {
+                    state: hash_map,
+                    claims: Some(real),
+                })
+            },
+            Err(_) => FutOk(JWTSession {
+                state: HashMap::new(),
+                claims: None,
+            })
+        }
+
+    }
+}

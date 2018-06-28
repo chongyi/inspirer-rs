@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use actix_web::*;
+use actix_web::middleware::session::RequestSession;
 use futures::Future;
 use biscuit::*;
 use biscuit::jws::*;
@@ -18,6 +21,7 @@ pub struct Authentication {
 }
 
 pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let cloned_req= req.clone();
     Form::<Authentication>::extract(&req).from_err().and_then(move |r| {
         let auth = Email {
             email: r.email.clone(),
@@ -27,13 +31,20 @@ pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse>
         let checker = Auth::new(auth);
 
         req.state().database.send(checker).from_err()
-    }).and_then(|res| {
+    }).and_then(move |res| {
         match res {
             Ok(user) => {
                 let chaims = PrivateClaims {
                     uid: user.id,
                     name: user.name,
                 };
+
+                let s = cloned_req.session().get::<PrivateClaims>("chaims");
+                match s {
+                    Ok(t) => println!("{:?}", t),
+                    Err(_) => println!("err"),
+                };
+
 
                 Ok(HttpResponse::Ok().body(chaims.generate_jwt_token()?))
             },

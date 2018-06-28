@@ -39,13 +39,6 @@ pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse>
                     name: user.name,
                 };
 
-                let s = cloned_req.session().get::<PrivateClaims>("chaims");
-                match s {
-                    Ok(t) => println!("{:?}", t),
-                    Err(_) => println!("err"),
-                };
-
-
                 Ok(HttpResponse::Ok().body(chaims.generate_jwt_token()?))
             },
             Err(e) => Err(e),

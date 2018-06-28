@@ -57,7 +57,6 @@ fn start_server() {
         move || App::with_state(state::AppState { database: addr.clone() })
             .scope("/api.admin", |scope| {
                 scope
-                    .middleware(SessionStorage::new(JWTSessionBackend))
                     .route("/authentication", Method::POST, admin::authorization::authorization)
             })
     ).bind(server_bind).unwrap().start();

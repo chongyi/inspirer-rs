@@ -128,7 +128,6 @@ authentication_handler!(Email);
 
 pub struct JWTSession {
     pub state: HashMap<String, String>,
-    pub claims: Option<PrivateClaims>,
 }
 
 impl SessionImpl for JWTSession {
@@ -192,12 +191,10 @@ impl<S> SessionBackend<S> for JWTSessionBackend {
                 hash_map.insert("chaims".to_owned(), serde_json::to_string(&real).unwrap());
                 FutOk(JWTSession {
                     state: hash_map,
-                    claims: Some(real),
                 })
             },
             Err(_) => FutOk(JWTSession {
                 state: HashMap::new(),
-                claims: None,
             })
         }
 

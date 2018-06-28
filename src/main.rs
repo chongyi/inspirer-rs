@@ -4,6 +4,8 @@ extern crate diesel;
 extern crate serde_derive;
 #[macro_use]
 extern crate tera;
+#[macro_use]
+extern crate failure;
 
 extern crate serde;
 extern crate serde_json;
@@ -13,8 +15,8 @@ extern crate actix_web;
 extern crate dotenv;
 extern crate chrono;
 extern crate http;
-extern crate failure;
 extern crate djangohashers;
+extern crate biscuit;
 
 mod controllers;
 mod database;

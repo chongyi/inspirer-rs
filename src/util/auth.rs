@@ -4,14 +4,21 @@ use diesel::MysqlConnection;
 use diesel::r2d2::{PooledConnection, ConnectionManager};
 use djangohashers::check_password;
 
-use models::user::User;
+use models::user::{User, AuthenticationUser};
 use database::DatabaseExecutor;
 
 type Connection = PooledConnection<ConnectionManager<MysqlConnection>>;
-type AuthenticateResult = Result<bool, Error>;
+type AuthenticateResult = Result<AuthenticationUser, Error>;
+
+#[derive(Fail, Debug, PartialEq)]
+pub enum AuthenticateError {
+    #[fail(display = "Authentication invalidate")]
+    ValidateError
+}
 
 pub trait Authenticate {
-    fn check(&self, connection: &Connection) -> bool;
+    fn check(&self, result: AuthenticationUser) -> bool;
+    fn validate(&self, connection: &Connection) -> AuthenticateResult;
 }
 
 pub struct Authentication<T> {
@@ -32,23 +39,25 @@ impl<T> Authentication<T> {
 }
 
 impl Authenticate for Authentication<Email> {
-    fn check(&self, connection: &Connection) -> bool {
-        let result = User::find_auth_info_by_email(connection, self.authentication.email.clone());
-
-        match result {
-            Ok(auth) => {
-                if let None = auth.password {
-                    return false;
-                }
-
-                self.authentication.password == auth.password.unwrap()
-//                check_password(
-//                    self.authentication.password.as_str(),
-//                    auth.password.unwrap().as_str()
-//                ).unwrap_or(false)
-            },
-            Err(_) => false
+    fn check(&self, result: AuthenticationUser) -> bool {
+        if let None = result.password {
+            return false;
         }
+
+        check_password(
+            self.authentication.password.as_str(),
+            result.password.unwrap().as_str()
+        ).unwrap_or(false)
+    }
+
+    fn validate(&self, connection: &Connection) -> AuthenticateResult {
+        let result = User::find_auth_info_by_email(connection, self.authentication.email.clone())?;
+
+        if self.check(result.clone()) {
+            return Ok(result);
+        }
+
+        Err(error::ErrorForbidden(AuthenticateError::ValidateError))
     }
 }
 
@@ -62,7 +71,7 @@ macro_rules! authentication_handler {
             type Result = AuthenticateResult;
 
             fn handle(&mut self, auth: Authentication<$x>, _: &mut Self::Context) -> Self::Result {
-                Ok(auth.check(&self.connection()?))
+                Ok(auth.validate(&self.connection()?)?)
             }
         }
     }

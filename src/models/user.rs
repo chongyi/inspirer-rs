@@ -8,6 +8,7 @@ type Conn = PooledConnection<ConnectionManager<MysqlConnection>>;
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct AuthenticationUser {
     pub id: u32,
+    pub name: String,
     pub email: String,
     pub password: Option<String>,
 }
@@ -25,7 +26,7 @@ impl User {
 
         Ok(
             users
-                .select((id, email, password))
+                .select((id, name, email, password))
                 .filter(email.eq(r))
                 .first::<AuthenticationUser>(conn)
                 .map_err(error::ErrorInternalServerError)?

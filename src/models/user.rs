@@ -5,9 +5,7 @@ use diesel::MysqlConnection;
 use diesel::r2d2::{PooledConnection, ConnectionManager};
 use chrono::NaiveDateTime;
 
-use database::DatabaseExecutor;
-
-type Conn = PooledConnection<ConnectionManager<MysqlConnection>>;
+use database::{DatabaseExecutor, Conn};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct AuthenticationUser {

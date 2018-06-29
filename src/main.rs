@@ -19,12 +19,13 @@ extern crate http;
 extern crate djangohashers;
 extern crate biscuit;
 
+#[macro_use]
+mod util;
 mod controllers;
 mod database;
 mod state;
 mod models;
 mod schema;
-mod util;
 mod middlewares;
 
 use actix::*;

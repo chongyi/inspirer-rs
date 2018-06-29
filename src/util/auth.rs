@@ -19,9 +19,8 @@ use dotenv;
 use serde_json;
 
 use models::user::{User, AuthenticationUser};
-use database::DatabaseExecutor;
+use database::{DatabaseExecutor, Conn as Connection};
 
-type Connection = PooledConnection<ConnectionManager<MysqlConnection>>;
 type AuthenticateResult = Result<AuthenticationUser, Error>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

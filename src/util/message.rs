@@ -1,3 +1,5 @@
+use actix::*;
+
 /// 错误消息体
 ///
 /// 错误消息体最终会转换为对应的 JSON 格式。
@@ -24,4 +26,31 @@ pub struct PaginatedListMessage<T> {
     pub page: i64,
     /// 每页数据条数
     pub per_page: i64,
+}
+
+#[derive(Copy, Clone)]
+pub struct Pagination<T> {
+    pub page: i64,
+    pub per_page: i64,
+    pub filter: Option<T>,
+}
+
+impl<T> Pagination<T> {
+    pub fn new(page: Option<i64>, per_page: Option<i64>, filter: Option<T>) -> Self {
+        Self {
+            page: match page {
+                Some(v) => v,
+                None => 1,
+            },
+            per_page: match per_page {
+                Some(v) => v,
+                None => 15,
+            },
+            filter,
+        }
+    }
+
+    pub fn paginate(page: Option<i64>, per_page: Option<i64>) -> Self {
+        Pagination::<T>::new(page, per_page, None)
+    }
 }

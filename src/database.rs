@@ -15,3 +15,4 @@ impl DatabaseExecutor {
     }
 }
 
+pub type Conn = PooledConnection<ConnectionManager<MysqlConnection>>;

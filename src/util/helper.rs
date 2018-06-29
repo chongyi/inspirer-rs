@@ -23,6 +23,25 @@ macro_rules! paginator {
             paginator
         }
     };
+    ($conn:ident, $fields:expr, $w:ident, $rt:ty, $lg:block) => {
+        {
+            let paginator = || -> Result<PaginatedListMessage<$rt>, Error> {
+                let counter = || { $lg };
+                let getter = || { $lg };
+
+                let count = counter().count().first::<i64>($conn).map_err(error::ErrorInternalServerError)?;
+                let results = getter()
+                    .select($fields)
+                    .limit($w.per_page)
+                    .offset(($w.page - 1) * $w.per_page)
+                    .load::<$rt>($conn).map_err(error::ErrorInternalServerError)?;
+
+                Ok(PaginatedListMessage { list: results, total: count, page: $w.page, per_page: $w.per_page })
+            };
+
+            paginator
+        }
+    };
 }
 
 pub fn get_paginate_params(req: &HttpRequest<AppState>) -> (Option<i64>, Option<i64>) {
@@ -44,7 +63,7 @@ fn parse_number<'a>(origin: Option<&'a str>) -> Option<i64> {
                     x
                 }
             },
-            None => None,
+            None => 1,
         }
     })
 }

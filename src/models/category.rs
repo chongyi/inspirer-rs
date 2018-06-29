@@ -1,13 +1,15 @@
 use actix::*;
 use actix_web::*;
+use diesel;
 use diesel::*;
 use diesel::MysqlConnection;
 use diesel::r2d2::{PooledConnection, ConnectionManager};
 use chrono::NaiveDateTime;
 
-use database::{DatabaseExecutor, Conn};
+use database::{DatabaseExecutor, Conn, last_insert_id};
 use util::helper;
 use util::message::{PaginatedListMessage, Pagination};
+use schema::categories;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
 
@@ -16,6 +18,34 @@ pub struct CategoryBase {
     pub id: u32,
     pub name: String,
     pub display_name: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct CreateCategory {
+    pub name: String,
+    pub display_name: Option<String>,
+    pub description: Option<String>,
+    pub sort: Option<i16>,
+}
+
+#[derive(Deserialize, Insertable, Debug)]
+#[table_name = "categories"]
+pub struct NewCategory {
+    pub name: String,
+    pub display_name: String,
+    pub description: String,
+    pub sort: Option<i16>,
+}
+
+impl From<CreateCategory> for NewCategory {
+    fn from(origin: CreateCategory) -> Self {
+        NewCategory {
+            name: origin.name.clone(),
+            display_name: origin.display_name.unwrap_or(origin.name.clone()),
+            description: origin.description.unwrap_or("".to_owned()),
+            sort: origin.sort
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
@@ -43,10 +73,25 @@ impl Category {
                 }
             }
 
-            query.order((created_at.desc(), id.desc()))
+            query.order((sort.desc(), created_at.desc(), id.desc()))
         });
 
         paginator()
+    }
+
+    pub fn create_category(connection: &Conn, category: NewCategory) -> Result<u64, Error> {
+        use schema::categories::dsl::*;
+
+        diesel::insert_into(categories)
+            .values(category)
+            .execute(connection)
+            .map_err(error::ErrorInternalServerError)?;
+
+        let generated_id: u64 = diesel::select(last_insert_id)
+            .first(connection)
+            .map_err(error::ErrorInternalServerError)?;
+
+        Ok(generated_id)
     }
 }
 
@@ -64,5 +109,17 @@ impl Handler<Pagination<GetCategoryList>> for DatabaseExecutor {
 
     fn handle(&mut self, condition: Pagination<GetCategoryList>, _: &mut Self::Context) -> Self::Result {
         Category::get_category_list(&self.connection()?, condition)
+    }
+}
+
+impl Message for NewCategory {
+    type Result = Result<u64, Error>;
+}
+
+impl Handler<NewCategory> for DatabaseExecutor {
+    type Result = Result<u64, Error>;
+
+    fn handle(&mut self, category: NewCategory, _: &mut Self::Context) -> Self::Result {
+        Category::create_category(&self.connection()?, category)
     }
 }

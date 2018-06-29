@@ -64,6 +64,8 @@ fn start_server() {
                     .nested("", |scope| {
                         scope.middleware(MAuthenticate)
                             .route("/session/current-user", Method::GET, admin::user::get_current_user_info)
+                            .route("/category", Method::GET, admin::category::get_category_list)
+                            .route("/category", Method::POST, admin::category::create_category)
                     })
             })
     ).bind(server_bind).unwrap().start();

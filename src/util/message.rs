@@ -54,3 +54,8 @@ impl<T> Pagination<T> {
         Pagination::<T>::new(page, per_page, None)
     }
 }
+
+#[derive(Deserialize,Serialize, Debug)]
+pub struct CreatedObjectIdMessage {
+    pub id: u64,
+}

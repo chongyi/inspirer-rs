@@ -24,7 +24,7 @@ pub struct CategoryDisplay {
     pub name: String,
     pub display_name: String,
     pub description: String,
-    pub sort: u16,
+    pub sort: i16,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -37,7 +37,7 @@ impl Category {
 
         let paginator = paginator!(connection, c, CategoryDisplay, {
             let mut query = categories.into_boxed();
-            if let Some(filter) = c.clone() {
+            if let Some(filter) = c.clone().filter {
                 if let Some(v) = filter.name {
                     query = query.filter(name.like(format!("%{}%", v)));
                 }
@@ -50,6 +50,7 @@ impl Category {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct GetCategoryList {
     pub name: Option<String>,
 }

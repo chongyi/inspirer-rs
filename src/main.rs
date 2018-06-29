@@ -30,12 +30,13 @@ mod middlewares;
 use actix::*;
 use actix_web::*;
 use actix_web::http::Method;
-use actix_web::middleware::session::{SessionStorage, RequestSession};
+use actix_web::middleware::session::SessionStorage;
 use util::auth::JWTSessionBackend;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
 use controllers::admin;
+use middlewares::authenticate::Authenticate as MAuthenticate;
 
 fn main() {
     start_server();
@@ -55,9 +56,14 @@ fn start_server() {
 
     server::HttpServer::new(
         move || App::with_state(state::AppState { database: addr.clone() })
+            .middleware(SessionStorage::new(JWTSessionBackend))
             .scope("/api.admin", |scope| {
                 scope
                     .route("/authentication", Method::POST, admin::authorization::authorization)
+                    .nested("", |scope| {
+                        scope.middleware(MAuthenticate)
+                            .route("/session/current-user", Method::GET, admin::user::get_current_user_info)
+                    })
             })
     ).bind(server_bind).unwrap().start();
 

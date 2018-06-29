@@ -1,18 +1,8 @@
-use std::rc::Rc;
-
 use actix_web::*;
-use actix_web::middleware::session::RequestSession;
 use futures::Future;
-use biscuit::*;
-use biscuit::jws::*;
-use biscuit::jwa::*;
-use chrono::{Utc, Duration};
-use dotenv;
 
 use state::AppState;
-use util::auth::Authentication as Auth;
-use util::auth::Email;
-use util::auth::{Authenticate, PrivateClaims};
+use util::auth::{Authentication as Auth, PrivateClaims, Email};
 
 #[derive(Deserialize)]
 pub struct Authentication {
@@ -20,8 +10,13 @@ pub struct Authentication {
     password: String,
 }
 
+#[derive(Serialize)]
+struct AuthorizationResult {
+    token: String,
+    exp: i64,
+}
+
 pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
-    let cloned_req= req.clone();
     Form::<Authentication>::extract(&req).from_err().and_then(move |r| {
         let auth = Email {
             email: r.email.clone(),
@@ -31,15 +26,20 @@ pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse>
         let checker = Auth::new(auth);
 
         req.state().database.send(checker).from_err()
-    }).and_then(move |res| {
+    }).and_then(|res| {
         match res {
             Ok(user) => {
-                let chaims = PrivateClaims {
+                let claims = PrivateClaims {
                     uid: user.id,
                     name: user.name,
                 };
 
-                Ok(HttpResponse::Ok().body(chaims.generate_jwt_token()?))
+                let (token, expired) = claims.generate_jwt_token()?;
+
+                Ok(HttpResponse::Ok().json(AuthorizationResult {
+                    token,
+                    exp: expired,
+                }))
             },
             Err(e) => Err(e),
         }

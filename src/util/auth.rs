@@ -9,8 +9,7 @@ use actix_web_httpauth::headers::authorization::{Authorization as ActixAuthoriza
 use diesel::MysqlConnection;
 use diesel::r2d2::{PooledConnection, ConnectionManager};
 use djangohashers::check_password;
-use futures::future::{err as FutErr, ok as FutOk, FutureResult};
-use futures::Future;
+use futures::future::{ok as FutOk, FutureResult};
 use biscuit::*;
 use biscuit::Empty as JWTEmpty;
 use biscuit::jws::*;
@@ -32,10 +31,12 @@ pub struct PrivateClaims {
 }
 
 impl PrivateClaims {
-    pub fn generate_jwt_token(&self) -> Result<String, Error> {
+    pub fn generate_jwt_token(&self) -> Result<(String, i64), Error> {
+        let expired = Utc::now() + Duration::days(1);
+        let timestamp = expired.timestamp();
         let claims = ClaimsSet::<PrivateClaims> {
             registered: RegisteredClaims {
-                expiry: Some(From::from(Utc::now() + Duration::days(1))),
+                expiry: Some(From::from(expired)),
                 ..Default::default()
             },
             private: PrivateClaims {
@@ -53,7 +54,7 @@ impl PrivateClaims {
         let token = jwt.into_encoded(&secret).map_err(error::ErrorInternalServerError)?;
         let token = token.unwrap_encoded().to_string();
 
-        Ok(token)
+        Ok((token, timestamp))
     }
 }
 
@@ -151,7 +152,7 @@ impl SessionImpl for JWTSession {
         self.state.clear()
     }
 
-    fn write(&self, mut resp: HttpResponse) -> Result<Response> {
+    fn write(&self, resp: HttpResponse) -> Result<Response> {
         Ok(Response::Done(resp))
     }
 }
@@ -159,7 +160,7 @@ impl SessionImpl for JWTSession {
 pub struct JWTSessionBackend;
 
 impl JWTSessionBackend {
-    pub fn parse_token<S>(&self, req: &mut HttpRequest<S>) -> Result<PrivateClaims, Error> {
+    pub fn parse_token<S>(&self, req: &mut HttpRequest<S>) -> Result<(PrivateClaims, RegisteredClaims), Error> {
         let auth = ActixAuthorization::<Bearer>::parse(req)?;
         let token = auth.token.clone();
 
@@ -174,8 +175,9 @@ impl JWTSessionBackend {
 
         let payload = token.payload().map_err(error::ErrorInternalServerError)?;
         let claims = (*payload).private.clone();
+        let registered = (*payload).registered.clone();
 
-        Ok(claims)
+        Ok((claims, registered))
     }
 }
 
@@ -187,8 +189,10 @@ impl<S> SessionBackend<S> for JWTSessionBackend {
         let claims = self.parse_token(req);
         match claims {
             Ok(real) => {
+                let (claims, registered) = real;
                 let mut hash_map: HashMap<String, String> = HashMap::new();
-                hash_map.insert("chaims".to_owned(), serde_json::to_string(&real).unwrap());
+                hash_map.insert("claims".to_owned(), serde_json::to_string(&claims).unwrap());
+                hash_map.insert("registered".to_owned(), serde_json::to_string(&registered).unwrap());
                 FutOk(JWTSession {
                     state: hash_map,
                 })

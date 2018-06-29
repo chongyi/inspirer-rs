@@ -14,3 +14,4 @@ impl DatabaseExecutor {
         Ok(self.0.get().map_err(error::ErrorInternalServerError)?)
     }
 }
+

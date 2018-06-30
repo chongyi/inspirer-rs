@@ -66,6 +66,7 @@ fn start_server() {
                             .route("/session/current-user", Method::GET, admin::user::get_current_user_info)
                             .route("/category", Method::GET, admin::category::get_category_list)
                             .route("/category", Method::POST, admin::category::create_category)
+                            .route("/category/{id:\\d+}", Method::DELETE, admin::category::delete_category)
                     })
             })
     ).bind(server_bind).unwrap().start();

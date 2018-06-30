@@ -93,6 +93,17 @@ impl Category {
 
         Ok(generated_id)
     }
+
+    pub fn delete_category(connection: &Conn, category_id: u32) -> Result<u32, Error> {
+        use schema::categories::dsl::*;
+
+        let count = diesel::delete(categories)
+            .filter(id.eq(category_id))
+            .execute(connection)
+            .map_err(error::ErrorInternalServerError)?;
+
+        Ok(count as u32)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -121,5 +132,19 @@ impl Handler<NewCategory> for DatabaseExecutor {
 
     fn handle(&mut self, category: NewCategory, _: &mut Self::Context) -> Self::Result {
         Category::create_category(&self.connection()?, category)
+    }
+}
+
+pub struct DeleteCategory (pub u32);
+
+impl Message for DeleteCategory {
+    type Result = Result<u32, Error>;
+}
+
+impl Handler<DeleteCategory> for DatabaseExecutor {
+    type Result = Result<u32, Error>;
+
+    fn handle(&mut self, finder: DeleteCategory, _: &mut Self::Context) -> Self::Result {
+        Category::delete_category(&self.connection()?, finder.0)
     }
 }

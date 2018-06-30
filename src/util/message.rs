@@ -53,10 +53,6 @@ impl<T> Pagination<T> {
             filter,
         }
     }
-
-    pub fn paginate(page: Option<i64>, per_page: Option<i64>) -> Self {
-        Pagination::<T>::new(page, per_page, None)
-    }
 }
 
 #[derive(Copy, Clone)]

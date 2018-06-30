@@ -35,6 +35,7 @@ use actix_web::middleware::session::SessionStorage;
 use util::auth::JWTSessionBackend;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
+use diesel::sql_query;
 
 use controllers::admin;
 use middlewares::authenticate::Authenticate as MAuthenticate;
@@ -51,8 +52,17 @@ fn start_server() {
 
     let manager = ConnectionManager::<MysqlConnection>::new(database_url);
     let pool = Pool::builder().build(manager).expect("Error: Failed to build pool");
+
+
+
     let addr = SyncArbiter::start(8, move || {
-        database::DatabaseExecutor(pool.clone())
+        let cloned = pool.clone();
+        let connection = &cloned.get().expect("Error: Connection initialize error.");
+        let timezone = dotenv::var("DB_TIMEZONE").unwrap_or("+8:00".to_string());
+
+        sql_query(format!("set time_zone='{}'", timezone)).execute(connection).expect("Error: Connection initialize error.");;
+
+        database::DatabaseExecutor(cloned)
     });
 
     server::HttpServer::new(
@@ -67,6 +77,7 @@ fn start_server() {
                             .route("/category", Method::GET, admin::category::get_category_list)
                             .route("/category", Method::POST, admin::category::create_category)
                             .route("/category/{id:\\d+}", Method::DELETE, admin::category::delete_category)
+                            .route("/category/{id:\\d+}", Method::PUT, admin::category::update_category)
                     })
             })
     ).bind(server_bind).unwrap().start();

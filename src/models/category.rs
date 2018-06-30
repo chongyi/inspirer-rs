@@ -2,16 +2,14 @@ use actix::*;
 use actix_web::*;
 use diesel;
 use diesel::*;
-use diesel::MysqlConnection;
-use diesel::r2d2::{PooledConnection, ConnectionManager};
 use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
-use util::helper;
-use util::message::{PaginatedListMessage, Pagination};
+use util::message::{PaginatedListMessage, Pagination, UpdateByID};
 use schema::categories;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
+type DisplayCategoryDetail = Result<Option<CategoryDisplay>, Error>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct CategoryBase {
@@ -79,6 +77,17 @@ impl Category {
         paginator()
     }
 
+    pub fn find_category_by_id(connection: &Conn, category_id: u32) -> Result<CategoryDisplay, Error> {
+        use schema::categories::dsl::*;
+
+        Ok(
+            categories
+                .filter(id.eq(category_id))
+                .first::<CategoryDisplay>(connection)
+                .map_err(error::ErrorInternalServerError)?
+        )
+    }
+
     pub fn create_category(connection: &Conn, category: NewCategory) -> Result<u64, Error> {
         use schema::categories::dsl::*;
 
@@ -103,6 +112,22 @@ impl Category {
             .map_err(error::ErrorInternalServerError)?;
 
         Ok(count as u32)
+    }
+
+    pub fn update_category(connection: &Conn, category_id: u32, update: UpdateCategory) -> DisplayCategoryDetail {
+        use schema::categories::dsl::*;
+
+        let count = diesel::update(categories)
+            .set(&update)
+            .filter(id.eq(category_id))
+            .execute(connection)
+            .map_err(error::ErrorInternalServerError)?;
+
+        if (count as u32) > 0 {
+            Ok(Self::find_category_by_id(connection, category_id).ok())
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -146,5 +171,26 @@ impl Handler<DeleteCategory> for DatabaseExecutor {
 
     fn handle(&mut self, finder: DeleteCategory, _: &mut Self::Context) -> Self::Result {
         Category::delete_category(&self.connection()?, finder.0)
+    }
+}
+
+#[derive(AsChangeset, Deserialize)]
+#[table_name="categories"]
+pub struct UpdateCategory {
+    pub name: Option<String>,
+    pub display_name: Option<String>,
+    pub description: Option<String>,
+    pub sort: Option<i16>,
+}
+
+impl Message for UpdateByID<UpdateCategory> {
+    type Result = DisplayCategoryDetail;
+}
+
+impl Handler<UpdateByID<UpdateCategory>> for DatabaseExecutor {
+    type Result = DisplayCategoryDetail;
+
+    fn handle(&mut self, update: UpdateByID<UpdateCategory>, _: &mut Self::Context) -> Self::Result {
+        Category::update_category(&self.connection()?, update.id, update.update)
     }
 }

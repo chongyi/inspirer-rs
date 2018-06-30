@@ -6,8 +6,6 @@ use actix_web::http::header::Header;
 use actix_web::middleware::Response;
 use actix_web::middleware::session::{SessionBackend, SessionImpl};
 use actix_web_httpauth::headers::authorization::{Authorization as ActixAuthorization, Bearer};
-use diesel::MysqlConnection;
-use diesel::r2d2::{PooledConnection, ConnectionManager};
 use djangohashers::check_password;
 use futures::future::{ok as FutOk, FutureResult};
 use biscuit::*;

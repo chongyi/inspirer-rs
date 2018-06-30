@@ -1,8 +1,6 @@
 use actix::*;
 use actix_web::*;
 use diesel::*;
-use diesel::MysqlConnection;
-use diesel::r2d2::{PooledConnection, ConnectionManager};
 use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn};

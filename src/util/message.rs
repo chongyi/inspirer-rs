@@ -1,5 +1,3 @@
-use actix::*;
-
 #[derive(Fail, Debug, PartialEq)]
 pub enum RuntimeError {
     #[fail(display = "Invalid argument")]
@@ -59,6 +57,12 @@ impl<T> Pagination<T> {
     pub fn paginate(page: Option<i64>, per_page: Option<i64>) -> Self {
         Pagination::<T>::new(page, per_page, None)
     }
+}
+
+#[derive(Copy, Clone)]
+pub struct UpdateByID<T> {
+    pub id: u32,
+    pub update: T,
 }
 
 #[derive(Deserialize,Serialize, Debug)]

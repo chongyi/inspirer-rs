@@ -1,7 +1,6 @@
 use actix_web::*;
 
 use state::AppState;
-use util::message::PaginatedListMessage;
 
 #[macro_export]
 macro_rules! paginator {

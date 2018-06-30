@@ -2,11 +2,11 @@ use actix::*;
 use actix_web::*;
 use diesel::prelude::MysqlConnection;
 use diesel::r2d2::{ Pool, PooledConnection, ConnectionManager };
-use diesel::types;
+use diesel::sql_types;
 
 pub struct DatabaseExecutor(pub Pool<ConnectionManager<MysqlConnection>>);
 
-no_arg_sql_function!(last_insert_id, types::Unsigned<types::BigInt>);
+no_arg_sql_function!(last_insert_id, sql_types::Unsigned<sql_types::BigInt>);
 
 impl Actor for DatabaseExecutor {
     type Context = SyncContext<Self>;

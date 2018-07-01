@@ -1,23 +1,4 @@
 table! {
-    articles (id) {
-        id -> Unsigned<Integer>,
-        creator_id -> Unsigned<Integer>,
-        title -> Varchar,
-        category_id -> Unsigned<Integer>,
-        keywords -> Varchar,
-        description -> Varchar,
-        content -> Mediumtext,
-        sort -> Unsigned<Smallint>,
-        name -> Nullable<Varchar>,
-        views -> Unsigned<Integer>,
-        display -> Unsigned<Smallint>,
-        modified_at -> Nullable<Timestamp>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-    }
-}
-
-table! {
     categories (id) {
         id -> Unsigned<Integer>,
         name -> Varchar,
@@ -26,6 +7,34 @@ table! {
         sort -> Smallint,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+    }
+}
+
+table! {
+    contents (id) {
+        id -> Unsigned<Integer>,
+        creator_id -> Unsigned<Integer>,
+        title -> Varchar,
+        category_id -> Unsigned<Integer>,
+        keywords -> Varchar,
+        description -> Varchar,
+        sort -> Unsigned<Smallint>,
+        display -> Bool,
+        content_type -> Unsigned<Smallint>,
+        content_id -> Unsigned<Integer>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
+    content_articles (id) {
+        id -> Unsigned<Integer>,
+        content_id -> Nullable<Unsigned<Integer>>,
+        content -> Mediumtext,
+        name -> Nullable<Varchar>,
+        views -> Unsigned<Integer>,
+        modified_at -> Nullable<Timestamp>,
     }
 }
 
@@ -41,7 +50,8 @@ table! {
 }
 
 allow_tables_to_appear_in_same_query!(
-    articles,
     categories,
+    contents,
+    content_articles,
     users,
 );

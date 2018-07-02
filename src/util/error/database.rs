@@ -15,12 +15,12 @@ impl RuntimeCause for DieselError {
         };
 
         match render {
-            RenderType::Json => self.render_json(builder, ErrorMessage::<String> {
+            RenderType::Json => builder.json(ErrorMessage::<String> {
                 code,
                 msg: "Database error".to_string(),
                 body: Some(message.to_string()),
             }),
-            RenderType::Text => self.render_text(builder, message),
+            RenderType::Text => builder.body(message),
         }
     }
 }

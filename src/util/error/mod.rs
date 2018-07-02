@@ -4,7 +4,7 @@ use std::fmt;
 
 use actix_web::{HttpResponse, Body, error::Error, HttpRequest, HttpMessage};
 use actix_web::dev::HttpResponseBuilder;
-use actix_web::error::ResponseError;
+use actix_web::error::{ResponseError, InternalError};
 use failure::{Fail, Backtrace};
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML, TEXT_PLAIN};
 
@@ -36,6 +36,16 @@ impl From<HttpRequest> for RenderType {
     }
 }
 
+pub struct ErrorContainer {
+    cause: Box<RuntimeCause>,
+}
+
+pub fn error_container<T: RuntimeCause>(err: T) -> ErrorContainer {
+    ErrorContainer {
+        cause: Box::new(err),
+    }
+}
+
 pub fn runtime_error_container<T, R>(render: R) -> Box<Fn(T) -> Error>
     where
         T: RuntimeCause,
@@ -55,14 +65,6 @@ pub struct RuntimeError<T> {
 
 pub trait RuntimeCause: Fail + fmt::Display + fmt::Debug {
     fn render(&self, render: RenderType) -> HttpResponse;
-
-    fn render_text<B: Into<Body>>(&self, mut builder: HttpResponseBuilder, text: B) -> HttpResponse {
-        builder.body(text)
-    }
-
-    fn render_json<T: Serialize>(&self, mut builder: HttpResponseBuilder, json: T) -> HttpResponse {
-        builder.json(json)
-    }
 }
 
 impl<T> RuntimeError<T>

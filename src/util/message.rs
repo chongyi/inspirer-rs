@@ -1,9 +1,3 @@
-#[derive(Fail, Debug, PartialEq)]
-pub enum RuntimeError {
-    #[fail(display = "Invalid argument")]
-    InvalidArgument,
-}
-
 /// 错误消息体
 ///
 /// 错误消息体最终会转换为对应的 JSON 格式。

@@ -1,4 +1,6 @@
 pub mod database;
+pub mod auth;
+pub mod common;
 
 use std::fmt;
 
@@ -12,14 +14,16 @@ use util::message::ErrorMessage;
 pub use database::*;
 use serde::Serialize;
 
+pub type ErrorDesc = (u16, &'static str);
+
 #[derive(Copy, Clone)]
 pub enum RenderType {
     Json,
     Text,
 }
 
-impl From<HttpRequest> for RenderType {
-    fn from(req: HttpRequest<()>) -> Self {
+impl<S> From<HttpRequest<S>> for RenderType {
+    fn from(req: HttpRequest<S>) -> Self {
         match req.mime_type() {
             Ok(op) => match op {
                 Some(mime) => {
@@ -46,7 +50,7 @@ pub fn error_container<T: RuntimeCause>(err: T) -> ErrorContainer {
     }
 }
 
-pub fn runtime_error_container<T, R>(render: R) -> Box<Fn(T) -> Error>
+pub fn runtime_error_container<T, R>(render: R) -> Box<FnOnce(T) -> Error>
     where
         T: RuntimeCause,
         R: Into<RenderType>,
@@ -111,5 +115,34 @@ impl<T> fmt::Display for RuntimeError<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.cause, f)
+    }
+}
+
+#[derive(Fail, Debug, PartialEq)]
+pub enum ApplicationLogicError {
+    #[fail(display = "Invalid argument.")]
+    InvalidArgument,
+    #[fail(display = "System logic error.")]
+    LogicError,
+}
+
+const APP_ERR_REQUEST_ERR: ErrorDesc = (10001, "Request error");
+const APP_ERR_INVALID_ARGUMENT: ErrorDesc = (10004, "Invalid argument.");
+const APP_ERR_LOGIC_ERR: ErrorDesc = (10001, "System logic error.");
+
+impl RuntimeCause for ApplicationLogicError {
+    fn render(&self, render: RenderType) -> HttpResponse {
+        let (builder, (code, message)) = match *self {
+            ApplicationLogicError::InvalidArgument => (HttpResponse::BadRequest(), APP_ERR_INVALID_ARGUMENT),
+            ApplicationLogicError::LogicError => (HttpResponse::InternalServerError(), APP_ERR_LOGIC_ERR),
+        };
+
+        match render {
+            RenderType::Json => builder.json(ErrorMessage::<String> {
+                code,
+                msg: "Runtime error.".to_string(),
+                body: Some(message.to_string()),
+            })
+        }
     }
 }

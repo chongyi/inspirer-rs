@@ -1,6 +1,7 @@
 use actix_web::*;
 
 use state::AppState;
+use util::error::{ErrorContainer as Error, error_container};
 
 #[macro_export]
 macro_rules! paginator {
@@ -10,11 +11,11 @@ macro_rules! paginator {
                 let counter = || { $lg };
                 let getter = || { $lg };
 
-                let count = counter().count().first::<i64>($conn).map_err(error::ErrorInternalServerError)?;
+                let count = counter().count().first::<i64>($conn).map_err(error_container)?;
                 let results = getter()
                     .limit($w.per_page)
                     .offset(($w.page - 1) * $w.per_page)
-                    .load::<$rt>($conn).map_err(error::ErrorInternalServerError)?;
+                    .load::<$rt>($conn).map_err(error_container)?;
 
                 Ok(PaginatedListMessage { list: results, total: count, page: $w.page, per_page: $w.per_page })
             };
@@ -28,12 +29,12 @@ macro_rules! paginator {
                 let counter = || { $lg };
                 let getter = || { $lg };
 
-                let count = counter().count().first::<i64>($conn).map_err(error::ErrorInternalServerError)?;
+                let count = counter().count().first::<i64>($conn).map_err(error_container)?;
                 let results = getter()
                     .select($fields)
                     .limit($w.per_page)
                     .offset(($w.page - 1) * $w.per_page)
-                    .load::<$rt>($conn).map_err(error::ErrorInternalServerError)?;
+                    .load::<$rt>($conn).map_err(error_container)?;
 
                 Ok(PaginatedListMessage { list: results, total: count, page: $w.page, per_page: $w.per_page })
             };

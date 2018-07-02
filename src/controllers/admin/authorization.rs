@@ -3,6 +3,7 @@ use futures::Future;
 
 use state::AppState;
 use util::auth::{Authentication as Auth, PrivateClaims, Email};
+use util::error::runtime_error_container;
 
 #[derive(Deserialize)]
 pub struct Authentication {
@@ -17,7 +18,8 @@ struct AuthorizationResult {
 }
 
 pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
-    Form::<Authentication>::extract(&req).from_err().and_then(move |r| {
+    let extractor = req.clone();
+    Form::<Authentication>::extract(&extractor).from_err().and_then(move |r| {
         let auth = Email {
             email: r.email.clone(),
             password: r.password.clone(),
@@ -25,24 +27,20 @@ pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse>
 
         let checker = Auth::new(auth);
 
-        req.state().database.send(checker).from_err()
+        extractor.state().database.send(checker).from_err()
     }).and_then(|res| {
-        match res {
-            Ok(user) => {
-                let claims = PrivateClaims {
-                    uid: user.id,
-                    name: user.name,
-                };
+        let user = res.map_err(runtime_error_container(req).into())?;
+        let claims = PrivateClaims {
+            uid: user.id,
+            name: user.name,
+        };
 
-                let (token, expired) = claims.generate_jwt_token()?;
+        let (token, expired) = claims.generate_jwt_token().map_err(runtime_error_container(req).into())?;
 
-                Ok(HttpResponse::Ok().json(AuthorizationResult {
-                    token,
-                    exp: expired,
-                }))
-            },
-            Err(e) => Err(e),
-        }
+        Ok(HttpResponse::Ok().json(AuthorizationResult {
+            token,
+            exp: expired,
+        }))
 
     }).responder()
 

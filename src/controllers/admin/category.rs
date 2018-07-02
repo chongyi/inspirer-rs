@@ -37,7 +37,7 @@ pub fn delete_category(req: HttpRequest<AppState>) -> FutureResponse<HttpRespons
     match_info.into_future()
         .map_err(runtime_error_container(req.clone()).into())
         .and_then(move |res| {
-            req.state().database.send(DeleteCategory(res)).map_err(error::ErrorInternalServerError)
+            req.state().database.send(DeleteCategory(res)).map_err(runtime_error_container(req).into())
         })
         .and_then(|res| {
             Ok(HttpResponse::Ok().json(DeletedObjectMessage {

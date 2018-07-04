@@ -17,6 +17,16 @@ pub struct ErrorMessage<T> {
     pub body: Option<T>,
 }
 
+impl<T> ErrorMessage<T> {
+    pub fn new(code: u16, msg: String, body: Option<T>) -> Self {
+        ErrorMessage::<T> {
+            code,
+            msg,
+            body,
+        }
+    }
+}
+
 /// 分页列表数据结构
 ///
 /// 页数可通过数据总数（`total`）与每页数据条数（`per_page`）得出。

@@ -18,6 +18,8 @@ extern crate chrono;
 extern crate http;
 extern crate djangohashers;
 extern crate biscuit;
+extern crate mime;
+extern crate r2d2;
 
 #[macro_use]
 mod util;

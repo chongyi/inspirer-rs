@@ -4,6 +4,9 @@ use diesel::prelude::MysqlConnection;
 use diesel::r2d2::{ Pool, PooledConnection, ConnectionManager };
 use diesel::sql_types;
 
+use util::error::{error_container, ErrorContainer as Error};
+use util::error::database::*;
+
 pub struct DatabaseExecutor(pub Pool<ConnectionManager<MysqlConnection>>);
 
 no_arg_sql_function!(last_insert_id, sql_types::Unsigned<sql_types::BigInt>);
@@ -14,7 +17,7 @@ impl Actor for DatabaseExecutor {
 
 impl DatabaseExecutor {
     pub fn connection(&mut self) -> Result<PooledConnection<ConnectionManager<MysqlConnection>>, Error> {
-        Ok(self.0.get().map_err(error::ErrorInternalServerError)?)
+        Ok(self.0.get().map_err(error_container)?)
     }
 }
 

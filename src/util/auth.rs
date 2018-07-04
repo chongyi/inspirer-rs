@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use actix::prelude::*;
 use actix_web::*;
+use actix_web::error::Error as ActixError;
 use actix_web::http::header::Header;
 use actix_web::middleware::Response;
 use actix_web::middleware::session::{SessionBackend, SessionImpl};
@@ -18,8 +19,9 @@ use serde_json;
 
 use models::user::{User, AuthenticationUser};
 use database::{DatabaseExecutor, Conn as Connection};
+use util::error::{ErrorContainer as Error, error_container, auth::AuthenticateError};
 
-type AuthenticateResult = Result<AuthenticationUser, Error>;
+pub type AuthenticateResult = Result<AuthenticationUser, Error>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PrivateClaims {
@@ -47,18 +49,12 @@ impl PrivateClaims {
             ..Default::default()
         }), claims.clone());
 
-        let secret = Secret::Bytes(dotenv::var("TOKEN_SECRET").map_err(error::ErrorInternalServerError)?.into_bytes());
-        let token = jwt.into_encoded(&secret).map_err(error::ErrorInternalServerError)?;
+        let secret = Secret::Bytes(dotenv::var("TOKEN_SECRET").map_err(error_container)?.into_bytes());
+        let token = jwt.into_encoded(&secret).map_err(error_container)?;
         let token = token.unwrap_encoded().to_string();
 
         Ok((token, timestamp))
     }
-}
-
-#[derive(Fail, Debug, PartialEq)]
-pub enum AuthenticateError {
-    #[fail(display = "Authentication invalidate")]
-    ValidateError
 }
 
 pub trait Authenticate {
@@ -102,7 +98,7 @@ impl Authenticate for Authentication<Email> {
             return Ok(result);
         }
 
-        Err(error::ErrorForbidden(AuthenticateError::ValidateError))
+        Err(error_container(AuthenticateError::ValidateError))
     }
 }
 
@@ -158,19 +154,19 @@ pub struct JWTSessionBackend;
 
 impl JWTSessionBackend {
     pub fn parse_token<S>(&self, req: &mut HttpRequest<S>) -> Result<(PrivateClaims, RegisteredClaims), Error> {
-        let auth = ActixAuthorization::<Bearer>::parse(req)?;
+        let auth = ActixAuthorization::<Bearer>::parse(req).map_err(error_container)?;
         let token = auth.token.clone();
 
         let secret = Secret::Bytes(
             dotenv::var("TOKEN_SECRET")
-                .map_err(error::ErrorInternalServerError)?
+                .map_err(error_container)?
                 .into_bytes()
         );
 
         let wd = JWT::<PrivateClaims, JWTEmpty>::new_encoded(&token);
-        let token = wd.into_decoded(&secret, SignatureAlgorithm::HS256).map_err(error::ErrorForbidden)?;
+        let token = wd.into_decoded(&secret, SignatureAlgorithm::HS256).map_err(error_container)?;
 
-        let payload = token.payload().map_err(error::ErrorInternalServerError)?;
+        let payload = token.payload().map_err(error_container)?;
         let claims = (*payload).private.clone();
         let registered = (*payload).registered.clone();
 
@@ -180,7 +176,7 @@ impl JWTSessionBackend {
 
 impl<S> SessionBackend<S> for JWTSessionBackend {
     type Session = JWTSession;
-    type ReadFuture = FutureResult<JWTSession, Error>;
+    type ReadFuture = FutureResult<JWTSession, ActixError>;
 
     fn from_request(&self, req: &mut HttpRequest<S>) -> Self::ReadFuture {
         let claims = self.parse_token(req);

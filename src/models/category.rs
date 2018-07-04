@@ -6,6 +6,7 @@ use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
 use util::message::{PaginatedListMessage, Pagination, UpdateByID};
+use util::error::{error_container, ErrorContainer as Error};
 use schema::categories;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
@@ -84,7 +85,7 @@ impl Category {
             categories
                 .filter(id.eq(category_id))
                 .first::<CategoryDisplay>(connection)
-                .map_err(error::ErrorInternalServerError)?
+                .map_err(error_container)?
         )
     }
 
@@ -94,11 +95,11 @@ impl Category {
         diesel::insert_into(categories)
             .values(category)
             .execute(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(error_container)?;
 
         let generated_id: u64 = diesel::select(last_insert_id)
             .first(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(error_container)?;
 
         Ok(generated_id)
     }
@@ -109,7 +110,7 @@ impl Category {
         let count = diesel::delete(categories)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(error_container)?;
 
         Ok(count as u32)
     }
@@ -121,7 +122,7 @@ impl Category {
             .set(&update)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(error_container)?;
 
         if (count as u32) > 0 {
             Ok(Self::find_category_by_id(connection, category_id).ok())

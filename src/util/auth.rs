@@ -19,7 +19,7 @@ use serde_json;
 
 use models::user::{User, AuthenticationUser};
 use database::{DatabaseExecutor, Conn as Connection};
-use util::error::{ApplicationError as Error, ErrorInformation};
+use util::error::{ApplicationError as Error};
 
 type AuthenticateResult = Result<AuthenticationUser, Error>;
 

@@ -4,7 +4,6 @@ use futures::Future;
 
 use state::AppState;
 use util::auth::PrivateClaims;
-use util::error::{error_handler, ApplicationError, RenderType, TextResponseError, JsonResponseError};
 use models::user::FindUser;
 
 pub fn get_current_user_info(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {

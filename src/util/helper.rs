@@ -1,21 +1,21 @@
 use actix_web::*;
 
 use state::AppState;
-use util::error::{ApplicationError as Error};
 
 #[macro_export]
 macro_rules! paginator {
     ($conn:ident, $w:ident, $rt:ty, $lg:block) => {
         {
             let paginator = || -> Result<PaginatedListMessage<$rt>, Error> {
+                use util::error::{ApplicationError as IAError};
                 let counter = || { $lg };
                 let getter = || { $lg };
 
-                let count = counter().count().first::<i64>($conn).or(Err(Error::DbPaginationError()))?;
+                let count = counter().count().first::<i64>($conn).or(Err(IAError::DbPaginationError()))?;
                 let results = getter()
                     .limit($w.per_page)
                     .offset(($w.page - 1) * $w.per_page)
-                    .load::<$rt>($conn).or(Err(Error::DbPaginationError()))?;
+                    .load::<$rt>($conn).or(Err(IAError::DbPaginationError()))?;
 
                 Ok(PaginatedListMessage { list: results, total: count, page: $w.page, per_page: $w.per_page })
             };
@@ -26,15 +26,16 @@ macro_rules! paginator {
     ($conn:ident, $fields:expr, $w:ident, $rt:ty, $lg:block) => {
         {
             let paginator = || -> Result<PaginatedListMessage<$rt>, Error> {
+                use util::error::{ApplicationError as IAError};
                 let counter = || { $lg };
                 let getter = || { $lg };
 
-                let count = counter().count().first::<i64>($conn).or(Err(Error::DbPaginationError()))?;
+                let count = counter().count().first::<i64>($conn).or(Err(IAError::DbPaginationError()))?;
                 let results = getter()
                     .select($fields)
                     .limit($w.per_page)
                     .offset(($w.page - 1) * $w.per_page)
-                    .load::<$rt>($conn).or(Err(Error::DbPaginationError()))?;
+                    .load::<$rt>($conn).or(Err(IAError::DbPaginationError()))?;
 
                 Ok(PaginatedListMessage { list: results, total: count, page: $w.page, per_page: $w.per_page })
             };

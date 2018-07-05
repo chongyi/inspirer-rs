@@ -15,7 +15,7 @@ pub fn get_category_list(req: HttpRequest<AppState>) -> FutureResponse<HttpRespo
 
     req.state().database.send(message).from_err().and_then(|res| {
         Ok(HttpResponse::Ok().json(res?))
-    }).responder()
+    }).map_err(error_handler!(req)).responder()
 }
 
 pub fn get_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {

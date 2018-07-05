@@ -6,7 +6,7 @@ use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
 use util::message::{PaginatedListMessage, Pagination, UpdateByID};
-use util::error::{ApplicationError as Error, database::map_database_error};
+use util::error::ApplicationError as Error;
 use schema::categories;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;

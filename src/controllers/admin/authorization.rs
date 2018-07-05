@@ -3,7 +3,6 @@ use futures::Future;
 
 use state::AppState;
 use util::auth::{Authentication as Auth, PrivateClaims, Email};
-use util::error::{error_handler, ApplicationError, RenderType, TextResponseError, JsonResponseError};
 
 #[derive(Deserialize)]
 pub struct Authentication {

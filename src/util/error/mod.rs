@@ -1,7 +1,3 @@
-#[macro_use]
-pub mod database;
-pub mod auth;
-
 use std::collections::HashMap;
 use std::fmt;
 
@@ -9,10 +5,6 @@ use actix_web::{Error, ResponseError, HttpRequest, HttpResponse, HttpMessage, ht
 use actix_web::http::{StatusCode};
 use actix::MailboxError;
 use failure::{Fail, Backtrace};
-use futures::Canceled;
-
-use super::message::ErrorMessage;
-use self::database::DatabaseErrorKind;
 
 #[macro_export]
 macro_rules! error_handler {
@@ -44,12 +36,64 @@ macro_rules! error_handler {
     };
 }
 
+#[macro_export]
+macro_rules! error_trigger_define {
+    ($ct:ident, $code:expr, $msg:expr, $status:expr) => {
+        pub const $ct: (u16, &'static str, StatusCode) = ($code, $msg, $status);
+    };
+    ($rt:expr, $ct:ident, __, $method:ident) => {
+        #[allow(non_snake_case)]
+        pub fn $method() -> Self {
+            $rt(ErrorInformation::new(
+                Self::$ct.0, Self::$ct.1.into(), Self::$ct.2, None
+            ))
+        }
+    };
+    ($rt:expr, $ct:ident, $en:expr, $method:ident) => {
+        #[allow(non_snake_case)]
+        pub fn $method() -> Self {
+            $rt($en, ErrorInformation::new(
+                Self::$ct.0, Self::$ct.1.into(), Self::$ct.2, None
+            ))
+        }
+    };
+    ($rt:expr, $ct:ident, $code:expr, $msg:expr, $status:expr, __, $method:ident) => {
+        error_trigger_define!($ct, $code, $msg, $status);
+        error_trigger_define!($rt, $ct, __, $method);
+    };
+    ($rt:expr, $ct:ident, $code:expr, $msg:expr, $status:expr, $en:expr, $method:ident) => {
+        error_trigger_define!($ct, $code, $msg, $status);
+        error_trigger_define!($rt, $ct, $en, $method);
+    };
+}
+
+#[macro_use]
+pub mod database;
+pub mod auth;
+
+use super::message::ErrorMessage;
+use self::database::DatabaseErrorKind;
+
 pub enum RenderType {
     Json,
     Text,
 }
 
-#[derive(Fail)]
+impl<S> From<HttpRequest<S>> for RenderType {
+    fn from(req: HttpRequest<S>) -> Self {
+        let default = HeaderValue::from_static("text/html");
+        let accept = req.headers()
+            .get(ACCEPT).unwrap_or(&default)
+            .to_str().unwrap_or("text/html");
+
+        if accept.contains("json") {
+            RenderType::Json
+        } else {
+            RenderType::Text
+        }
+    }
+}
+
 pub enum ApplicationError {
     SystemRuntimeError(ErrorInformation),
     AuthenticationError(ErrorInformation),
@@ -75,8 +119,6 @@ impl fmt::Display for ApplicationError
         write!(f, "Error")
     }
 }
-
-impl ResponseError for ApplicationError {}
 
 impl From<MailboxError> for ApplicationError {
     fn from(_: MailboxError) -> Self {
@@ -127,28 +169,6 @@ impl fmt::Display for ErrorInformation {
     }
 }
 
-pub fn error_handler<T, E>(render: T) -> Box<FnOnce(E) -> Error>
-    where
-        T: Into<RenderType>,
-        E: Into<ApplicationError>,
-{
-    let rt = render.into();
-
-    Box::new(move |error| {
-        let err = error.into();
-        let info = match err {
-            ApplicationError::SystemRuntimeError(info) => info,
-            ApplicationError::AuthenticationError(info) => info,
-            ApplicationError::DatabaseError(_, info) => info,
-        };
-
-        match rt {
-            RenderType::Json => JsonResponseError::new(info).into(),
-            RenderType::Text => TextResponseError::new(info).into(),
-        }
-    })
-}
-
 pub struct JsonResponseError {
     info: ErrorInformation,
     backtrace: Backtrace,
@@ -165,7 +185,13 @@ impl JsonResponseError {
 
 impl ResponseError for JsonResponseError {
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.info.status).json(ErrorMessage::new(self.info.code, self.info.message.clone(), Some(self.info.detail.clone())))
+        HttpResponse::build(self.info.status).json(
+            ErrorMessage::new(
+                self.info.code,
+                self.info.message.clone(),
+                Some(self.info.detail.clone())
+            )
+        )
     }
 }
 
@@ -206,7 +232,9 @@ impl TextResponseError {
 
 impl ResponseError for TextResponseError {
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.info.status).body(format!("<strong>Error</strong>({}) {}<br/>\n{:?}", self.info.code, self.info.message, self.info.detail))
+        HttpResponse::build(self.info.status).body(
+            format!("<strong>Error</strong>({}) {}<br/>\n{:?}", self.info.code, self.info.message, self.info.detail)
+        )
     }
 }
 
@@ -231,38 +259,7 @@ impl fmt::Display for TextResponseError
     }
 }
 
-impl<S> From<HttpRequest<S>> for RenderType {
-    fn from(req: HttpRequest<S>) -> Self {
-        let default = HeaderValue::from_static("text/html");
-        let accept = req.headers()
-            .get(ACCEPT).unwrap_or(&default)
-            .to_str().unwrap_or("text/html");
-
-        if accept.contains("json") {
-            RenderType::Json
-        } else {
-            RenderType::Text
-        }
-    }
-}
-
 impl ApplicationError {
-    pub const SYS_LOGIC_ARG_ERR: (u16, &'static str, StatusCode) = (10010, "Invalid argument.", StatusCode::INTERNAL_SERVER_ERROR);
-    pub const SYS_INVALID_ARGUMENT_ERR: (u16, &'static str, StatusCode) = (10011, "Invalid argument.", StatusCode::BAD_REQUEST);
-
-    #[allow(non_snake_case)]
-    pub fn SysLogicArgumentError() -> Self {
-        let (a, b, c) = Self::SYS_LOGIC_ARG_ERR;
-        ApplicationError::SystemRuntimeError(ErrorInformation::new(
-            a, b.into(), c, None
-        ))
-    }
-
-    #[allow(non_snake_case)]
-    pub fn SysInvalidArgumentError() -> Self {
-        let (a, b, c) = Self::SYS_INVALID_ARGUMENT_ERR;
-        ApplicationError::SystemRuntimeError(ErrorInformation::new(
-            a, b.into(), c, None
-        ))
-    }
+    error_trigger_define!(ApplicationError::SystemRuntimeError, SYS_LOGIC_ARG_ERR, 10010, "Invalid argument.", StatusCode::INTERNAL_SERVER_ERROR, __, SysLogicArgumentError);
+    error_trigger_define!(ApplicationError::SystemRuntimeError, SYS_INVALID_ARGUMENT_ERR, 10011, "Invalid argument.", StatusCode::BAD_REQUEST, __, SysInvalidArgumentError);
 }

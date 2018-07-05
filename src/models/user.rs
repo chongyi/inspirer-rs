@@ -4,7 +4,7 @@ use diesel::*;
 use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn};
-use util::error::{database::map_database_error, ApplicationError as Error};
+use util::error::ApplicationError as Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct AuthenticationUser {

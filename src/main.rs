@@ -6,6 +6,8 @@ extern crate serde_derive;
 extern crate tera;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate clap;
 
 extern crate serde;
 extern crate serde_json;
@@ -21,7 +23,6 @@ extern crate biscuit;
 extern crate mime;
 extern crate r2d2;
 extern crate pwhash;
-extern crate clap;
 
 #[macro_use]
 mod util;
@@ -48,8 +49,8 @@ use middlewares::authenticate::Authenticate as MAuthenticate;
 
 fn main() {
     let matches = CommandApp::new("Inspirer")
-        .version("1.0")
-        .author("Chongyi <chongyi@xopns.com>")
+        .version(crate_version!())
+        .author(crate_authors!())
         .subcommand(
             SubCommand::with_name("server")
                 .about("Blog server.")

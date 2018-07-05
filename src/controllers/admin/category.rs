@@ -2,7 +2,7 @@ use futures::future::{Future, IntoFuture};
 use actix_web::*;
 
 use state::AppState;
-use util::message::{Pagination, CreatedObjectIdMessage, RuntimeError, DeletedObjectMessage, UpdateByID};
+use util::message::{Pagination, CreatedObjectIdMessage, DeletedObjectMessage, UpdateByID};
 use util::helper::get_paginate_params;
 use util::error::ApplicationError;
 use models::category::{GetCategoryList, CreateCategory, NewCategory, DeleteCategory, UpdateCategory, FindCategory};

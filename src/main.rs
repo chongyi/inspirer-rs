@@ -80,6 +80,7 @@ fn start_server() {
                             .route("/category", Method::POST, admin::category::create_category)
                             .route("/category/{id:\\d+}", Method::DELETE, admin::category::delete_category)
                             .route("/category/{id:\\d+}", Method::PUT, admin::category::update_category)
+                            .route("/category/{id:\\d+}", Method::GET, admin::category::get_category)
                     })
             })
     ).bind(server_bind).unwrap().start();

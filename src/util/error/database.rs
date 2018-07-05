@@ -1,72 +1,110 @@
-use diesel::result::Error as DieselError;
-use diesel::result::DatabaseErrorKind;
-use diesel::r2d2::Error as DieselR2d2Error;
-use r2d2::Error as R2d2Error;
-use actix_web::HttpResponse;
+use diesel::result::{
+    Error as DieselError,
+    DatabaseErrorKind as DieselDatabaseErrorKind,
+    DatabaseErrorInformation
+};
 
-use super::RuntimeCause;
-use super::RenderType;
-use super::ErrorDesc;
-use util::message::ErrorMessage;
+use actix_web::http::StatusCode;
 
-const DB_UNKNOWN_ERR: ErrorDesc = (10100, "Unknown database error.");
-const DB_CONNECTION_ERR: ErrorDesc = (10101, "Database connection error.");
-const DB_DATA_CONFLICT_ERR: ErrorDesc = (10134, "Data conflict.");
-const DB_QUERY_ERR: ErrorDesc = (10140, "Database query error.");
-const DB_NO_QUERY_RESULT_ERR: ErrorDesc = (10141, "No result.");
+use super::{ApplicationError, ErrorInformation};
 
-impl RuntimeCause for DieselError {
-    fn render(&self, render: RenderType) -> HttpResponse {
-        let (mut builder, (code, message)) = match *self {
-            DieselError::NotFound => (HttpResponse::NotFound(), DB_NO_QUERY_RESULT_ERR),
-            DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => (HttpResponse::Conflict(), DB_DATA_CONFLICT_ERR),
-            _ => (HttpResponse::InternalServerError(), DB_UNKNOWN_ERR),
-        };
-
-        match render {
-            RenderType::Json => builder.json(ErrorMessage::<String> {
-                code,
-                msg: "Database error".to_string(),
-                body: Some(message.to_string()),
-            }),
-            RenderType::Text => builder.body(message),
+#[macro_export]
+macro_rules! map_database_error {
+    ($target:expr) => {
+        |err| {
+            use util::error::ApplicationError as IAppErr;
+            use diesel::result::{
+                Error as IDieselError,
+                DatabaseErrorKind as IDieselDatabaseErrorKind,
+                DatabaseErrorInformation as IDatabaseErrorInformation
+            };
+            let t = $target.into();
+            match err {
+                IDieselError::NotFound => IAppErr::DbNotFound(t),
+                IDieselError::DatabaseError(kind, info) => match kind {
+                    IDieselDatabaseErrorKind::UniqueViolation => IAppErr::DbConflict(t, kind),
+                    _ => IAppErr::DbError(t, kind),
+                },
+                _ => IAppErr::DbUnknownError(),
+            }
         }
+    };
+}
+
+pub enum DatabaseErrorKind {
+    NotFound(String),
+    DatabaseError(String, DieselDatabaseErrorKind),
+    GetConnection,
+    PaginationError,
+    Unknown,
+}
+
+impl ApplicationError {
+    pub const DB_NOT_FOUND: (u16, &'static str, StatusCode) = (10441, "Data not found.", StatusCode::NOT_FOUND);
+    pub const DB_UNIQUE_VIOLATION: (u16, &'static str, StatusCode) = (10412, "Data conflict.", StatusCode::CONFLICT);
+    pub const DB_ERR: (u16, &'static str, StatusCode) = (10400, "Database error.", StatusCode::INTERNAL_SERVER_ERROR);
+    pub const DB_GET_CONNECTION: (u16, &'static str, StatusCode) = (10402, "Database connection.", StatusCode::INTERNAL_SERVER_ERROR);
+    pub const DB_PAGINATION_ERROR: (u16, &'static str, StatusCode) = (10444, "Format data error.", StatusCode::INTERNAL_SERVER_ERROR);
+
+    #[allow(non_snake_case)]
+    pub fn DbNotFound(target: String) -> Self {
+        let (a, b, c) = Self::DB_NOT_FOUND;
+        ApplicationError::DatabaseError(DatabaseErrorKind::NotFound(target), ErrorInformation::new(
+            a, b.into(), c, None
+        ))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn DbConflict(target: String, kind: DieselDatabaseErrorKind) -> Self {
+        let (a, b, c) = Self::DB_UNIQUE_VIOLATION;
+        ApplicationError::DatabaseError(DatabaseErrorKind::DatabaseError(target, kind), ErrorInformation::new(
+            a, b.into(), c, None
+        ))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn DbError(target: String, kind: DieselDatabaseErrorKind) -> Self {
+        let (a, b, c) = Self::DB_ERR;
+        ApplicationError::DatabaseError(DatabaseErrorKind::DatabaseError(target, kind), ErrorInformation::new(
+            a, b.into(), c, None
+        ))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn DbUnknownError() -> Self {
+        let (a, b, c) = Self::DB_ERR;
+        ApplicationError::DatabaseError(DatabaseErrorKind::Unknown, ErrorInformation::new(
+            a, b.into(), c, None
+        ))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn DbGetConnectionError() -> Self {
+        let (a, b, c) = Self::DB_GET_CONNECTION;
+        ApplicationError::DatabaseError(DatabaseErrorKind::GetConnection, ErrorInformation::new(
+            a, b.into(), c, None
+        ))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn DbPaginationError() -> Self {
+        let (a, b, c) = Self::DB_PAGINATION_ERROR;
+        ApplicationError::DatabaseError(DatabaseErrorKind::PaginationError, ErrorInformation::new(
+            a, b.into(), c, None
+        ))
     }
 }
 
-//impl RuntimeCause for DieselR2d2Error {
-//    fn render(&self, render: RenderType) -> HttpResponse {
-//        let (code, message) = match *self {
-//            R2d2Error::ConnectionError(_) => DB_CONNECTION_ERR,
-//            R2d2Error::QueryError(_) => DB_QUERY_ERR,
-//        };
-//
-//        let builder = HttpResponse::InternalServerError();
-//
-//        match render {
-//            RenderType::Json => builder.json(ErrorMessage::<String> {
-//                code,
-//                msg: "Database error".to_string(),
-//                body: Some(message.to_string()),
-//            }),
-//            RenderType::Text => builder.body(message),
-//        }
-//    }
-//}
-
-impl RuntimeCause for R2d2Error {
-    fn render(&self, render: RenderType) -> HttpResponse {
-        let (code, message) = DB_UNKNOWN_ERR;
-
-        let builder = HttpResponse::InternalServerError();
-
-        match render {
-            RenderType::Json => builder.json(ErrorMessage::<String> {
-                code,
-                msg: "Database error".to_string(),
-                body: Some(message.to_string()),
-            }),
-            RenderType::Text => builder.body(message),
+pub fn map_database_error(target: &'static str) -> Box<FnOnce(DieselError) -> ApplicationError> {
+    Box::new(move |err| {
+        let t = target.into();
+        match err {
+            DieselError::NotFound => ApplicationError::DbNotFound(t),
+            DieselError::DatabaseError(kind, info) => match kind {
+                DieselDatabaseErrorKind::UniqueViolation => ApplicationError::DbConflict(t, kind),
+                _ => ApplicationError::DbError(t, kind),
+            },
+            _ => ApplicationError::DbUnknownError(),
         }
-    }
+    })
 }

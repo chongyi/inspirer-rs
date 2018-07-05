@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use actix::prelude::*;
 use actix_web::*;
-use actix_web::error::Error as ActixError;
+use actix_web::Error as ActixError;
 use actix_web::http::header::Header;
 use actix_web::middleware::Response;
 use actix_web::middleware::session::{SessionBackend, SessionImpl};
@@ -19,9 +19,9 @@ use serde_json;
 
 use models::user::{User, AuthenticationUser};
 use database::{DatabaseExecutor, Conn as Connection};
-use util::error::{ErrorContainer as Error, error_container, auth::AuthenticateError};
+use util::error::{ApplicationError as Error, ErrorInformation};
 
-pub type AuthenticateResult = Result<AuthenticationUser, Error>;
+type AuthenticateResult = Result<AuthenticationUser, Error>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PrivateClaims {
@@ -49,12 +49,18 @@ impl PrivateClaims {
             ..Default::default()
         }), claims.clone());
 
-        let secret = Secret::Bytes(dotenv::var("TOKEN_SECRET").map_err(error_container)?.into_bytes());
-        let token = jwt.into_encoded(&secret).map_err(error_container)?;
+        let secret = Secret::Bytes(dotenv::var("TOKEN_SECRET").or(Err(Error::SysLogicArgumentError()))?.into_bytes());
+        let token = jwt.into_encoded(&secret).or(Err(Error::SysLogicArgumentError()))?;
         let token = token.unwrap_encoded().to_string();
 
         Ok((token, timestamp))
     }
+}
+
+#[derive(Fail, Debug, PartialEq)]
+pub enum AuthenticateError {
+    #[fail(display = "Authentication invalidate")]
+    ValidateError
 }
 
 pub trait Authenticate {
@@ -98,7 +104,7 @@ impl Authenticate for Authentication<Email> {
             return Ok(result);
         }
 
-        Err(error_container(AuthenticateError::ValidateError))
+        Err(Error::AuthValidationError())
     }
 }
 
@@ -154,19 +160,19 @@ pub struct JWTSessionBackend;
 
 impl JWTSessionBackend {
     pub fn parse_token<S>(&self, req: &mut HttpRequest<S>) -> Result<(PrivateClaims, RegisteredClaims), Error> {
-        let auth = ActixAuthorization::<Bearer>::parse(req).map_err(error_container)?;
+        let auth = ActixAuthorization::<Bearer>::parse(req).or(Err(Error::SysLogicArgumentError()))?;
         let token = auth.token.clone();
 
         let secret = Secret::Bytes(
             dotenv::var("TOKEN_SECRET")
-                .map_err(error_container)?
+                .or(Err(Error::SysLogicArgumentError()))?
                 .into_bytes()
         );
 
         let wd = JWT::<PrivateClaims, JWTEmpty>::new_encoded(&token);
-        let token = wd.into_decoded(&secret, SignatureAlgorithm::HS256).map_err(error_container)?;
+        let token = wd.into_decoded(&secret, SignatureAlgorithm::HS256).or(Err(Error::AuthValidationError()))?;
 
-        let payload = token.payload().map_err(error_container)?;
+        let payload = token.payload().or(Err(Error::SysLogicArgumentError()))?;
         let claims = (*payload).private.clone();
         let registered = (*payload).registered.clone();
 

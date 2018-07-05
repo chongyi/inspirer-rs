@@ -4,7 +4,8 @@ use actix_web::*;
 use state::AppState;
 use util::message::{Pagination, CreatedObjectIdMessage, RuntimeError, DeletedObjectMessage, UpdateByID};
 use util::helper::get_paginate_params;
-use models::category::{GetCategoryList, CreateCategory, NewCategory, DeleteCategory, UpdateCategory};
+use util::error::ApplicationError;
+use models::category::{GetCategoryList, CreateCategory, NewCategory, DeleteCategory, UpdateCategory, FindCategory};
 
 pub fn get_category_list(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let (page, per_page) = get_paginate_params(&req);
@@ -17,45 +18,65 @@ pub fn get_category_list(req: HttpRequest<AppState>) -> FutureResponse<HttpRespo
     }).responder()
 }
 
+pub fn get_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let origin = req.clone();
+    let match_info = match req.match_info().get("id") {
+        Some(s) => Ok(s.parse::<u32>().unwrap()),
+        None => Err(ApplicationError::SysInvalidArgumentError())
+    };
+
+    match_info.into_future()
+        .from_err()
+        .and_then(move |res| {
+            req.state().database.send(FindCategory::Id(res)).from_err()
+        })
+        .and_then(|res| {
+            Ok(HttpResponse::Ok().json(res?))
+        }).map_err(error_handler!(origin)).responder()
+}
+
 pub fn create_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let origin = req.clone();
     Form::<CreateCategory>::extract(&req).from_err().and_then(move |res| {
         req.state().database.send(NewCategory::from(res.into_inner())).from_err()
     }).and_then(|res| {
         Ok(HttpResponse::Ok().json(CreatedObjectIdMessage {
             id: res?
         }))
-    }).responder()
+    }).map_err(error_handler!(origin)).responder()
 }
 
 pub fn delete_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let origin = req.clone();
     let match_info = match req.match_info().get("id") {
         Some(s) => Ok(s.parse::<u32>().unwrap()),
-        None => Err(RuntimeError::InvalidArgument)
+        None => Err(ApplicationError::SysInvalidArgumentError())
     };
 
     match_info.into_future()
-        .map_err(error::ErrorBadRequest)
+        .from_err()
         .and_then(move |res| {
-            req.state().database.send(DeleteCategory(res)).map_err(error::ErrorInternalServerError)
+            req.state().database.send(DeleteCategory(res)).from_err()
         })
         .and_then(|res| {
             Ok(HttpResponse::Ok().json(DeletedObjectMessage {
                 count: res?
             }))
-        }).responder()
+        }).map_err(error_handler!(origin)).responder()
 }
 
 pub fn update_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let extract = req.clone();
+    let origin = req.clone();
 
     Form::<UpdateCategory>::extract(&req).from_err().and_then(move |update| {
         let match_info = match extract.match_info().get("id") {
             Some(s) => Ok(s.parse::<u32>().unwrap()),
-            None => Err(RuntimeError::InvalidArgument)
+            None => Err(ApplicationError::SysInvalidArgumentError())
         };
 
         match_info.into_future()
-            .map_err(error::ErrorBadRequest)
+            .from_err()
             .and_then(move |res| {
                 req.state().database.send(UpdateByID::<UpdateCategory> {
                     id: res,
@@ -64,5 +85,5 @@ pub fn update_category(req: HttpRequest<AppState>) -> FutureResponse<HttpRespons
             })
     }).and_then(|res| {
         Ok(HttpResponse::Ok().json(res?))
-    }).responder()
+    }).map_err(error_handler!(origin)).responder()
 }

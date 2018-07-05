@@ -6,6 +6,7 @@ use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
 use util::message::{PaginatedListMessage, Pagination, UpdateByID};
+use util::error::{ApplicationError as Error, database::map_database_error};
 use schema::categories;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
@@ -84,7 +85,18 @@ impl Category {
             categories
                 .filter(id.eq(category_id))
                 .first::<CategoryDisplay>(connection)
-                .map_err(error::ErrorInternalServerError)?
+                .map_err(map_database_error!("categories"))?
+        )
+    }
+
+    pub fn find_category_by_name(connection: &Conn, category_name: String) -> Result<CategoryDisplay, Error> {
+        use schema::categories::dsl::*;
+
+        Ok(
+            categories
+                .filter(name.eq(category_name))
+                .first::<CategoryDisplay>(connection)
+                .map_err(map_database_error!("categories"))?
         )
     }
 
@@ -94,11 +106,11 @@ impl Category {
         diesel::insert_into(categories)
             .values(category)
             .execute(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(map_database_error!("categories"))?;
 
         let generated_id: u64 = diesel::select(last_insert_id)
             .first(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(map_database_error!("categories"))?;
 
         Ok(generated_id)
     }
@@ -109,7 +121,7 @@ impl Category {
         let count = diesel::delete(categories)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(map_database_error!("categories"))?;
 
         Ok(count as u32)
     }
@@ -121,7 +133,7 @@ impl Category {
             .set(&update)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(error::ErrorInternalServerError)?;
+            .map_err(map_database_error!("categories"))?;
 
         if (count as u32) > 0 {
             Ok(Self::find_category_by_id(connection, category_id).ok())
@@ -192,5 +204,25 @@ impl Handler<UpdateByID<UpdateCategory>> for DatabaseExecutor {
 
     fn handle(&mut self, update: UpdateByID<UpdateCategory>, _: &mut Self::Context) -> Self::Result {
         Category::update_category(&self.connection()?, update.id, update.update)
+    }
+}
+
+pub enum  FindCategory {
+    Id(u32),
+    Name(String),
+}
+
+impl Message for FindCategory {
+    type Result = DisplayCategoryDetail;
+}
+
+impl Handler<FindCategory> for DatabaseExecutor {
+    type Result = DisplayCategoryDetail;
+
+    fn handle(&mut self, find: FindCategory, _: &mut Self::Context) -> Self::Result {
+        Ok(Some(match find {
+            FindCategory::Id(id) => Category::find_category_by_id(&self.connection()?, id)?,
+            FindCategory::Name(name) => Category::find_category_by_name(&self.connection()?, name)?,
+        }))
     }
 }

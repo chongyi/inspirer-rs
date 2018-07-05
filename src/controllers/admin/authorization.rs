@@ -3,6 +3,7 @@ use futures::Future;
 
 use state::AppState;
 use util::auth::{Authentication as Auth, PrivateClaims, Email};
+use util::error::{error_handler, ApplicationError, RenderType, TextResponseError, JsonResponseError};
 
 #[derive(Deserialize)]
 pub struct Authentication {
@@ -17,6 +18,7 @@ struct AuthorizationResult {
 }
 
 pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let origin = req.clone();
     Form::<Authentication>::extract(&req).from_err().and_then(move |r| {
         let auth = Email {
             email: r.email.clone(),
@@ -44,6 +46,6 @@ pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse>
             Err(e) => Err(e),
         }
 
-    }).responder()
+    }).map_err(error_handler!(origin)).responder()
 
 }

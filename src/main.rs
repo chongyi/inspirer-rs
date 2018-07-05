@@ -41,7 +41,7 @@ use util::auth::JWTSessionBackend;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 use diesel::sql_query;
-use clap::{Arg, App as CommandApp, SubCommand};
+use clap::{Arg, App as CommandApp, SubCommand, ArgMatches};
 use pwhash::bcrypt::{hash as password_hash, verify as password_verify};
 
 use controllers::admin;
@@ -81,25 +81,29 @@ fn main() {
         .get_matches();
 
     match matches.subcommand() {
-        ("server", Some(sub)) => {
-            let control = sub.value_of("CONTROL").unwrap();
-            match control {
-                "start" => start_server(),
-                _ => println!("Unknown control command: {}", control),
-            };
-        },
-        ("tools:password", Some(sub)) => {
-            let password = sub.value_of("password").unwrap();
-            match sub.value_of("hashed") {
-                Some(hashed) => if password_verify(password, hashed) {
-                    println!("Passed!");
-                } else {
-                    println!("Mismatching");
-                },
-                None => println!("Hashed: {}", password_hash(password).unwrap()),
-            };
-        },
+        ("server", Some(sub)) => server_control(sub),
+        ("tools:password", Some(sub)) => tools_password(sub),
         _ => (),
+    };
+}
+
+fn server_control(sub: &ArgMatches) {
+    let control = sub.value_of("CONTROL").unwrap();
+    match control {
+        "start" => start_server(),
+        _ => println!("Unknown control command: {}", control),
+    };
+}
+
+fn tools_password(sub: &ArgMatches) {
+    let password = sub.value_of("password").unwrap();
+    match sub.value_of("hashed") {
+        Some(hashed) => if password_verify(password, hashed) {
+            println!("Passed!");
+        } else {
+            println!("Mismatching");
+        },
+        None => println!("Hashed: {}", password_hash(password).unwrap()),
     };
 }
 

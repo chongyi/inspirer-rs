@@ -20,6 +20,8 @@ extern crate djangohashers;
 extern crate biscuit;
 extern crate mime;
 extern crate r2d2;
+extern crate pwhash;
+extern crate clap;
 
 #[macro_use]
 mod util;
@@ -38,12 +40,66 @@ use util::auth::JWTSessionBackend;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 use diesel::sql_query;
+use clap::{Arg, App as CommandApp, SubCommand};
+use pwhash::bcrypt::{hash as password_hash, verify as password_verify};
 
 use controllers::admin;
 use middlewares::authenticate::Authenticate as MAuthenticate;
 
 fn main() {
-    start_server();
+    let matches = CommandApp::new("Inspirer")
+        .version("1.0")
+        .author("Chongyi <chongyi@xopns.com>")
+        .subcommand(
+            SubCommand::with_name("server")
+                .about("Blog server.")
+                .arg(
+                    Arg::with_name("CONTROL")
+                        .help("Control command, eg: start, stop, restart, reload")
+                        .required(true)
+                        .default_value("start")
+                )
+        )
+        .subcommands(vec![
+            SubCommand::with_name("tools:password")
+                .about("Tools about password hash maker and checker.")
+                .args(&[
+                    Arg::with_name("password")
+                        .takes_value(true)
+                        .help("Origin password text.")
+                        .long("pwd")
+                        .short("p")
+                        .required(true),
+                    Arg::with_name("hashed")
+                        .takes_value(true)
+                        .help("Hashed password. If you provide the argument, the tools will verify the hash string for password you provide.")
+                        .long("hashed")
+                        .short("h")
+                ])
+        ])
+        .get_matches();
+
+    match matches.subcommand() {
+        ("server", Some(sub)) => {
+            let control = sub.value_of("CONTROL").unwrap();
+            match control {
+                "start" => start_server(),
+                _ => println!("Unknown control command: {}", control),
+            };
+        },
+        ("tools:password", Some(sub)) => {
+            let password = sub.value_of("password").unwrap();
+            match sub.value_of("hashed") {
+                Some(hashed) => if password_verify(password, hashed) {
+                    println!("Passed!");
+                } else {
+                    println!("Mismatching");
+                },
+                None => println!("Hashed: {}", password_hash(password).unwrap()),
+            };
+        },
+        _ => (),
+    };
 }
 
 fn start_server() {

@@ -90,7 +90,10 @@ fn main() {
 fn server_control(sub: &ArgMatches) {
     let control = sub.value_of("CONTROL").unwrap();
     match control {
-        "start" => start_server(),
+        "start" => {
+            println!("Start server");
+            start_server()
+        },
         _ => println!("Unknown control command: {}", control),
     };
 }

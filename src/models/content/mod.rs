@@ -21,8 +21,9 @@ pub enum ContentEntityDisplay {
 }
 
 #[derive(Clone, Deserialize)]
-#[serde(tag = "entity_type", content = "body", rename_all = "snake_case")]
+#[serde(tag = "entity_type", content = "body")]
 pub enum CreateContentEntity {
+    #[serde(rename = "article")]
     Article(CreateArticle),
 }
 
@@ -61,7 +62,7 @@ pub struct ContentBase {
 
 #[derive(Deserialize)]
 pub struct CreateContent {
-    pub creator_id: u32,
+    pub creator_id: Option<u32>,
     pub title: String,
     pub category_id: Option<u32>,
     pub keywords: Option<String>,
@@ -108,7 +109,7 @@ impl Content {
         };
 
         let new_content = NewContent {
-            creator_id: create.creator_id,
+            creator_id: create.creator_id.unwrap(),
             title: create.title,
             category_id: create.category_id,
             keywords: create.keywords.unwrap_or(String::from("")),

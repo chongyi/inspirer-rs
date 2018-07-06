@@ -5,6 +5,7 @@ use actix_web::{Error, ResponseError, HttpRequest, HttpResponse, HttpMessage, ht
 use actix_web::http::{StatusCode};
 use actix::MailboxError;
 use failure::{Fail, Backtrace};
+use dotenv;
 
 #[macro_export]
 macro_rules! error_handler {
@@ -101,8 +102,8 @@ pub enum ApplicationError {
 }
 
 impl From<Error> for ApplicationError {
-    fn from(_: Error) -> Self {
-        ApplicationError::SysLogicArgumentError()
+    fn from(err: Error) -> Self {
+        ApplicationError::SysRuntimeError(err)
     }
 }
 
@@ -126,15 +127,28 @@ impl From<MailboxError> for ApplicationError {
     }
 }
 
-#[derive(Fail, Debug, Serialize, Clone)]
+#[derive(Fail, Serialize, Clone)]
 pub enum ErrorDetail {
     String(String),
     Array(HashMap<String, ErrorDetail>),
+    List(Vec<String>),
 }
 
 impl fmt::Display for ErrorDetail {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl fmt::Debug for ErrorDetail {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let detail: String = match self {
+            ErrorDetail::String(s) => s.clone(),
+            ErrorDetail::Array(h) => format!("{:?}", h),
+            ErrorDetail::List(v) => v.join("\n"),
+        };
+
+        write!(f, "{}", detail)
     }
 }
 
@@ -165,7 +179,13 @@ impl Default for ErrorInformation {
 
 impl fmt::Display for ErrorInformation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "*Error*({}) {} \n{:?}", self.code, self.message, self.detail)
+        let detail: String = if let Some(ref dt) = self.detail {
+            format!("{}", dt)
+        } else {
+            String::from("No more information")
+        };
+
+        write!(f, "*Error*({}) {} \n{:?}", self.code, self.message, detail)
     }
 }
 
@@ -189,7 +209,13 @@ impl ResponseError for JsonResponseError {
             ErrorMessage::new(
                 self.info.code,
                 self.info.message.clone(),
-                Some(self.info.detail.clone())
+                {
+                    if dotenv::var("DEBUG").unwrap_or("false".to_string()).to_lowercase() == "true" {
+                        Some(self.info.detail.clone())
+                    } else {
+                        None
+                    }
+                }
             )
         )
     }
@@ -232,8 +258,19 @@ impl TextResponseError {
 
 impl ResponseError for TextResponseError {
     fn error_response(&self) -> HttpResponse {
+        let detail: String = if let Some(ref dt) = self.info.detail {
+            format!("{}", dt)
+        } else {
+            String::from("No more information")
+        };
+
         HttpResponse::build(self.info.status).body(
-            format!("<strong>Error</strong>({}) {}<br/>\n{:?}", self.info.code, self.info.message, self.info.detail)
+            format!(
+                "<p><strong>Error</strong>({}) {}</p>\n<p><pre>{}</pre></p>",
+                self.info.code,
+                self.info.message,
+                detail
+            )
         )
     }
 }
@@ -260,6 +297,20 @@ impl fmt::Display for TextResponseError
 }
 
 impl ApplicationError {
+    error_trigger_define!(SYS_RUNTIME_ERR, 10000, "Unknown runtime error.", StatusCode::INTERNAL_SERVER_ERROR);
     error_trigger_define!(ApplicationError::SystemRuntimeError, SYS_LOGIC_ARG_ERR, 10010, "Invalid argument.", StatusCode::INTERNAL_SERVER_ERROR, __, SysLogicArgumentError);
     error_trigger_define!(ApplicationError::SystemRuntimeError, SYS_INVALID_ARGUMENT_ERR, 10011, "Invalid argument.", StatusCode::BAD_REQUEST, __, SysInvalidArgumentError);
+
+    #[allow(non_snake_case)]
+    pub fn SysRuntimeError<T: fmt::Debug>(context: T) -> Self {
+        let detail = format!("{:?}", context);
+        let string_list = detail.split("\n").map(|x| x.to_string()).collect();
+
+        ApplicationError::SystemRuntimeError(ErrorInformation {
+            code: Self::SYS_RUNTIME_ERR.0,
+            message: Self::SYS_RUNTIME_ERR.1.into(),
+            status: Self::SYS_RUNTIME_ERR.2,
+            detail: Some(ErrorDetail::List(string_list)),
+        })
+    }
 }

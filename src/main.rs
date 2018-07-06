@@ -27,6 +27,7 @@ extern crate pwhash;
 #[macro_use]
 mod util;
 mod controllers;
+#[macro_use]
 mod database;
 mod state;
 mod models;
@@ -142,6 +143,7 @@ fn start_server() {
                             .route("/category/{id:\\d+}", Method::DELETE, admin::category::delete_category)
                             .route("/category/{id:\\d+}", Method::PUT, admin::category::update_category)
                             .route("/category/{id:\\d+}", Method::GET, admin::category::get_category)
+                            .route("/content", Method::POST, admin::content::create_content)
                     })
             })
     ).bind(server_bind).unwrap().start();

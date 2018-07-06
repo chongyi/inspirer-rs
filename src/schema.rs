@@ -15,7 +15,7 @@ table! {
         id -> Unsigned<Integer>,
         creator_id -> Unsigned<Integer>,
         title -> Varchar,
-        category_id -> Unsigned<Integer>,
+        category_id -> Nullable<Unsigned<Integer>>,
         keywords -> Varchar,
         description -> Varchar,
         sort -> Unsigned<Smallint>,

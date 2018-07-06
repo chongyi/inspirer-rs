@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `contents` (
     `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
     `creator_id` INT(11) UNSIGNED NOT NULL,
     `title` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `category_id` INT(11) UNSIGNED NOT NULL,
+    `category_id` INT(11) UNSIGNED DEFAULT NULL,
     `keywords` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
     `description` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
     `sort` SMALLINT(4) UNSIGNED NOT NULL DEFAULT '0',

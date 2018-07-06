@@ -12,6 +12,20 @@ pub type Conn = PooledConnection<ConnectionManager<MysqlConnection>>;
 
 no_arg_sql_function!(last_insert_id, sql_types::Unsigned<sql_types::BigInt>);
 
+#[macro_export]
+macro_rules! last_insert_id {
+    ($conn:expr, $table:expr) => {
+        {
+            use database::last_insert_id as lastid;
+            let generated_id: u64 = diesel::select(lastid)
+                .first($conn)
+                .map_err(map_database_error!($table))?;
+
+            generated_id
+        }
+    };
+}
+
 impl Actor for DatabaseExecutor {
     type Context = SyncContext<Self>;
 }

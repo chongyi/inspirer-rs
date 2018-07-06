@@ -7,7 +7,7 @@ use actix_web::http::header::Header;
 use actix_web::middleware::Response;
 use actix_web::middleware::session::{SessionBackend, SessionImpl};
 use actix_web_httpauth::headers::authorization::{Authorization as ActixAuthorization, Bearer};
-use djangohashers::check_password;
+use pwhash::bcrypt::verify as password_verify;
 use futures::future::{ok as FutOk, FutureResult};
 use biscuit::*;
 use biscuit::Empty as JWTEmpty;
@@ -91,10 +91,10 @@ impl Authenticate for Authentication<Email> {
             return false;
         }
 
-        check_password(
+        password_verify(
             self.authentication.password.as_str(),
             result.password.unwrap().as_str()
-        ).unwrap_or(false)
+        )
     }
 
     fn validate(&self, connection: &Connection) -> AuthenticateResult {

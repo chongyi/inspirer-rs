@@ -8,6 +8,8 @@ extern crate tera;
 extern crate failure;
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate lazy_static;
 
 extern crate serde;
 extern crate serde_json;
@@ -43,9 +45,18 @@ use diesel::r2d2::{Pool, ConnectionManager};
 use diesel::sql_query;
 use clap::{Arg, App as CommandApp, SubCommand, ArgMatches};
 use pwhash::bcrypt::{hash as password_hash, verify as password_verify};
+use tera::Tera;
 
 use controllers::admin;
 use middlewares::authenticate::Authenticate as MAuthenticate;
+
+lazy_static! {
+    pub static ref TEMPLATES: Tera = {
+        let mut tera = compile_templates!("res/templates/**/*");
+        tera.autoescape_on(vec!["html", ".sql"]);
+        tera
+    };
+}
 
 fn main() {
     let matches = CommandApp::new("Inspirer")

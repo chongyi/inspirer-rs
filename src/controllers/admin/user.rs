@@ -10,10 +10,7 @@ pub fn get_current_user_info(req: HttpRequest<AppState>) -> FutureResponse<HttpR
     let claims = req.session().get::<PrivateClaims>("claims").unwrap().unwrap();
 
     req.state().database
-        .send(FindUser {
-            id: Some(claims.uid),
-            email: None,
-        })
+        .send(FindUser::Id(claims.uid))
         .from_err()
         .and_then(|res| {
             match res {

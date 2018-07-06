@@ -63,9 +63,9 @@ impl User {
     }
 }
 
-pub struct FindUser {
-    pub id: Option<u32>,
-    pub email: Option<String>,
+pub enum FindUser {
+    Id(u32),
+    Email(String),
 }
 
 impl Message for FindUser {
@@ -76,12 +76,9 @@ impl Handler<FindUser> for DatabaseExecutor {
     type Result = Result<UserDisplay, Error>;
 
     fn handle(&mut self, condition: FindUser, _: &mut Self::Context) -> Self::Result {
-        if let Some(id) = condition.id {
-            User::find_user_by_id(&self.connection()?, id)
-        } else if let Some(email) = condition.email {
-            User::find_user_by_email(&self.connection()?, email)
-        } else {
-            Err(Error::SysLogicArgumentError())
+        match condition {
+            FindUser::Id(id) => User::find_user_by_id(&self.connection()?, id),
+            FindUser::Email(email) => User::find_user_by_email(&self.connection()?, email),
         }
     }
 }

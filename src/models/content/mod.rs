@@ -20,7 +20,7 @@ pub enum ContentEntityDisplay {
     Article(ArticleDisplay),
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 #[serde(tag = "entity_type", content = "body")]
 pub enum CreateContentEntity {
     #[serde(rename = "article")]
@@ -60,7 +60,7 @@ pub struct ContentBase {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct CreateContent {
     pub creator_id: Option<u32>,
     pub title: String,

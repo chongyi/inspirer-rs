@@ -18,7 +18,7 @@ struct AuthorizationResult {
 
 pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let origin = req.clone();
-    Form::<Authentication>::extract(&req).from_err().and_then(move |r| {
+    Json::<Authentication>::extract(&req).from_err().and_then(move |r| {
         let auth = Email {
             email: r.email.clone(),
             password: r.password.clone(),

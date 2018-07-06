@@ -37,7 +37,7 @@ pub fn get_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> 
 
 pub fn create_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let origin = req.clone();
-    Form::<CreateCategory>::extract(&req).from_err().and_then(move |res| {
+    Json::<CreateCategory>::extract(&req).from_err().and_then(move |res| {
         req.state().database.send(NewCategory::from(res.into_inner())).from_err()
     }).and_then(|res| {
         Ok(HttpResponse::Ok().json(CreatedObjectIdMessage {
@@ -69,7 +69,7 @@ pub fn update_category(req: HttpRequest<AppState>) -> FutureResponse<HttpRespons
     let extract = req.clone();
     let origin = req.clone();
 
-    Form::<UpdateCategory>::extract(&req).from_err().and_then(move |update| {
+    Json::<UpdateCategory>::extract(&req).from_err().and_then(move |update| {
         let match_info = match extract.match_info().get("id") {
             Some(s) => Ok(s.parse::<u32>().unwrap()),
             None => Err(ApplicationError::SysInvalidArgumentError())

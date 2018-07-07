@@ -4,7 +4,7 @@ use actix_web::*;
 use state::AppState;
 use util::message::{Pagination, CreatedObjectIdMessage, DeletedObjectMessage, UpdateByID};
 use util::helper::get_paginate_params;
-use util::error::ApplicationError;
+use util::error::{error_handler, ApplicationError};
 use models::category::{GetCategoryList, CreateCategory, NewCategory, DeleteCategory, UpdateCategory, FindCategory};
 
 pub fn get_category_list(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
@@ -15,7 +15,7 @@ pub fn get_category_list(req: HttpRequest<AppState>) -> FutureResponse<HttpRespo
 
     req.state().database.send(message).from_err().and_then(|res| {
         Ok(HttpResponse::Ok().json(res?))
-    }).map_err(error_handler!(req)).responder()
+    }).map_err(error_handler(req)).responder()
 }
 
 pub fn get_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
@@ -32,7 +32,7 @@ pub fn get_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> 
         })
         .and_then(|res| {
             Ok(HttpResponse::Ok().json(res?))
-        }).map_err(error_handler!(origin)).responder()
+        }).map_err(error_handler(origin)).responder()
 }
 
 pub fn create_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
@@ -43,7 +43,7 @@ pub fn create_category(req: HttpRequest<AppState>) -> FutureResponse<HttpRespons
         Ok(HttpResponse::Ok().json(CreatedObjectIdMessage {
             id: res?
         }))
-    }).map_err(error_handler!(origin)).responder()
+    }).map_err(error_handler(origin)).responder()
 }
 
 pub fn delete_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
@@ -62,7 +62,7 @@ pub fn delete_category(req: HttpRequest<AppState>) -> FutureResponse<HttpRespons
             Ok(HttpResponse::Ok().json(DeletedObjectMessage {
                 count: res?
             }))
-        }).map_err(error_handler!(origin)).responder()
+        }).map_err(error_handler(origin)).responder()
 }
 
 pub fn update_category(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
@@ -85,5 +85,5 @@ pub fn update_category(req: HttpRequest<AppState>) -> FutureResponse<HttpRespons
             })
     }).and_then(|res| {
         Ok(HttpResponse::Ok().json(res?))
-    }).map_err(error_handler!(origin)).responder()
+    }).map_err(error_handler(origin)).responder()
 }

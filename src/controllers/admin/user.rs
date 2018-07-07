@@ -4,6 +4,7 @@ use futures::Future;
 
 use state::AppState;
 use util::auth::PrivateClaims;
+use util::error::error_handler;
 use models::user::FindUser;
 
 pub fn get_current_user_info(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
@@ -18,6 +19,6 @@ pub fn get_current_user_info(req: HttpRequest<AppState>) -> FutureResponse<HttpR
                 Err(e) => Err(e),
             }
         })
-        .map_err(error_handler!(req))
+        .map_err(error_handler(req))
         .responder()
 }

@@ -7,26 +7,18 @@ use actix_web::http::StatusCode;
 
 use super::{ApplicationError, ErrorInformation};
 
-#[macro_export]
-macro_rules! map_database_error {
-    ($target:expr) => {
-        |err| {
-            use util::error::ApplicationError as IAppErr;
-            use diesel::result::{
-                Error as IDieselError,
-                DatabaseErrorKind as IDieselDatabaseErrorKind,
-            };
-            let t = $target.into();
-            match err {
-                IDieselError::NotFound => IAppErr::DbNotFound(t),
-                IDieselError::DatabaseError(kind, info) => match kind {
-                    IDieselDatabaseErrorKind::UniqueViolation => IAppErr::DbConflict(t, kind),
-                    _ => IAppErr::DbError(t, kind),
-                },
-                _ => IAppErr::DbUnknownError(),
-            }
+pub fn map_database_error(table: &'static str) -> impl FnOnce(DieselError) -> ApplicationError {
+    move |err| {
+        let t = table.into();
+        match err {
+            DieselError::NotFound => ApplicationError::DbNotFound(t),
+            DieselError::DatabaseError(kind, info) => match kind {
+                DieselDatabaseErrorKind::UniqueViolation => ApplicationError::DbConflict(t, kind),
+                _ => ApplicationError::DbError(t, kind),
+            },
+            _ => ApplicationError::DbUnknownError(),
         }
-    };
+    }
 }
 
 pub enum DatabaseErrorKind {

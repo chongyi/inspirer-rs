@@ -8,7 +8,7 @@ use actix_web::*;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
 use util::message::CreatedObjectIdMessage;
-use util::error::ApplicationError as Error;
+use util::error::{ApplicationError as Error, database::map_database_error};
 use self::article::{ArticleDisplay, CreateArticle, NewArticle};
 use schema::contents;
 
@@ -100,7 +100,7 @@ impl Content {
                 diesel::insert_into(content_articles)
                     .values(new_article)
                     .execute(connection)
-                    .map_err(map_database_error!("content_articles"))?;
+                    .map_err(map_database_error("content_articles"))?;
 
                 let generated_id: u64 = last_insert_id!(connection, "content_articles");
 
@@ -125,7 +125,7 @@ impl Content {
             diesel::insert_into(contents)
                 .values(new_content)
                 .execute(connection)
-                .map_err(map_database_error!("contents"))?;
+                .map_err(map_database_error("contents"))?;
 
             let generated_id: u64 = last_insert_id!(connection, "contents");
 

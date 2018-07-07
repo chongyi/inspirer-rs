@@ -3,6 +3,7 @@ use futures::Future;
 
 use state::AppState;
 use util::auth::{Authentication as Auth, PrivateClaims, Email};
+use util::error::error_handler;
 
 #[derive(Deserialize)]
 pub struct Authentication {
@@ -45,6 +46,6 @@ pub fn authorization(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse>
             Err(e) => Err(e),
         }
 
-    }).map_err(error_handler!(origin)).responder()
+    }).map_err(error_handler(origin)).responder()
 
 }

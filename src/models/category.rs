@@ -6,7 +6,7 @@ use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
 use util::message::{PaginatedListMessage, Pagination, UpdateByID};
-use util::error::ApplicationError as Error;
+use util::error::{ApplicationError as Error, database::map_database_error};
 use schema::categories;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
@@ -85,7 +85,7 @@ impl Category {
             categories
                 .filter(id.eq(category_id))
                 .first::<CategoryDisplay>(connection)
-                .map_err(map_database_error!("categories"))?
+                .map_err(map_database_error("categories"))?
         )
     }
 
@@ -96,7 +96,7 @@ impl Category {
             categories
                 .filter(name.eq(category_name))
                 .first::<CategoryDisplay>(connection)
-                .map_err(map_database_error!("categories"))?
+                .map_err(map_database_error("categories"))?
         )
     }
 
@@ -106,11 +106,11 @@ impl Category {
         diesel::insert_into(categories)
             .values(category)
             .execute(connection)
-            .map_err(map_database_error!("categories"))?;
+            .map_err(map_database_error("categories"))?;
 
         let generated_id: u64 = diesel::select(last_insert_id)
             .first(connection)
-            .map_err(map_database_error!("categories"))?;
+            .map_err(map_database_error("categories"))?;
 
         Ok(generated_id)
     }
@@ -121,7 +121,7 @@ impl Category {
         let count = diesel::delete(categories)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(map_database_error!("categories"))?;
+            .map_err(map_database_error("categories"))?;
 
         Ok(count as u32)
     }
@@ -133,7 +133,7 @@ impl Category {
             .set(&update)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(map_database_error!("categories"))?;
+            .map_err(map_database_error("categories"))?;
 
         if (count as u32) > 0 {
             Ok(Self::find_category_by_id(connection, category_id).ok())

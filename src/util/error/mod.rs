@@ -7,34 +7,22 @@ use actix::MailboxError;
 use failure::{Fail, Backtrace};
 use dotenv;
 
-#[macro_export]
-macro_rules! error_handler {
-    ($r:ident) => {
-        {
-            use actix_web::Error as IAErr;
-            use util::error::{
-                ApplicationError as IAppErr,
-                JsonResponseError as JsonErr,
-                TextResponseError as TextErr,
-                RenderType as RType
-            };
-            let rt: RType = $r.into();
-            let handler = move |err: IAppErr| -> IAErr {
-                let info = match err {
-                    IAppErr::SystemRuntimeError(info) => info,
-                    IAppErr::AuthenticationError(info) => info,
-                    IAppErr::DatabaseError(_, info) => info,
-                };
+pub fn error_handler<T>(r: T) -> impl FnOnce(ApplicationError) -> Error
+    where T: Into<RenderType>
+{
+    let rt: RenderType = r.into();
+    move |err: ApplicationError| -> Error {
+        let info = match err {
+            ApplicationError::SystemRuntimeError(info) => info,
+            ApplicationError::AuthenticationError(info) => info,
+            ApplicationError::DatabaseError(_, info) => info,
+        };
 
-                match rt {
-                    RType::Json => JsonErr::new(info).into(),
-                    RType::Text => TextErr::new(info).into(),
-                }
-            };
-
-            handler
+        match rt {
+            RenderType::Json => JsonResponseError::new(info).into(),
+            RenderType::Text => TextResponseError::new(info).into(),
         }
-    };
+    }
 }
 
 #[macro_export]

@@ -4,7 +4,7 @@ use diesel::*;
 use chrono::NaiveDateTime;
 
 use database::{DatabaseExecutor, Conn};
-use util::error::ApplicationError as Error;
+use util::error::{ApplicationError as Error, database::map_database_error};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct AuthenticationUser {
@@ -34,7 +34,7 @@ impl User {
                 .select((id, name, email, password))
                 .filter(email.eq(r))
                 .first::<AuthenticationUser>(conn)
-                .map_err(map_database_error!("users"))?
+                .map_err(map_database_error("users"))?
         )
     }
 
@@ -46,7 +46,7 @@ impl User {
                 .select((id, name, email, created_at, updated_at))
                 .filter(id.eq(c))
                 .first::<UserDisplay>(conn)
-                .map_err(map_database_error!("users"))?
+                .map_err(map_database_error("users"))?
         )
     }
 
@@ -58,7 +58,7 @@ impl User {
                 .select((id, name, email, created_at, updated_at))
                 .filter(email.eq(c))
                 .first::<UserDisplay>(conn)
-                .map_err(map_database_error!("users"))?
+                .map_err(map_database_error("users"))?
         )
     }
 }

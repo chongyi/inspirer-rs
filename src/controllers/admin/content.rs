@@ -3,7 +3,7 @@ use actix_web::middleware::session::RequestSession;
 use futures::future::{IntoFuture, Future, ok as FutOk, err as FutErr};
 
 use state::AppState;
-use util::error::ApplicationError;
+use util::error::{error_handler, ApplicationError};
 use util::message::CreatedObjectIdMessage;
 use models::content::CreateContent;
 use util::auth::PrivateClaims;
@@ -31,6 +31,6 @@ pub fn create_content(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse
         .and_then(|res| {
             Ok(HttpResponse::Ok().json(CreatedObjectIdMessage { id: res? }))
         })
-        .map_err(error_handler!(origin))
+        .map_err(error_handler(origin))
         .responder()
 }

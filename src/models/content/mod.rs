@@ -113,7 +113,7 @@ impl Content {
                         .set(content_id.eq(cid))
                         .filter(id.eq(generated_id))
                         .execute(conn)
-                        .map_err(map_database_error!("content_articles"))?
+                        .map_err(map_database_error("content_articles"))?
                     )
                 })
             }

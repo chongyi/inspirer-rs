@@ -13,7 +13,7 @@ pub struct ArticleDisplay {
     pub modified_at: Option<NaiveDateTime>,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct CreateArticle {
     pub content: String,
     pub name: Option<String>,

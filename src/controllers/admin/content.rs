@@ -12,7 +12,7 @@ use util::helper::get_paginate_params;
 pub fn create_content(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let origin = req.clone();
     let claims = req.session().get::<PrivateClaims>("claims").unwrap().unwrap();
-    Form::<CreateContent>::extract(&req).from_err()
+    Json::<CreateContent>::extract(&req).from_err()
         .and_then(move |res| {
             let mut data = res.into_inner();
 

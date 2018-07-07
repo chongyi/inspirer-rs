@@ -6,6 +6,9 @@ use actix_web::http::{StatusCode};
 use actix::MailboxError;
 use failure::{Fail, Backtrace};
 use dotenv;
+use tera::{Tera, Context};
+
+use TEMPLATES;
 
 pub fn error_handler<T>(r: T) -> impl FnOnce(ApplicationError) -> Error
     where T: Into<RenderType>
@@ -252,14 +255,22 @@ impl ResponseError for TextResponseError {
             String::from("No more information")
         };
 
-        HttpResponse::build(self.info.status).body(
-            format!(
+        let mut context = Context::new();
+        context.add("code", &self.info.code);
+        context.add("message", &self.info.message);
+        context.add("detail", &detail);
+
+        let rendered = match TEMPLATES.render("error.html", &context) {
+            Ok(r) => r,
+            Err(_) => format!(
                 "<p><strong>Error</strong>({}) {}</p>\n<p><pre>{}</pre></p>",
                 self.info.code,
                 self.info.message,
                 detail
             )
-        )
+        };
+
+        HttpResponse::build(self.info.status).body(rendered)
     }
 }
 

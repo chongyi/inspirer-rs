@@ -20,7 +20,7 @@ pub enum ContentEntityDisplay {
     Article(ArticleDisplay),
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 #[serde(tag = "entity_type", content = "body")]
 pub enum CreateContentEntity {
     #[serde(rename = "article")]
@@ -61,7 +61,7 @@ pub struct ContentBase {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct CreateContent {
     pub creator_id: Option<u32>,
     pub title: String,
@@ -96,7 +96,7 @@ impl Content {
     pub const CONTENT_TYPE_ARTICLE: u16 = 1;
 
     pub fn create_content(connection: &Conn, create: CreateContent) -> Result<u64, Error> {
-        let (id, description) = match create.entity.clone() {
+        let (id, description, refresh_id) = match create.entity.clone() {
             CreateContentEntity::Article(article) => {
                 use schema::content_articles::dsl::*;
                 let new_article: NewArticle = article.clone().into();
@@ -105,9 +105,17 @@ impl Content {
                     .execute(connection)
                     .map_err(map_database_error("content_articles"))?;
 
-                let generated_id: u64 = last_insert_id!(connection, "content_articles");
+                let generated_id = last_insert_id!(connection, "content_articles") as u32;
 
-                (generated_id, article.description())
+                (generated_id, article.description(), move |cid: u32, conn: &Conn| -> Result<_, Error> {
+                    Ok(
+                        diesel::update(content_articles)
+                        .set(content_id.eq(cid))
+                        .filter(id.eq(generated_id))
+                        .execute(conn)
+                        .map_err(map_database_error!("content_articles"))?
+                    )
+                })
             }
         };
 
@@ -119,7 +127,7 @@ impl Content {
             description: create.description.unwrap_or(String::from("")),
             sort: create.sort,
             display: create.display,
-            content_id: id as u32,
+            content_id: id,
             content_type: create.entity.into(),
         };
 
@@ -131,6 +139,7 @@ impl Content {
                 .map_err(map_database_error("contents"))?;
 
             let generated_id: u64 = last_insert_id!(connection, "contents");
+            refresh_id(generated_id as u32, connection)?;
 
             Ok(generated_id)
         }

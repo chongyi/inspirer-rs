@@ -2,9 +2,13 @@ use chrono::NaiveDateTime;
 use diesel;
 use diesel::*;
 
-use super::GetDescription;
+use super::{GetDescription, ContentRelate};
 use schema::content_articles;
+use database::Conn;
+use models::content::{UpdateContentEntity, ContentEntityDisplay};
+use util::error::{ApplicationError as Error, database::map_database_error};
 
+#[derive(Serialize, Queryable)]
 pub struct ArticleDisplay {
     pub id: u32,
     pub content: String,
@@ -31,6 +35,13 @@ impl GetDescription for CreateArticle {
     }
 }
 
+#[derive(Deserialize, Clone, Debug, AsChangeset)]
+#[table_name = "content_articles"]
+pub struct UpdateArticle {
+    pub content: Option<String>,
+    pub name: Option<String>,
+}
+
 #[derive(Insertable)]
 #[table_name = "content_articles"]
 pub struct NewArticle {
@@ -44,5 +55,34 @@ impl From<CreateArticle> for NewArticle {
             content: create.content.clone(),
             name: create.name.clone(),
         }
+    }
+}
+
+pub struct Article;
+
+impl ContentRelate for Article {
+    fn delete_by_content_id(connection: &Conn, content_id: u32) -> bool {
+        use schema::content_articles::dsl::*;
+
+        let res = delete_by_id!(content_articles, "content_articles", connection, content_id, content_id);
+        match res {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
+    fn update_by_id(connection: &Conn, entity_id: u32, update: UpdateContentEntity) -> Result<ContentEntityDisplay, Error> {
+        use schema::content_articles::dsl::*;
+
+        let r = (match update {
+            UpdateContentEntity::Article(r) => Some(r),
+            _ => None,
+        }).unwrap();
+
+        let count = update_by_id!(content_articles, "content_articles", connection, entity_id, &r)?;
+
+        Ok(ContentEntityDisplay::Article(
+            find_by_id!(ArticleDisplay, content_articles, "content_articles", connection, (id, content, name, views, modified_at), entity_id)?
+        ))
     }
 }

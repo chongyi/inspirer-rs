@@ -7,7 +7,7 @@ use actix::*;
 use actix_web::*;
 
 use database::{DatabaseExecutor, Conn, last_insert_id};
-use util::message::CreatedObjectIdMessage;
+use util::message::{CreatedObjectIdMessage, PaginatedListMessage, Pagination};
 use util::error::{ApplicationError as Error, database::map_database_error};
 use self::article::{ArticleDisplay, CreateArticle, NewArticle};
 use schema::contents;
@@ -48,6 +48,7 @@ pub struct ContentDisplay {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Debug, Clone, Serialize, Queryable)]
 pub struct ContentBase {
     pub id: u32,
     pub creator_id: u32,
@@ -86,6 +87,8 @@ pub struct NewContent {
     pub content_type: u16,
     pub content_id: u32,
 }
+
+pub type PaginatedContentList = Result<PaginatedListMessage<ContentBase>, Error>;
 
 pub struct Content;
 
@@ -132,6 +135,31 @@ impl Content {
             Ok(generated_id)
         }
     }
+
+    pub fn get_content_list(connection: &Conn, c: Pagination<GetContentList>) -> PaginatedContentList {
+        use schema::contents::dsl::*;
+
+        let paginator = paginator!(connection, (id, creator_id, title, sort, category_id, content_id, content_type, created_at, updated_at), c, ContentBase, {
+            let mut query = contents.into_boxed();
+            if let Some(filter) = c.clone().filter {
+                if let Some(v) = filter.search {
+                    query = query.filter(
+                            title.like(format!("%{}%", v))
+                                .or(keywords.like(format!("%{}%", v)))
+                                .or(description.like(format!("%{}%", v)))
+                        );
+                }
+
+                if let Some(t) = filter.content_type {
+                    query = query.filter(content_type.eq(t));
+                }
+            }
+
+            query.order((sort.desc(), created_at.desc(), id.desc()))
+        });
+
+        paginator()
+    }
 }
 
 impl Message for CreateContent {
@@ -143,5 +171,23 @@ impl Handler<CreateContent> for DatabaseExecutor {
 
     fn handle(&mut self, msg: CreateContent, _: &mut Self::Context) -> Self::Result {
         Content::create_content(&self.connection()?, msg)
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct GetContentList {
+    pub search: Option<String>,
+    pub content_type: Option<u16>,
+}
+
+impl Message for Pagination<GetContentList> {
+    type Result = PaginatedContentList;
+}
+
+impl Handler<Pagination<GetContentList>> for DatabaseExecutor {
+    type Result = PaginatedContentList;
+
+    fn handle(&mut self, condition: Pagination<GetContentList>, _: &mut Self::Context) -> Self::Result {
+        Content::get_content_list(&self.connection()?, condition)
     }
 }

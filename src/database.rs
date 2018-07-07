@@ -17,9 +17,10 @@ macro_rules! last_insert_id {
     ($conn:expr, $table:expr) => {
         {
             use database::last_insert_id as lastid;
+            use util::error::database::map_database_error as map_db_err;
             let generated_id: u64 = diesel::select(lastid)
                 .first($conn)
-                .map_err(map_database_error!($table))?;
+                .map_err(map_db_err($table))?;
 
             generated_id
         }

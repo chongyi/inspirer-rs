@@ -4,9 +4,10 @@ use futures::future::{IntoFuture, Future, ok as FutOk, err as FutErr};
 
 use state::AppState;
 use util::error::{error_handler, ApplicationError};
-use util::message::CreatedObjectIdMessage;
-use models::content::CreateContent;
+use util::message::{Pagination, CreatedObjectIdMessage};
+use models::content::{CreateContent, GetContentList};
 use util::auth::PrivateClaims;
+use util::helper::get_paginate_params;
 
 pub fn create_content(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let origin = req.clone();
@@ -30,6 +31,20 @@ pub fn create_content(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse
         })
         .and_then(|res| {
             Ok(HttpResponse::Ok().json(CreatedObjectIdMessage { id: res? }))
+        })
+        .map_err(error_handler(origin))
+        .responder()
+}
+
+pub fn get_content_list(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let origin = req.clone();
+    Query::<GetContentList>::extract(&req).into_future().from_err()
+        .and_then(move |res| {
+            let (page, per_page) = get_paginate_params(&req);
+            req.state().database.send(Pagination::new(page, per_page, Some(res.into_inner()))).from_err()
+        })
+        .and_then(|res| {
+            Ok(HttpResponse::Ok().json(res?))
         })
         .map_err(error_handler(origin))
         .responder()

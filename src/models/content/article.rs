@@ -64,7 +64,11 @@ impl ContentRelate for Article {
     fn delete_by_content_id(connection: &Conn, content_id: u32) -> bool {
         use schema::content_articles::dsl::*;
 
-        let res = delete_by_id!(content_articles, "content_articles", connection, content_id, content_id);
+        let res = delete_by_id!(
+            connection => (
+                content_articles content_id = content_id
+            )
+        );
         match res {
             Ok(_) => true,
             Err(_) => false,
@@ -79,15 +83,20 @@ impl ContentRelate for Article {
             _ => None,
         }).unwrap();
 
-        let count = update_by_id!(content_articles, "content_articles", connection, entity_id, &r)?;
+        let count = update_by_id!(
+            connection => (
+                content_articles # = entity_id; <- &r
+            )
+        )?;
 
         Ok(ContentEntityDisplay::Article(
             find_by_id!(
-                connection =>
+                connection => (
                     content_articles(
                         (id, content, name, views, modified_at)
                     ) # = entity_id => ArticleDisplay
-                )?
+                )
+            )?
         ))
     }
 }

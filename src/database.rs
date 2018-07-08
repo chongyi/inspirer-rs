@@ -29,33 +29,33 @@ macro_rules! last_insert_id {
 
 #[macro_export]
 macro_rules! delete_by_id {
-    ($table:ident, $table_name:expr, $conn:expr, $id:expr) => {
-        delete_by_id!($table:ident, $table_name:expr, $conn:expr, $id:expr, id)
+    ($conn:expr => ($table:ident # = $id:expr)) => {
+        delete_by_id!($conn => ($table id = $id))
     };
-    ($table:ident, $table_name:expr, $conn:expr, $id:expr, $id_field:ident) => {
+    ($conn:expr => ($table:ident $id_field:ident = $id:expr)) => {
         {
             use util::error::database::map_database_error as map_db_err;
             diesel::delete($table)
                 .filter($id_field.eq($id))
                 .execute($conn)
-                .map_err(map_db_err($table_name))
+                .map_err(map_db_err(stringify!($table)))
         }
     };
 }
 
 #[macro_export]
 macro_rules! find_by_id {
-    ($conn:expr => $table:ident # = $id:expr => $ty:ty) => {
-        find_by_id!($conn => $table id = $id => $ty)
+    ($conn:expr => ($table:ident # = $id:expr => $ty:ty)) => {
+        find_by_id!($conn => ($table id = $id => $ty))
     };
-    ($conn:expr => $table:ident $id_fields:ident = $id:expr => $ty:ty) => {
+    ($conn:expr => ($table:ident $id_fields:ident = $id:expr => $ty:ty)) => {
         use schema::$table::all_columns as $table_all_fields;
-        find_by_id!($conn => $table($table_all_fields) id_fields = $id => $ty)
+        find_by_id!($conn => ($table($table_all_fields) id_fields = $id => $ty))
     };
-    ($conn:expr => $table:ident($fields:expr) # = $id:expr => $ty:ty) => {
-        find_by_id!($conn => $table($fields) id = $id => $ty)
+    ($conn:expr => ($table:ident($fields:expr) # = $id:expr => $ty:ty)) => {
+        find_by_id!($conn => ($table($fields) id = $id => $ty))
     };
-    ($conn:expr => $table:ident($fields:expr) $id_field:ident = $id:expr => $ty:ty) => {
+    ($conn:expr => ($table:ident($fields:expr) $id_field:ident = $id:expr => $ty:ty)) => {
         {
             use util::error::database::map_database_error as map_db_err;
             $table
@@ -64,22 +64,22 @@ macro_rules! find_by_id {
                 .first::<$ty>($conn)
                 .map_err(map_db_err(stringify!($table)))
         }
-    }
+    };
 }
 
 #[macro_export]
 macro_rules! update_by_id {
-    ($table:ident, $table_name:expr, $conn:expr, $id:expr, $update:expr) => {
-        update_by_id!($table, $table_name, $conn, $id, id, $update)
+    ($conn:expr => ($table:ident # = $id:expr; <- $update:expr)) => {
+        update_by_id!($conn => ($table id = $id; <- $update))
     };
-    ($table:ident, $table_name:expr, $conn:expr, $id:expr, $id_field:ident, $update:expr) => {
+    ($conn:expr => ($table:ident $id_field:ident = $id:expr; <- $update:expr)) => {
         {
             use util::error::database::map_database_error as map_db_err;
             diesel::update($table)
                 .set($update)
                 .filter($id_field.eq($id))
                 .execute($conn)
-                .map_err(map_db_err($table_name))
+                .map_err(map_db_err(stringify!($table)))
         }
     };
 }

@@ -218,6 +218,12 @@ impl Content {
             };
         }
 
+        delete_by_id!(
+            connection => (
+                contents # = cid
+            )
+        );
+
         Ok(cid)
     }
 
@@ -244,8 +250,18 @@ impl Content {
 
         let updated_content: ContentDisplay = {
             use schema::contents::dsl::*;
-            update_by_id!(contents, "contents", connection, cid, &update_content)?;
-            find_by_id!(ContentDisplay, contents, "contents", connection, (id, creator_id, title, keywords, description, sort, display, category_id, created_at, updated_at), cid)?
+            update_by_id!(
+                connection => (
+                    contents # = cid; <- &update_content
+                )
+            )?;
+            find_by_id!(
+                connection => (
+                    contents(
+                        (id, creator_id, title, keywords, description, sort, display, category_id, created_at, updated_at)
+                    ) # = cid => ContentDisplay
+                )
+            )?
         };
 
         Ok(

@@ -34,6 +34,7 @@ mod state;
 mod models;
 mod schema;
 mod middlewares;
+mod routes;
 
 use actix::*;
 use actix_web::*;
@@ -49,6 +50,7 @@ use tera::Tera;
 
 use controllers::admin;
 use middlewares::authenticate::Authenticate as MAuthenticate;
+use routes::admin::admin_routes;
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
@@ -145,21 +147,7 @@ fn start_server() {
     server::HttpServer::new(
         move || App::with_state(state::AppState { database: addr.clone() })
             .middleware(SessionStorage::new(JWTSessionBackend))
-            .scope("/api.admin", |scope| {
-                scope
-                    .route("/authentication", Method::POST, admin::authorization::authorization)
-                    .nested("", |scope| {
-                        scope.middleware(MAuthenticate)
-                            .route("/session/current-user", Method::GET, admin::user::get_current_user_info)
-                            .route("/category", Method::GET, admin::category::get_category_list)
-                            .route("/category", Method::POST, admin::category::create_category)
-                            .route("/category/{id:\\d+}", Method::DELETE, admin::category::delete_category)
-                            .route("/category/{id:\\d+}", Method::PUT, admin::category::update_category)
-                            .route("/category/{id:\\d+}", Method::GET, admin::category::get_category)
-                            .route("/content", Method::POST, admin::content::create_content)
-                            .route("/content", Method::GET, admin::content::get_content_list)
-                    })
-            })
+            .scope("/api.admin", admin_routes)
     ).bind(server_bind).unwrap().start();
 
     let _ = sys.run();

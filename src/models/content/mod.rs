@@ -17,6 +17,7 @@ pub trait GetDescription {
 }
 
 pub trait ContentRelate {
+    fn find_by_id(connection: &Conn, entity_id: u32) -> Result<ContentEntityDisplay, Error>;
     fn delete_by_content_id(connection: &Conn, content_id: u32) -> bool;
     fn update_by_id(connection: &Conn, entity_id: u32, update: UpdateContentEntity) -> Result<ContentEntityDisplay, Error>;
 }
@@ -92,6 +93,22 @@ pub struct ContentBase {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Debug, Clone, Serialize, Queryable)]
+pub struct ContentFull {
+    pub id: u32,
+    pub creator_id: u32,
+    pub title: String,
+    pub category_id: Option<u32>,
+    pub keywords: String,
+    pub description: String,
+    pub sort: u16,
+    pub display: bool,
+    pub content_type: u16,
+    pub content_id: u32,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateContent {
     pub creator_id: Option<u32>,
@@ -142,10 +159,10 @@ impl Content {
                 (generated_id, article.description(), move |cid: u32, conn: &Conn| -> Result<_, Error> {
                     Ok(
                         diesel::update(content_articles)
-                        .set(content_id.eq(cid))
-                        .filter(id.eq(generated_id))
-                        .execute(conn)
-                        .map_err(map_database_error("content_articles"))?
+                            .set(content_id.eq(cid))
+                            .filter(id.eq(generated_id))
+                            .execute(conn)
+                            .map_err(map_database_error("content_articles"))?
                     )
                 })
             }
@@ -202,6 +219,37 @@ impl Content {
         paginator()
     }
 
+    pub fn find_content_by_id(connection: &Conn, id: u32) -> Result<ContentFullDisplay, Error> {
+        use schema::contents::dsl::*;
+
+        let content: ContentFull = find_by_id!(
+            connection => (
+                contents # = id => ContentFull
+            )
+        )?;
+
+        let entity = match content.content_type {
+            Self::CONTENT_TYPE_ARTICLE => Article::find_by_id(connection, content.content_id)?,
+            _ => return Err(Error::SysLogicArgumentError()),
+        };
+
+        Ok(
+            ContentFullDisplay {
+                id: content.id,
+                title: content.title.clone(),
+                creator_id: content.creator_id,
+                category_id: content.category_id,
+                keywords: content.keywords.clone(),
+                description: content.description.clone(),
+                sort: content.sort,
+                display: content.display,
+                entity,
+                created_at: content.created_at,
+                updated_at: content.updated_at,
+            }
+        )
+    }
+
     pub fn delete_content(connection: &Conn, cid: u32) -> Result<u32, Error> {
         use schema::contents::dsl::*;
 
@@ -244,7 +292,7 @@ impl Content {
                 match entity {
                     UpdateContentEntity::Article(_) => Article::update_by_id(connection, target.content_id, entity.clone())
                 }
-            },
+            }
             None => Err(Error::SysLogicArgumentError()),
         }?;
 
@@ -331,7 +379,7 @@ pub struct PreUpdateContent {
 }
 
 #[derive(AsChangeset)]
-#[table_name="contents"]
+#[table_name = "contents"]
 pub struct UpdateContent {
     pub title: Option<String>,
     pub category_id: Option<u32>,
@@ -366,7 +414,7 @@ impl Handler<UpdateByID<PreUpdateContent>> for DatabaseExecutor {
     }
 }
 
-pub struct DeleteContent (pub u32);
+pub struct DeleteContent(pub u32);
 
 impl Message for DeleteContent {
     type Result = Result<u32, Error>;
@@ -377,5 +425,19 @@ impl Handler<DeleteContent> for DatabaseExecutor {
 
     fn handle(&mut self, finder: DeleteContent, _: &mut Self::Context) -> Self::Result {
         Content::delete_content(&self.connection()?, finder.0)
+    }
+}
+
+pub struct FindContent(pub u32);
+
+impl Message for FindContent {
+    type Result = Result<ContentFullDisplay, Error>;
+}
+
+impl Handler<FindContent> for DatabaseExecutor {
+    type Result = Result<ContentFullDisplay, Error>;
+
+    fn handle(&mut self, finder: FindContent, _: &mut Self::Context) -> Self::Result {
+        Content::find_content_by_id(&self.connection()?, finder.0)
     }
 }

@@ -48,12 +48,17 @@ macro_rules! find_by_id {
     ($conn:expr => ($table:ident # = $id:expr => $ty:ty)) => {
         find_by_id!($conn => ($table id = $id => $ty))
     };
-    ($conn:expr => ($table:ident $id_fields:ident = $id:expr => $ty:ty)) => {
-        use schema::$table::all_columns as $table_all_fields;
-        find_by_id!($conn => ($table($table_all_fields) id_fields = $id => $ty))
-    };
     ($conn:expr => ($table:ident($fields:expr) # = $id:expr => $ty:ty)) => {
         find_by_id!($conn => ($table($fields) id = $id => $ty))
+    };
+    ($conn:expr => ($table:ident $id_field:ident = $id:expr => $ty:ty)) => {
+        {
+            use util::error::database::map_database_error as map_db_err;
+            $table
+                .filter($id_field.eq($id))
+                .first::<$ty>($conn)
+                .map_err(map_db_err(stringify!($table)))
+        }
     };
     ($conn:expr => ($table:ident($fields:expr) $id_field:ident = $id:expr => $ty:ty)) => {
         {

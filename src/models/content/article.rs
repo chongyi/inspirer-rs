@@ -61,6 +61,20 @@ impl From<CreateArticle> for NewArticle {
 pub struct Article;
 
 impl ContentRelate for Article {
+    fn find_by_id(connection: &Conn, entity_id: u32) -> Result<ContentEntityDisplay, Error> {
+        use schema::content_articles::dsl::*;
+
+        Ok(ContentEntityDisplay::Article(
+            find_by_id!(
+                connection => (
+                    content_articles(
+                        (id, content, name, views, modified_at)
+                    ) # = entity_id => ArticleDisplay
+                )
+            )?
+        ))
+    }
+
     fn delete_by_content_id(connection: &Conn, content_id: u32) -> bool {
         use schema::content_articles::dsl::*;
 

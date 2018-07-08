@@ -82,7 +82,12 @@ impl ContentRelate for Article {
         let count = update_by_id!(content_articles, "content_articles", connection, entity_id, &r)?;
 
         Ok(ContentEntityDisplay::Article(
-            find_by_id!(ArticleDisplay, content_articles, "content_articles", connection, (id, content, name, views, modified_at), entity_id)?
+            find_by_id!(
+                connection =>
+                    content_articles(
+                        (id, content, name, views, modified_at)
+                    ) # = entity_id => ArticleDisplay
+                )?
         ))
     }
 }

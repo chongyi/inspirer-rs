@@ -45,31 +45,26 @@ macro_rules! delete_by_id {
 
 #[macro_export]
 macro_rules! find_by_id {
-    ($ty:ty, $table:ident, $table_name:expr, $conn:expr, $id:expr) => {
-        find_by_id!($ty, $table, $table_name, $conn, $id, id)
+    ($conn:expr => $table:ident # = $id:expr => $ty:ty) => {
+        find_by_id!($conn => $table id = $id => $ty)
     };
-    ($ty:ty, $table:ident, $table_name:expr, $conn:expr, $fields:expr, $id:expr) => {
-        find_by_id!($ty, $table, $table_name, $conn, $fields, $id, id)
+    ($conn:expr => $table:ident $id_fields:ident = $id:expr => $ty:ty) => {
+        use schema::$table::all_columns as $table_all_fields;
+        find_by_id!($conn => $table($table_all_fields) id_fields = $id => $ty)
     };
-    ($ty:ty, $table:ident, $table_name:expr, $conn:expr, $id:expr, $id_field:ident) => {
-        {
-            use util::error::database::map_database_error as map_db_err;
-            $table
-                .filter($id_field.eq($id))
-                .first::<$ty>($conn)
-                .map_err(map_db_err($table_name))
-        }
+    ($conn:expr => $table:ident($fields:expr) # = $id:expr => $ty:ty) => {
+        find_by_id!($conn => $table($fields) id = $id => $ty)
     };
-    ($ty:ty, $table:ident, $table_name:expr, $conn:expr, $fields:expr, $id:expr, $id_field:ident) => {
+    ($conn:expr => $table:ident($fields:expr) $id_field:ident = $id:expr => $ty:ty) => {
         {
             use util::error::database::map_database_error as map_db_err;
             $table
                 .select($fields)
                 .filter($id_field.eq($id))
                 .first::<$ty>($conn)
-                .map_err(map_db_err($table_name))
+                .map_err(map_db_err(stringify!($table)))
         }
-    };
+    }
 }
 
 #[macro_export]

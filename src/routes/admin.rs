@@ -19,5 +19,8 @@ pub fn admin_routes<S>(scope: Scope<S>) -> Scope<S>
                 .route("/category/{id:\\d+}", Method::GET, admin::category::get_category)
                 .route("/content", Method::POST, admin::content::create_content)
                 .route("/content", Method::GET, admin::content::get_content_list)
+                .route("/content/{id:\\d+}", Method::GET, admin::content::get_content)
+                .route("/content/{id:\\d+}", Method::DELETE, admin::content::delete_content)
+                .route("/content/{id:\\d+}", Method::PUT, admin::content::update_content)
         })
 }

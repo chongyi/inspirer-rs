@@ -219,12 +219,12 @@ impl Content {
         paginator()
     }
 
-    pub fn find_content_by_id(connection: &Conn, id: u32) -> Result<ContentFullDisplay, Error> {
+    pub fn find_content_by_id(connection: &Conn, cid: u32) -> Result<ContentFullDisplay, Error> {
         use schema::contents::dsl::*;
 
         let content: ContentFull = find_by_id!(
             connection => (
-                contents # = id => ContentFull
+                contents # = cid => ContentFull
             )
         )?;
 

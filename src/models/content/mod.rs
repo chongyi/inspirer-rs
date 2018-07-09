@@ -266,13 +266,13 @@ impl Content {
             };
         }
 
-        delete_by_id!(
+        let res = delete_by_id!(
             connection => (
                 contents # = cid
             )
-        );
+        )? as u32;
 
-        Ok(cid)
+        Ok(res)
     }
 
     pub fn update_content(connection: &Conn, cid: u32, update: PreUpdateContent) -> DisplayContentDetail {

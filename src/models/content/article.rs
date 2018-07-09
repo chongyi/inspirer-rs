@@ -75,12 +75,12 @@ impl ContentRelate for Article {
         ))
     }
 
-    fn delete_by_content_id(connection: &Conn, content_id: u32) -> bool {
+    fn delete_by_content_id(connection: &Conn, cid: u32) -> bool {
         use schema::content_articles::dsl::*;
 
         let res = delete_by_id!(
             connection => (
-                content_articles content_id = content_id
+                content_articles content_id = cid
             )
         );
         match res {

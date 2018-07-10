@@ -172,6 +172,8 @@ impl JWTSessionBackend {
         let wd = JWT::<PrivateClaims, JWTEmpty>::new_encoded(&token);
         let token = wd.into_decoded(&secret, SignatureAlgorithm::HS256).or(Err(Error::AuthValidationError()))?;
 
+        token.validate_times(None).or(Err(Error::AuthValidationError()))?;
+
         let payload = token.payload().or(Err(Error::SysLogicArgumentError()))?;
         let claims = (*payload).private.clone();
         let registered = (*payload).registered.clone();

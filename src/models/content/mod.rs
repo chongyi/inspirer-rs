@@ -76,8 +76,8 @@ pub struct ContentFullDisplay {
 #[derive(Serialize, Queryable)]
 pub struct ContentRelateBase {
     pub id: u32,
-    pub content_id: u32,
-    pub content_type: u16,
+    pub entity_id: u32,
+    pub entity_type: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Queryable)]
@@ -87,8 +87,8 @@ pub struct ContentBase {
     pub title: String,
     pub sort: u16,
     pub category_id: Option<u32>,
-    pub content_id: u32,
-    pub content_type: u16,
+    pub entity_id: u32,
+    pub entity_type: u16,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -103,8 +103,8 @@ pub struct ContentFull {
     pub description: String,
     pub sort: u16,
     pub display: bool,
-    pub content_type: u16,
-    pub content_id: u32,
+    pub entity_type: u16,
+    pub entity_id: u32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -132,8 +132,8 @@ pub struct NewContent {
     pub description: String,
     pub sort: Option<u16>,
     pub display: Option<bool>,
-    pub content_type: u16,
-    pub content_id: u32,
+    pub entity_type: u16,
+    pub entity_id: u32,
 }
 
 type PaginatedContentList = Result<PaginatedListMessage<ContentBase>, Error>;
@@ -176,8 +176,8 @@ impl Content {
             description: create.description.unwrap_or(String::from("")),
             sort: create.sort,
             display: create.display,
-            content_id: id,
-            content_type: create.entity.into(),
+            entity_id: id,
+            entity_type: create.entity.into(),
         };
 
         {
@@ -197,7 +197,7 @@ impl Content {
     pub fn get_content_list(connection: &Conn, c: Pagination<GetContentList>) -> PaginatedContentList {
         use schema::contents::dsl::*;
 
-        let paginator = paginator!(connection, (id, creator_id, title, sort, category_id, content_id, content_type, created_at, updated_at), c, ContentBase, {
+        let paginator = paginator!(connection, (id, creator_id, title, sort, category_id, entity_id, entity_type, created_at, updated_at), c, ContentBase, {
             let mut query = contents.into_boxed();
             if let Some(filter) = c.clone().filter {
                 if let Some(v) = filter.search {
@@ -208,8 +208,8 @@ impl Content {
                         );
                 }
 
-                if let Some(t) = filter.content_type {
-                    query = query.filter(content_type.eq(t));
+                if let Some(t) = filter.entity_type {
+                    query = query.filter(entity_type.eq(t));
                 }
             }
 
@@ -228,8 +228,8 @@ impl Content {
             )
         )?;
 
-        let entity = match content.content_type {
-            Self::CONTENT_TYPE_ARTICLE => Article::find_by_id(connection, content.content_id)?,
+        let entity = match content.entity_type {
+            Self::CONTENT_TYPE_ARTICLE => Article::find_by_id(connection, content.entity_id)?,
             _ => return Err(Error::SysLogicArgumentError()),
         };
 
@@ -253,14 +253,14 @@ impl Content {
     pub fn delete_content(connection: &Conn, cid: u32) -> Result<u32, Error> {
         use schema::contents::dsl::*;
 
-        let target = contents.select((id, content_id, content_type))
+        let target = contents.select((id, entity_id, entity_type))
             .filter(id.eq(cid))
             .first::<ContentRelateBase>(connection)
             .optional()
             .map_err(map_database_error("contents"))?;
 
         if let Some(t) = target {
-            match t.content_type {
+            match t.entity_type {
                 1 => Article::delete_by_content_id(connection, cid),
                 _ => true,
             };
@@ -279,7 +279,7 @@ impl Content {
         let target: ContentRelateBase = {
             use schema::contents::dsl::*;
 
-            contents.select((id, content_id, content_type))
+            contents.select((id, entity_id, entity_type))
                 .filter(id.eq(cid))
                 .first::<ContentRelateBase>(connection)
                 .map_err(map_database_error("contents"))?
@@ -290,7 +290,7 @@ impl Content {
         let updated_entity = match entity_matches {
             Some(entity) => {
                 match entity {
-                    UpdateContentEntity::Article(_) => Article::update_by_id(connection, target.content_id, entity.clone())
+                    UpdateContentEntity::Article(_) => Article::update_by_id(connection, target.entity_id, entity.clone())
                 }
             }
             None => Err(Error::SysLogicArgumentError()),
@@ -345,7 +345,7 @@ impl Handler<CreateContent> for DatabaseExecutor {
 #[derive(Clone, Debug, Deserialize)]
 pub struct GetContentList {
     pub search: Option<String>,
-    pub content_type: Option<u16>,
+    pub entity_type: Option<u16>,
 }
 
 impl Message for Pagination<GetContentList> {

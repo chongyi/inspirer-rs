@@ -146,7 +146,7 @@ fn start_server() {
 
     server::HttpServer::new(
         move || App::with_state(state::AppState { database: addr.clone() })
-            .handler("/assets", fs::StaticFiles::new("./public/assets"))
+            .handler("/assets", fs::StaticFiles::new("./res/public/assets"))
             .middleware(SessionStorage::new(JWTSessionBackend))
             .scope("/api.admin", admin_routes)
     ).bind(server_bind).unwrap().start();

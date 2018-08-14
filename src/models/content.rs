@@ -96,13 +96,11 @@ impl Content {
     pub fn update(connection: &Conn, target: u32, data: UpdateContent) -> Result<Option<ContentFullDisplay>> {
         use schema::contents::dsl::*;
 
-        let count = diesel::update(contents)
-            .set(&data)
-            .filter(id.eq(target))
-            .execute(connection)
-            .map_err(map_database_error(Some("contents")))?;
+        let count = update_by_id!(connection => (
+            contents # = target; <- &data
+        ))?;
 
-        if (count as u32) > 0 {
+        if count > 0 {
             Ok(Self::find_by_id(connection, target).ok())
         } else {
             Ok(None)

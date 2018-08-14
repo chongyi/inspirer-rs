@@ -115,27 +115,22 @@ impl Category {
         Ok(generated_id)
     }
 
-    pub fn delete(connection: &Conn, category_id: u32) -> Result<u32> {
+    pub fn delete(connection: &Conn, category_id: u32) -> Result<usize> {
         use schema::categories::dsl::*;
 
-        let count = diesel::delete(categories)
-            .filter(id.eq(category_id))
-            .execute(connection)
-            .map_err(map_database_error(Some("categories")))?;
+        let count = delete_by_id!(connection => (categories # = category_id))?;
 
-        Ok(count as u32)
+        Ok(count)
     }
 
     pub fn update(connection: &Conn, category_id: u32, update: UpdateCategory) -> Result<Option<CategoryFullDisplay>> {
         use schema::categories::dsl::*;
 
-        let count = diesel::update(categories)
-            .set(&update)
-            .filter(id.eq(category_id))
-            .execute(connection)
-            .map_err(map_database_error(Some("categories")))?;
+        let count = update_by_id!(connection => (
+            categories # = category_id; <- &update
+        ))?;
 
-        if (count as u32) > 0 {
+        if count > 0 {
             Ok(Self::find_by_id(connection, category_id).ok())
         } else {
             Ok(None)
@@ -175,11 +170,11 @@ impl Handler<NewCategory> for DatabaseExecutor {
 pub struct DeleteCategory(pub u32);
 
 impl Message for DeleteCategory {
-    type Result = Result<u32>;
+    type Result = Result<usize>;
 }
 
 impl Handler<DeleteCategory> for DatabaseExecutor {
-    type Result = Result<u32>;
+    type Result = Result<usize>;
 
     fn handle(&mut self, finder: DeleteCategory, _: &mut Self::Context) -> Self::Result {
         Category::delete(&self.connection()?, finder.0)

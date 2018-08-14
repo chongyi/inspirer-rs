@@ -25,6 +25,28 @@ pub struct NewSubject {
     pub sort: i16,
 }
 
+#[derive(Deserialize, AsChangeset, Debug)]
+#[table_name = "subjects"]
+pub struct UpdateSubject {
+    pub name: Option<String>,
+    pub title: Option<String>,
+    pub keywords: Option<String>,
+    pub description: Option<String>,
+    pub sort: Option<i16>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+pub struct SubjectDisplay {
+    pub id: u32,
+    pub name: Option<String>,
+    pub title: String,
+    pub keywords: String,
+    pub description: String,
+    pub sort: i16,
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
 pub struct SubjectRelate {
     pub content_id: u32,
     pub sort: Option<i16>,
@@ -111,6 +133,52 @@ impl Subject {
             }
 
             Ok(())
+        })
+    }
+
+    pub fn find_by_id(connection: &Conn, target: u32) -> Result<SubjectDisplay> {
+        use schema::subjects::dsl::*;
+
+        find_by_id!(connection => (
+            subjects # = target => SubjectDisplay
+        ))
+    }
+
+    pub fn find_by_name(connection: &Conn, target: String) -> Result<SubjectDisplay> {
+        use schema::subjects::dsl::*;
+
+        find_by_id!(connection => (
+            subjects name = target => SubjectDisplay
+        ))
+    }
+
+    pub fn update(connection: &Conn, target: u32, update: UpdateSubject) -> Result<Option<SubjectDisplay>> {
+        use schema::subjects::dsl::*;
+
+        let count  = update_by_id!(connection => (
+            subjects # = target; <- &update
+        ))?;
+
+        if count > 0 {
+            Ok(Self::find_by_id(connection, target).ok())
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn delete(connection: &Conn, target: u32) -> Result<(usize, usize)> {
+        use schema::subjects::dsl::*;
+
+        connection.transaction(|| {
+            let count = delete_by_id!(connection => (subjects # = target))?;
+            if count > 0 {
+                use schema::subject_relates::dsl::*;
+                let relates_count = delete_by_id!(connection => (subject_relates subject_id = target))?;
+
+                Ok((count, relates_count))
+            } else {
+                Err(Error)
+            }
         })
     }
 }

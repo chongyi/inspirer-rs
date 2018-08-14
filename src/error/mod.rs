@@ -1,6 +1,7 @@
 use std::borrow::BorrowMut;
 use actix_web::{HttpRequest, HttpResponse, HttpMessage};
 use actix_web::error::{Error as ActixError, ResponseError};
+use std::fmt::{self, Formatter};
 use mime;
 
 pub mod database;
@@ -15,18 +16,20 @@ pub fn error_handler<T: AsRef<HttpRequest>>(req: T) -> impl FnOnce(Error) -> Act
     move |err: Error| {
         if json {
             let json = JsonError;
-            json.into();
+            json.into()
         } else {
             let html = HtmlError;
-            html.into();
+            html.into()
         }
     }
 }
 
 pub struct Error;
 
+#[derive(Fail, Debug)]
 pub struct JsonError;
 
+#[derive(Fail, Debug)]
 pub struct HtmlError;
 
 impl ResponseError for JsonError {
@@ -35,4 +38,16 @@ impl ResponseError for JsonError {
 
 impl ResponseError for HtmlError {
 
+}
+
+impl fmt::Display for JsonError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl fmt::Display for HtmlError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }

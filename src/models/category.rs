@@ -8,6 +8,7 @@ use database::{DatabaseExecutor, Conn, last_insert_id};
 use message::{PaginatedListMessage, Pagination, UpdateByID};
 use error::{Error, database::map_database_error};
 use schema::categories;
+use schema::categories::dsl as column;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
 type DisplayCategoryDetail = Result<Option<CategoryDisplay>, Error>;
@@ -55,7 +56,7 @@ pub struct CategoryDisplay {
     pub description: String,
     pub sort: i16,
     pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 pub struct Category;
@@ -64,7 +65,8 @@ impl Category {
     pub fn get_category_list(connection: &Conn, c: Pagination<GetCategoryList>) -> PaginatedCategoryList {
         use schema::categories::dsl::*;
 
-        let paginator = paginator!(connection, c, CategoryDisplay, {
+        let columns = (id, name, display_name, description, sort, created_at, updated_at);
+        let paginator = paginator!(connection, columns, c, CategoryDisplay, {
             let mut query = categories.into_boxed();
             if let Some(filter) = c.clone().filter {
                 if let Some(v) = filter.name {
@@ -81,22 +83,26 @@ impl Category {
     pub fn find_category_by_id(connection: &Conn, category_id: u32) -> Result<CategoryDisplay, Error> {
         use schema::categories::dsl::*;
 
+        let columns = (id, name, display_name, description, sort, created_at, updated_at);
         Ok(
             categories
+                .select(columns)
                 .filter(id.eq(category_id))
                 .first::<CategoryDisplay>(connection)
-                .map_err(map_database_error("categories"))?
+                .map_err(map_database_error(Some("categories")))?
         )
     }
 
     pub fn find_category_by_name(connection: &Conn, category_name: String) -> Result<CategoryDisplay, Error> {
         use schema::categories::dsl::*;
 
+        let columns = (id, name, display_name, description, sort, created_at, updated_at);
         Ok(
             categories
+                .select(columns)
                 .filter(name.eq(category_name))
                 .first::<CategoryDisplay>(connection)
-                .map_err(map_database_error("categories"))?
+                .map_err(map_database_error(Some("categories")))?
         )
     }
 
@@ -106,11 +112,11 @@ impl Category {
         diesel::insert_into(categories)
             .values(category)
             .execute(connection)
-            .map_err(map_database_error("categories"))?;
+            .map_err(map_database_error(Some("categories")))?;
 
         let generated_id: u64 = diesel::select(last_insert_id)
             .first(connection)
-            .map_err(map_database_error("categories"))?;
+            .map_err(map_database_error(Some("categories")))?;
 
         Ok(generated_id)
     }
@@ -121,7 +127,7 @@ impl Category {
         let count = diesel::delete(categories)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(map_database_error("categories"))?;
+            .map_err(map_database_error(Some("categories")))?;
 
         Ok(count as u32)
     }
@@ -133,7 +139,7 @@ impl Category {
             .set(&update)
             .filter(id.eq(category_id))
             .execute(connection)
-            .map_err(map_database_error("categories"))?;
+            .map_err(map_database_error(Some("categories")))?;
 
         if (count as u32) > 0 {
             Ok(Self::find_category_by_id(connection, category_id).ok())

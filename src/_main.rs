@@ -25,17 +25,6 @@ extern crate mime;
 extern crate r2d2;
 extern crate pwhash;
 
-#[macro_use]
-mod util;
-mod controllers;
-#[macro_use]
-mod database;
-mod state;
-mod models;
-mod schema;
-mod middlewares;
-mod routes;
-
 use actix::*;
 use actix_web::*;
 use actix_web::http::Method;

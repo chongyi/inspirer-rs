@@ -11,3 +11,9 @@ pub fn map_database_error(target: Option<&str>) -> impl FnOnce(DieselError) -> E
         err
     }
 }
+
+impl From<DieselError> for Error {
+    fn from(err: DieselError) -> Self {
+        (map_database_error(None))(err)
+    }
+}

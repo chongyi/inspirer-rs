@@ -1,31 +1,22 @@
-use actix::*;
-use actix_web::*;
+use actix::{Message, Handler};
 use diesel;
 use diesel::*;
 use chrono::NaiveDateTime;
 
+use result::Result;
 use database::{DatabaseExecutor, Conn, last_insert_id};
 use message::{PaginatedListMessage, Pagination, UpdateByID};
 use error::{Error, database::map_database_error};
 use schema::categories;
 use schema::categories::dsl as column;
 
-type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>, Error>;
-type DisplayCategoryDetail = Result<Option<CategoryDisplay>, Error>;
+type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct CategoryBase {
     pub id: u32,
     pub name: String,
     pub display_name: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct CreateCategory {
-    pub name: String,
-    pub display_name: Option<String>,
-    pub description: Option<String>,
-    pub sort: Option<i16>,
 }
 
 #[derive(Deserialize, Insertable, Debug)]
@@ -37,22 +28,22 @@ pub struct NewCategory {
     pub sort: Option<i16>,
 }
 
-impl From<CreateCategory> for NewCategory {
-    fn from(origin: CreateCategory) -> Self {
-        NewCategory {
-            name: origin.name.clone(),
-            display_name: origin.display_name.unwrap_or(origin.name.clone()),
-            description: origin.description.unwrap_or("".to_owned()),
-            sort: origin.sort
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct CategoryDisplay {
     pub id: u32,
     pub name: String,
     pub display_name: String,
+    pub description: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+pub struct CategoryFullDisplay {
+    pub id: u32,
+    pub name: String,
+    pub display_name: String,
+    pub keywords: String,
     pub description: String,
     pub sort: i16,
     pub created_at: NaiveDateTime,
@@ -62,11 +53,18 @@ pub struct CategoryDisplay {
 pub struct Category;
 
 impl Category {
-    pub fn get_category_list(connection: &Conn, c: Pagination<GetCategoryList>) -> PaginatedCategoryList {
+    const DISPLAY_COLUMNS: (
+        column::id, column::name, column::display_name,
+        column::description, column::created_at, column::updated_at
+    ) = (
+        column::id, column::name, column::display_name,
+        column::description, column::created_at, column::updated_at
+    );
+
+    pub fn get_list(connection: &Conn, c: Pagination<GetCategoryList>) -> PaginatedCategoryList {
         use schema::categories::dsl::*;
 
-        let columns = (id, name, display_name, description, sort, created_at, updated_at);
-        let paginator = paginator!(connection, columns, c, CategoryDisplay, {
+        let paginator = paginator!(connection, Self::DISPLAY_COLUMNS, c, CategoryDisplay, {
             let mut query = categories.into_boxed();
             if let Some(filter) = c.clone().filter {
                 if let Some(v) = filter.name {
@@ -80,33 +78,29 @@ impl Category {
         paginator()
     }
 
-    pub fn find_category_by_id(connection: &Conn, category_id: u32) -> Result<CategoryDisplay, Error> {
+    pub fn find_by_id(connection: &Conn, category_id: u32) -> Result<CategoryFullDisplay> {
         use schema::categories::dsl::*;
 
-        let columns = (id, name, display_name, description, sort, created_at, updated_at);
         Ok(
             categories
-                .select(columns)
                 .filter(id.eq(category_id))
-                .first::<CategoryDisplay>(connection)
+                .first::<CategoryFullDisplay>(connection)
                 .map_err(map_database_error(Some("categories")))?
         )
     }
 
-    pub fn find_category_by_name(connection: &Conn, category_name: String) -> Result<CategoryDisplay, Error> {
+    pub fn find_by_name(connection: &Conn, category_name: String) -> Result<CategoryFullDisplay> {
         use schema::categories::dsl::*;
 
-        let columns = (id, name, display_name, description, sort, created_at, updated_at);
         Ok(
             categories
-                .select(columns)
                 .filter(name.eq(category_name))
-                .first::<CategoryDisplay>(connection)
+                .first::<CategoryFullDisplay>(connection)
                 .map_err(map_database_error(Some("categories")))?
         )
     }
 
-    pub fn create_category(connection: &Conn, category: NewCategory) -> Result<u64, Error> {
+    pub fn create(connection: &Conn, category: NewCategory) -> Result<u64> {
         use schema::categories::dsl::*;
 
         diesel::insert_into(categories)
@@ -121,7 +115,7 @@ impl Category {
         Ok(generated_id)
     }
 
-    pub fn delete_category(connection: &Conn, category_id: u32) -> Result<u32, Error> {
+    pub fn delete(connection: &Conn, category_id: u32) -> Result<u32> {
         use schema::categories::dsl::*;
 
         let count = diesel::delete(categories)
@@ -132,7 +126,7 @@ impl Category {
         Ok(count as u32)
     }
 
-    pub fn update_category(connection: &Conn, category_id: u32, update: UpdateCategory) -> DisplayCategoryDetail {
+    pub fn update(connection: &Conn, category_id: u32, update: UpdateCategory) -> Result<Option<CategoryFullDisplay>> {
         use schema::categories::dsl::*;
 
         let count = diesel::update(categories)
@@ -142,7 +136,7 @@ impl Category {
             .map_err(map_database_error(Some("categories")))?;
 
         if (count as u32) > 0 {
-            Ok(Self::find_category_by_id(connection, category_id).ok())
+            Ok(Self::find_by_id(connection, category_id).ok())
         } else {
             Ok(None)
         }
@@ -162,38 +156,38 @@ impl Handler<Pagination<GetCategoryList>> for DatabaseExecutor {
     type Result = PaginatedCategoryList;
 
     fn handle(&mut self, condition: Pagination<GetCategoryList>, _: &mut Self::Context) -> Self::Result {
-        Category::get_category_list(&self.connection()?, condition)
+        Category::get_list(&self.connection()?, condition)
     }
 }
 
 impl Message for NewCategory {
-    type Result = Result<u64, Error>;
+    type Result = Result<u64>;
 }
 
 impl Handler<NewCategory> for DatabaseExecutor {
-    type Result = Result<u64, Error>;
+    type Result = Result<u64>;
 
     fn handle(&mut self, category: NewCategory, _: &mut Self::Context) -> Self::Result {
-        Category::create_category(&self.connection()?, category)
+        Category::create(&self.connection()?, category)
     }
 }
 
-pub struct DeleteCategory (pub u32);
+pub struct DeleteCategory(pub u32);
 
 impl Message for DeleteCategory {
-    type Result = Result<u32, Error>;
+    type Result = Result<u32>;
 }
 
 impl Handler<DeleteCategory> for DatabaseExecutor {
-    type Result = Result<u32, Error>;
+    type Result = Result<u32>;
 
     fn handle(&mut self, finder: DeleteCategory, _: &mut Self::Context) -> Self::Result {
-        Category::delete_category(&self.connection()?, finder.0)
+        Category::delete(&self.connection()?, finder.0)
     }
 }
 
 #[derive(AsChangeset, Deserialize)]
-#[table_name="categories"]
+#[table_name = "categories"]
 pub struct UpdateCategory {
     pub name: Option<String>,
     pub display_name: Option<String>,
@@ -202,33 +196,33 @@ pub struct UpdateCategory {
 }
 
 impl Message for UpdateByID<UpdateCategory> {
-    type Result = DisplayCategoryDetail;
+    type Result = Result<Option<CategoryFullDisplay>>;
 }
 
 impl Handler<UpdateByID<UpdateCategory>> for DatabaseExecutor {
-    type Result = DisplayCategoryDetail;
+    type Result = Result<Option<CategoryFullDisplay>>;
 
     fn handle(&mut self, update: UpdateByID<UpdateCategory>, _: &mut Self::Context) -> Self::Result {
-        Category::update_category(&self.connection()?, update.id, update.update)
+        Category::update(&self.connection()?, update.id, update.update)
     }
 }
 
-pub enum  FindCategory {
+pub enum FindCategory {
     Id(u32),
     Name(String),
 }
 
 impl Message for FindCategory {
-    type Result = DisplayCategoryDetail;
+    type Result = Result<Option<CategoryFullDisplay>>;
 }
 
 impl Handler<FindCategory> for DatabaseExecutor {
-    type Result = DisplayCategoryDetail;
+    type Result = Result<Option<CategoryFullDisplay>>;
 
     fn handle(&mut self, find: FindCategory, _: &mut Self::Context) -> Self::Result {
         Ok(Some(match find {
-            FindCategory::Id(id) => Category::find_category_by_id(&self.connection()?, id)?,
-            FindCategory::Name(name) => Category::find_category_by_name(&self.connection()?, name)?,
+            FindCategory::Id(id) => Category::find_by_id(&self.connection()?, id)?,
+            FindCategory::Name(name) => Category::find_by_name(&self.connection()?, name)?,
         }))
     }
 }

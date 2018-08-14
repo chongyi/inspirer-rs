@@ -20,10 +20,9 @@ table! {
         keywords -> Varchar,
         description -> Varchar,
         sort -> Smallint,
-        #[sql_name = "type"]
-        type_ -> Unsigned<Smallint>,
+        content_type -> Unsigned<Smallint>,
         content -> Nullable<Mediumtext>,
-        display -> Unsigned<Tinyint>,
+        display -> Bool,
         published_at -> Nullable<Timestamp>,
         modified_at -> Nullable<Timestamp>,
         created_at -> Timestamp,

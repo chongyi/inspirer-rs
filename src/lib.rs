@@ -13,8 +13,11 @@ extern crate chrono;
 mod models;
 mod schema;
 mod error;
-mod state;
 mod message;
+mod controllers;
+
+pub mod state;
+pub mod routes;
 
 pub mod result {
     use std::result::Result as StdResult;

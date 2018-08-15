@@ -57,6 +57,34 @@ pub struct CreateSubject {
     pub relates: Option<Vec<SubjectRelate>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+pub struct SubjectRelateBaseInfo {
+    pub id: u32,
+    pub name: Option<String>,
+    pub title: String,
+    pub category_id: Option<u32>,
+    pub content_sort: i16,
+    pub content_type: u16,
+    pub display: bool,
+    pub relate_sort: i16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+pub struct SubjectRelateInfo {
+    pub id: u32,
+    pub name: Option<String>,
+    pub title: String,
+    pub category_id: Option<u32>,
+    pub description: String,
+    pub keywords: String,
+    pub content_sort: i16,
+    pub content_type: u16,
+    pub published_at: Option<NaiveDateTime>,
+    pub modified_at: Option<NaiveDateTime>,
+    pub display: bool,
+    pub relate_sort: i16,
+}
+
 impl Subject {
     pub fn create(connection: &Conn, create: CreateSubject) -> Result<u32> {
         use schema::subjects::dsl::*;
@@ -155,7 +183,7 @@ impl Subject {
     pub fn update(connection: &Conn, target: u32, update: UpdateSubject) -> Result<Option<SubjectDisplay>> {
         use schema::subjects::dsl::*;
 
-        let count  = update_by_id!(connection => (
+        let count = update_by_id!(connection => (
             subjects # = target; <- &update
         ))?;
 
@@ -181,4 +209,54 @@ impl Subject {
             }
         })
     }
+
+    pub fn get_list(connection: &Conn) {}
+
+    pub fn get_relate_list(connection: &Conn, paginated: Pagination<GetRelateList>) -> Result<PaginatedListMessage<SubjectRelateInfo>> {
+        use schema::contents;
+        use schema::subject_relates as sr;
+
+        let target = paginated.filter.ok_or(Error)?.target;
+        let display = paginated.filter.ok_or(Error)?.display;
+
+        let paginator = paginator!(
+            connection,
+            (contents::id, contents::name, contents::title, contents::category_id, contents::description, contents::keywords, contents::sort, contents::content_type, contents::published_at, contents::modified_at, contents::display, sr::sort),
+            paginated,
+            SubjectRelateInfo,
+            {
+
+                sr::table
+                    .inner_join(contents::table.on(
+                        sr::content_id.eq(contents::id)
+                            .and(contents::display.eq(display))
+                    ))
+                    .filter(sr::subject_id.eq(target))
+                    .order_by((sr::sort.desc(), contents::sort.desc()))
+            });
+
+        paginator()
+    }
+
+    pub fn get_relate_base_info_list(connection: &Conn, target: u32, display: bool) -> Result<Vec<SubjectRelateBaseInfo>> {
+        use schema::contents;
+        use schema::subject_relates as sr;
+
+        sr::table
+            .inner_join(contents::table.on(
+                sr::content_id.eq(contents::id)
+                    .and(contents::display.eq(display))
+            ))
+            .select((contents::id, contents::name, contents::title, contents::category_id, contents::sort, contents::content_type, contents::display, sr::sort))
+            .filter(sr::subject_id.eq(target))
+            .order_by((sr::sort.desc(), contents::sort.desc()))
+            .load::<SubjectRelateBaseInfo>(connection)
+            .map_err(map_database_error(Some("subject_relates")))
+    }
+}
+
+#[derive(Clone, Debug, Copy)]
+pub struct GetRelateList {
+    pub target: u32,
+    pub display: bool
 }

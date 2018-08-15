@@ -62,6 +62,26 @@ pub struct ContentFullDisplay {
 pub struct Content;
 
 impl Content {
+    pub const DISPLAY_COLUMNS: (
+        column::id, column::name, column::title,
+        column::category_id, column::keywords, column::description,
+        column::sort, column::content_type, column::display,
+        column::published_at, column::modified_at
+    ) = (
+        column::id, column::name, column::title,
+        column::category_id, column::keywords, column::description,
+        column::sort, column::content_type, column::display,
+        column::published_at, column::modified_at
+    );
+
+    pub const DISPLAY_BASE_COLUMNS: (
+        column::id, column::name, column::title,
+        column::category_id,  column::sort, column::content_type, column::display
+    ) = (
+        column::id, column::name, column::title,
+        column::category_id,  column::sort, column::content_type, column::display
+    );
+
     pub fn create(connection: &Conn, data: NewContent) -> Result<u32> {
         use schema::contents::dsl::*;
 

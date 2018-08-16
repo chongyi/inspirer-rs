@@ -42,6 +42,21 @@ pub struct UpdateContent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+pub struct ContentDisplay {
+    pub id: u32,
+    pub name: Option<String>,
+    pub title: String,
+    pub category_id: Option<u32>,
+    pub keywords: String,
+    pub description: String,
+    pub sort: i16,
+    pub content_type: u16,
+    pub display: bool,
+    pub published_at: Option<NaiveDateTime>,
+    pub modified_at: Option<NaiveDateTime>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct ContentFullDisplay {
     pub id: u32,
     pub name: Option<String>,
@@ -125,5 +140,54 @@ impl Content {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn get_list(connection: &Conn, c: Pagination<GetContents>) -> Result<PaginatedListMessage<ContentDisplay>> {
+        use schema::contents::dsl::*;
+
+        let paginator = paginator!(connection, Self::DISPLAY_COLUMNS, c, ContentDisplay, {
+            let mut query = contents.into_boxed();
+            if let Some(filter) = c.clone().filter {
+                if let Some(v) = filter.search {
+                    query = query.filter(name.like(format!("%{}%", &v)).or(title.like(format!("%{}%", &v))));
+                }
+
+                if let Some(v) = filter.display {
+                    query = query.filter(display.eq(v));
+                }
+
+            }
+
+            query.order((sort.desc(), published_at.desc(), id.desc(), created_at.desc()))
+        });
+
+        paginator()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct GetContents {
+    pub search: Option<String>,
+    pub display: Option<bool>,
+}
+
+impl Default for GetContents {
+    fn default() -> Self {
+        GetContents {
+            search: None,
+            display: Some(true)
+        }
+    }
+}
+
+impl Message for Pagination<GetContents> {
+    type Result = Result<PaginatedListMessage<ContentDisplay>>;
+}
+
+impl Handler<Pagination<GetContents>> for DatabaseExecutor {
+    type Result = <Pagination<GetContents> as Message>::Result;
+
+    fn handle(&mut self, msg: Pagination<GetContents>, ctx: &mut Self::Context) -> Self::Result {
+        Content::get_list(&self.connection()?, msg)
     }
 }

@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use actix::*;
+use actix::dev::{Request, ToEnvelope};
 use diesel::{sql_query, RunQueryDsl};
 use diesel::prelude::MysqlConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -13,7 +14,7 @@ pub struct Config {
 #[derive(Clone)]
 pub struct AppState {
     /// 通过该字段对数据库进行访问以及操作
-    database: Addr<DatabaseExecutor>,
+    pub database: Addr<DatabaseExecutor>,
 }
 
 impl AppState {

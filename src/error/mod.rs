@@ -1,4 +1,5 @@
 use std::borrow::BorrowMut;
+use actix::MailboxError;
 use actix_web::{HttpRequest, HttpResponse, HttpMessage};
 use actix_web::error::{Error as ActixError, ResponseError};
 use std::fmt::{self, Formatter};
@@ -6,7 +7,7 @@ use mime;
 
 pub mod database;
 
-pub fn error_handler<T: AsRef<HttpRequest>>(req: T) -> impl FnOnce(Error) -> ActixError {
+pub fn error_handler<S, T: AsRef<HttpRequest<S>>>(req: T) -> impl FnOnce(Error) -> ActixError {
     let json = if let Ok(Some(mime)) = req.as_ref().mime_type() {
         mime.subtype() == mime::JSON || mime.suffix() == Some(mime::JSON)
     } else {
@@ -49,5 +50,11 @@ impl fmt::Display for JsonError {
 impl fmt::Display for HtmlError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl From<MailboxError> for Error {
+    fn from(_: MailboxError) -> Self {
+        Error
     }
 }

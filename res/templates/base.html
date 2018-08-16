@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Inspirer</title>
+  <link rel="stylesheet" href="assets/app.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header>
+  <nav class="nav-main">
+    <div class="container">
+      <div class="nav-head" style="margin-right: 2rem">
+        <a href="#">Inspirer</a>
+      </div>
+      <div>
+        <ul class="nav">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+{% block body %}{% endblock %}
+</body>
+</html>

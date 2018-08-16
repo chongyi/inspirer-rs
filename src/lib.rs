@@ -3,6 +3,7 @@
 #[macro_use] extern crate failure;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate tera;
+#[macro_use] extern crate log;
 
 extern crate serde;
 extern crate serde_json;
@@ -11,6 +12,8 @@ extern crate actix_web;
 extern crate mime;
 extern crate chrono;
 extern crate futures;
+extern crate regex;
+extern crate comrak;
 
 #[macro_use] mod database;
 mod models;

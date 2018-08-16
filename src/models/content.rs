@@ -191,3 +191,23 @@ impl Handler<Pagination<GetContents>> for DatabaseExecutor {
         Content::get_list(&self.connection()?, msg)
     }
 }
+
+pub enum FindContent {
+    ById(u32),
+    ByName(String),
+}
+
+impl Message for FindContent {
+    type Result = Result<ContentFullDisplay>;
+}
+
+impl Handler<FindContent> for DatabaseExecutor {
+    type Result = <FindContent as Message>::Result;
+
+    fn handle(&mut self, msg: FindContent, ctx: &mut Self::Context) -> Self::Result {
+        match msg {
+            FindContent::ByName(name) => Content::find_by_name(&self.connection()?, name),
+            FindContent::ById(id) => Content::find_by_id(&self.connection()?, id)
+        }
+    }
+}

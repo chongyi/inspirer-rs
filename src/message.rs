@@ -1,3 +1,5 @@
+use error::ErrorDetail;
+
 /// 错误消息体
 ///
 /// 错误消息体最终会转换为对应的 JSON 格式。
@@ -17,6 +19,16 @@ impl<T> ErrorMessage<T> {
             code,
             msg,
             body,
+        }
+    }
+}
+
+impl Default for ErrorMessage<ErrorDetail> {
+    fn default() -> Self {
+        ErrorMessage::<ErrorDetail> {
+            code: 65535,
+            msg: "Unknown error.".into(),
+            body: None
         }
     }
 }

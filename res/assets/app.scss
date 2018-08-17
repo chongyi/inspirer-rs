@@ -1,0 +1,67 @@
+@import "variables";
+
+body {
+  font-family: $base-font-family;
+  font-size: $default-font-size;
+  line-height: $default-line-height;
+}
+
+time {
+  font-family: $monospaced-font-family;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: $base-link-color;
+}
+
+.container {
+  width: 960px;
+  margin: auto;
+  position: relative;
+}
+
+.nav-main, .nav {
+  &::after {
+    clear: both;
+    display: table;
+    content: " ";
+  }
+}
+
+.nav-main {
+  line-height: $default-line-height * 1.2;
+
+  .nav-head {
+    float: left;
+    font-size: 1.2em;
+    font-weight: bold;
+    & > a {
+      color: $base-theme-color;
+    }
+  }
+
+  ul.nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    & > li {
+      float: left;
+      & > a {
+        padding: .8rem;
+      }
+    }
+  }
+}
+
+
+@media screen and (max-width: 960px) {
+  .container {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 640px) {
+
+}

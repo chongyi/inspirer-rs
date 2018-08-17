@@ -3,55 +3,70 @@ table! {
         id -> Unsigned<Integer>,
         name -> Varchar,
         display_name -> Varchar,
+        keywords -> Varchar,
         description -> Varchar,
         sort -> Smallint,
         created_at -> Timestamp,
-        updated_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
     }
 }
 
 table! {
     contents (id) {
         id -> Unsigned<Integer>,
-        creator_id -> Unsigned<Integer>,
+        name -> Nullable<Varchar>,
         title -> Varchar,
         category_id -> Nullable<Unsigned<Integer>>,
         keywords -> Varchar,
-        description -> Text,
-        sort -> Unsigned<Smallint>,
+        description -> Varchar,
+        sort -> Smallint,
+        content_type -> Unsigned<Smallint>,
+        content -> Nullable<Mediumtext>,
         display -> Bool,
-        entity_type -> Unsigned<Smallint>,
-        entity_id -> Unsigned<Integer>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-    }
-}
-
-table! {
-    content_articles (id) {
-        id -> Unsigned<Integer>,
-        content_id -> Nullable<Unsigned<Integer>>,
-        content -> Mediumtext,
-        name -> Nullable<Varchar>,
-        views -> Unsigned<Integer>,
+        published_at -> Nullable<Timestamp>,
         modified_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
     }
 }
 
 table! {
-    users (id) {
+    push_messages (id) {
         id -> Unsigned<Integer>,
-        name -> Varchar,
-        email -> Varchar,
-        password -> Nullable<Varchar>,
+        content -> Varchar,
+        sort -> Smallint,
         created_at -> Timestamp,
-        updated_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    subjects (id) {
+        id -> Unsigned<Integer>,
+        name -> Nullable<Varchar>,
+        title -> Varchar,
+        keywords -> Varchar,
+        description -> Varchar,
+        sort -> Smallint,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    subject_relates (subject_id, content_id) {
+        subject_id -> Unsigned<Integer>,
+        content_id -> Unsigned<Integer>,
+        sort -> Smallint,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
     }
 }
 
 allow_tables_to_appear_in_same_query!(
     categories,
     contents,
-    content_articles,
-    users,
+    push_messages,
+    subjects,
+    subject_relates,
 );

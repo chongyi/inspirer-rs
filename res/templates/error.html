@@ -5,11 +5,14 @@
     <title>Whoops</title>
 </head>
 <body>
-<p><strong>Error</strong> ({{code}})</p>
-<p>{{message}}</p>
 <p>
-<pre>
-{{detail}}
+  <strong>Error</strong> ({{status}})
+</p>
+<p>{{error.message}}</p>
+<p>
+<pre><code>
+{{error.detail}}
+</code>
 </pre>
 </p>
 </body>

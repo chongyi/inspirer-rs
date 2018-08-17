@@ -1,0 +1,16 @@
+@import "variables";
+
+ul.content-list {
+  margin: 3rem 0 0 0;
+  padding: 0;
+  list-style: none;
+
+  & > li {
+    line-height: $default-line-height * 1.4;
+  }
+
+  time {
+    color: $unimportant-text-color;
+    font-size: .85em;
+  }
+}

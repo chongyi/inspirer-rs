@@ -1,0 +1,49 @@
+@import "variables";
+@import "vs2015.css";
+
+article {
+  & > header {
+    margin: 5rem 0;
+    & > h1 {
+      line-height: $default-line-height * 2;
+    }
+  }
+
+  p, ul, code {
+    line-height: $default-line-height * 1.4;
+    overflow: auto;
+  }
+
+  blockquote {
+    border-left: solid .4rem $lightness-border-color;
+    margin: 0;
+    padding-left: 1.6rem;
+  }
+
+  pre > code {
+    padding: 1rem!important;
+    color: #DCDCDC;
+    background: #1E1E1E;
+  }
+
+  code {
+    font-family: $monospaced-font-family;
+    background: $lightness-border-color;
+    color: $dark-theme-color;
+    padding: .1rem .4rem;
+    border-radius: .4rem;
+    font-size: 0.85em;
+  }
+}
+
+@media screen and (max-width: 960px) {
+  article {
+    & > header {
+      margin: 1.6rem 0;
+      & > h1 {
+        font-size: 1.2em;
+        line-height: $default-line-height;
+      }
+    }
+  }
+}

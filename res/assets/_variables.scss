@@ -1,0 +1,14 @@
+$base-theme-color: #2c90ff;
+$dark-theme-color: #0d326c;
+$base-link-color: #2370c8;
+$unimportant-text-color: #999;
+
+$base-border-color: $base-link-color;
+$light-border-color: lighten($base-border-color, 20%);
+$lightness-border-color: lighten($base-border-color, 40%);
+
+$base-font-family: Georgia,"Times New Roman",Times,Kai,"Kaiti SC",KaiTi,BiauKai,serif;
+$monospaced-font-family: Monaco,Menlo,Consolas,"Courier New",FontAwesome,monospace;
+
+$default-font-size: 1.1rem;
+$default-line-height: 1.1rem;

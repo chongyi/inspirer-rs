@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="/assets/content.css">
+{% endblock %}
+{% block body %}
+<div class="container">
+    <article>
+        <header>
+            <h1>{{ content.title }}</h1>
+            <div>
+                <time datetime="{{ content.published_at_o }}">{{ content.published_at }}</time>
+            </div>
+        </header>
+        <div>
+            {{ content.content | safe }}
+        </div>
+    </article>
+</div>
+<script src="/assets/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+{% endblock %}

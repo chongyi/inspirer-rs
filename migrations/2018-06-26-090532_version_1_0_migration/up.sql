@@ -1,52 +1,65 @@
-CREATE TABLE IF NOT EXISTS `users` (
-    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `email` VARCHAR(160) NOT NULL,
-    `password` VARCHAR(160) DEFAULT NULL,
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `union_email` (`email`),
-    KEY `index_name` (`name`)
-);
+create table if not exists `categories` (
+  `id` int unsigned not null auto_increment,
+  `name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `display_name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `keywords` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null default '',
+  `description` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null default '',
+  `sort` smallint(4) not null default 0,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`id`),
+  unique key `union_name` (`name`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '内容分类表';
 
-CREATE TABLE IF NOT EXISTS `categories` (
-    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `display_name` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `description` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `sort` SMALLINT(4) NOT NULL DEFAULT '0',
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `union_name` (`name`)
-) CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
+create table if not exists `contents` (
+  `id` int unsigned not null auto_increment,
+  `name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci,
+  `title` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `category_id` int unsigned default null,
+  `keywords` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null default '',
+  `description` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null default '',
+  `sort` smallint not null default 0,
+  `content_type` smallint unsigned not null default 1,
+  `content` mediumtext character set utf8mb4 collate utf8mb4_general_ci null,
+  `display` tinyint(1) not null default 1,
+  `published_at` timestamp null,
+  `modified_at` timestamp null,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`id`),
+  unique key `union_name` (`name`),
+  key `search_title` (`name`, `title`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '内容表';
 
-CREATE TABLE IF NOT EXISTS `contents` (
-    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `creator_id` INT(11) UNSIGNED NOT NULL,
-    `title` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `category_id` INT(11) UNSIGNED DEFAULT NULL,
-    `keywords` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `description` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `sort` SMALLINT(4) UNSIGNED NOT NULL DEFAULT '0',
-    `display` TINYINT(1) NOT NULL DEFAULT '1',
-    `entity_type` SMALLINT UNSIGNED NOT NULL DEFAULT '1' COMMENT '内容类型，1 表文章',
-    `entity_id` INT(11) UNSIGNED NOT NULL,
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `index_title` (`title`),
-    KEY `index_category` (`category_id`)
-) CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
+create table if not exists `push_messages` (
+  `id` int unsigned not null auto_increment,
+  `content` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `sort` smallint not null default 0,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`id`),
+  key `search` (`content`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = 'PUSH 消息表';
 
-CREATE TABLE IF NOT EXISTS `content_articles` (
-    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `content_id` INT(11) UNSIGNED DEFAULT NULL,
-    `content` MEDIUMTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `name` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-    `views` INT(11) UNSIGNED NOT NULL DEFAULT '0',
-    `modified_at` TIMESTAMP NULL COMMENT '最后修改时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `union_name` (`name`)
-) CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
+create table if not exists `subjects` (
+  `id` int unsigned not null auto_increment,
+  `name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci,
+  `title` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `keywords` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null default '',
+  `description` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null default '',
+  `sort` smallint not null default 0,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`id`),
+  unique key `union_name` (`name`),
+  key `search_title` (`name`, `title`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '专题表';
+
+create table if not exists `subject_relates` (
+  `subject_id` int unsigned not null,
+  `content_id` int unsigned not null,
+  `sort` smallint not null default 0,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`subject_id`, `content_id`)
+) comment = '专题内容关联表';

@@ -96,7 +96,7 @@ impl Subject {
                 .map_err(map_database_error(Some("subjects")))?;
 
             if rows < 1 {
-                return Err(Error);
+                return Err(Error::internal_server_error(Some("[unknown]"), None));
             }
 
             let generated_id: u64 = diesel::select(last_insert_id)
@@ -205,7 +205,7 @@ impl Subject {
 
                 Ok((count, relates_count))
             } else {
-                Err(Error)
+                Ok((count, 0))
             }
         })
     }
@@ -216,8 +216,8 @@ impl Subject {
         use schema::contents;
         use schema::subject_relates as sr;
 
-        let target = paginated.filter.ok_or(Error)?.target;
-        let display = paginated.filter.ok_or(Error)?.display;
+        let target = paginated.filter.ok_or(Error::bad_request_error(Some("[param]"), None))?.target;
+        let display = paginated.filter.ok_or(Error::bad_request_error(Some("[param]"), None))?.display;
 
         let paginator = paginator!(
             connection,

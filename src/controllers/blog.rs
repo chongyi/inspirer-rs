@@ -50,12 +50,7 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
             context.add("contents", &list);
             let rendered = match TEMPLATES.render("home.html", &context) {
                 Ok(r) => r,
-                Err(e) => format!(
-                    "<p><strong>Error</strong>({}) {}</p>\n<p><pre>{:?}</pre></p>",
-                    123,
-                    "fuck",
-                    e
-                )
+                Err(e) => "Render error".into()
             };
             Ok(HttpResponse::Ok().body(rendered))
         })
@@ -82,10 +77,10 @@ pub fn content(req: HttpRequest<AppState>) -> impl Responder {
             } else if name_string.is_match(name) {
                 content::FindContent::ByName(name.into())
             } else {
-                return FutErr(error_handler(req_for_err)(Error)).responder();
+                return FutErr(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None))).responder();
             }
         },
-        None => return FutErr(error_handler(req_for_err)(Error)).responder(),
+        None => return FutErr(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None))).responder(),
     };
 
     req_for_contents.state().database.send(name).from_err()
@@ -110,12 +105,7 @@ pub fn content(req: HttpRequest<AppState>) -> impl Responder {
             context.add("content", &data);
             let rendered = match TEMPLATES.render("content.html", &context) {
                 Ok(r) => r,
-                Err(e) => format!(
-                    "<p><strong>Error</strong>({}) {}</p>\n<p><pre>{:?}</pre></p>",
-                    123,
-                    "fuck",
-                    e
-                )
+                Err(e) => "Render error".into()
             };
             Ok(HttpResponse::Ok().body(rendered))
         })

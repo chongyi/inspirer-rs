@@ -157,6 +157,6 @@ impl Actor for DatabaseExecutor {
 
 impl DatabaseExecutor {
     pub fn connection(&mut self) -> Result<Conn, Error> {
-        Ok(self.0.get().or(Err(Error))?)
+        Ok(self.0.get().map_err(Error::database_connection_get_error)?)
     }
 }

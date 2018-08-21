@@ -1,6 +1,7 @@
 use actix::{Message, Handler};
 use diesel;
 use diesel::*;
+use diesel::dsl::exists;
 use chrono::NaiveDateTime;
 
 use result::Result;
@@ -9,6 +10,7 @@ use message::{PaginatedListMessage, Pagination, UpdateByID};
 use error::{Error, database::map_database_error};
 use schema::categories;
 use schema::categories::dsl as column;
+use regex::Regex;
 
 type PaginatedCategoryList = Result<PaginatedListMessage<CategoryDisplay>>;
 
@@ -134,6 +136,21 @@ impl Category {
             Ok(Self::find_by_id(connection, category_id).ok())
         } else {
             Ok(None)
+        }
+    }
+
+    pub fn exists(connection: &Conn, category: String) -> Result<bool> {
+        use schema::categories::dsl::*;
+
+        let regex = Regex::new(r"^\d+$").unwrap();
+
+        if regex.is_match(&category) {
+            let category_id = category.parse::<u32>().unwrap();
+            select(exists(categories.filter(id.eq(category_id))))
+                .get_result(connection).map_err(map_database_error(Some("categories")))
+        } else {
+            select(exists(categories.filter(name.eq(category))))
+                .get_result(connection).map_err(map_database_error(Some("categories")))
         }
     }
 }

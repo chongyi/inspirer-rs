@@ -12,6 +12,16 @@ use error::Error;
 use regex;
 use comrak::{markdown_to_html, ComrakOptions};
 
+#[derive(Serialize)]
+struct Content {
+    id: u32,
+    name: Option<String>,
+    title: String,
+    description: String,
+    published_at_o: Option<NaiveDateTime>,
+    published_at: Option<String>
+}
+
 pub fn home(req: HttpRequest<AppState>) -> impl Responder {
     let ref_req = Rc::new(req);
     let req_for_contents = Rc::clone(&ref_req);
@@ -24,15 +34,6 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
 
     req_for_contents.state().database.send(default_content).from_err()
         .and_then(|contents| {
-            #[derive(Serialize)]
-            struct Content {
-                id: u32,
-                name: Option<String>,
-                title: String,
-                published_at_o: Option<NaiveDateTime>,
-                published_at: Option<String>
-            };
-
             let contents: PaginatedListMessage<content::ContentDisplay> = contents?;
             let mut list: Vec<Content> = vec![];
 
@@ -41,6 +42,7 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
                     id: item.id,
                     name: item.name,
                     title: item.title,
+                    description: item.description,
                     published_at_o : item.published_at,
                     published_at: item.published_at.map(|v| v.format("%Y-%m-%d").to_string())
                 });
@@ -48,6 +50,7 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
 
             let mut context = Context::new();
             context.add("contents", &list);
+
             let rendered = match TEMPLATES.render("home.html", &context) {
                 Ok(r) => r,
                 Err(e) => "Render error".into()
@@ -58,8 +61,51 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
         .responder()
 }
 
-pub fn content_list(req: HttpRequest<AppState>) -> impl Responder {
-    "🚧🚧🚧"
+fn content_list(req: Rc<HttpRequest<AppState>>, filter: Pagination<content::GetContents>) -> impl Responder {
+    let req_for_contents = Rc::clone(&req);
+    let req_for_err = Rc::clone(&req);
+
+    req_for_contents.state().database.send(filter).from_err()
+        .and_then(|contents| {
+            let contents: PaginatedListMessage<content::ContentDisplay> = contents?;
+            let mut list: Vec<Content> = vec![];
+
+            for item in contents.list {
+                list.push(Content {
+                    id: item.id,
+                    name: item.name,
+                    title: item.title,
+                    description: item.description,
+                    published_at_o : item.published_at,
+                    published_at: item.published_at.map(|v| v.format("%Y-%m-%d").to_string())
+                });
+            }
+
+            let pagination = PaginatedListMessage {
+                list,
+                page: contents.page,
+                per_page: contents.per_page,
+                total: contents.total
+            };
+
+            let mut context = Context::new();
+            context.add("contents", &pagination);
+
+            let rendered = match TEMPLATES.render("list.html", &context) {
+                Ok(r) => r,
+                Err(e) => "Render error".into()
+            };
+            Ok(HttpResponse::Ok().body(rendered))
+        })
+        .map_err(error_handler(req_for_err))
+        .responder()
+}
+
+pub fn article_list(req: HttpRequest<AppState>) -> impl Responder {
+    let ref_req = Rc::new(req);
+    let mut default_content = Pagination::<content::GetContents>::from_request(Rc::clone(&ref_req));
+
+    content_list(ref_req, default_content)
 }
 
 pub fn content(req: HttpRequest<AppState>) -> impl Responder {

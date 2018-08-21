@@ -168,6 +168,7 @@ impl Content {
 #[derive(Clone, Debug)]
 pub struct GetContents {
     pub search: Option<String>,
+    pub category: Option<String>,
     pub display: Option<bool>,
 }
 
@@ -175,6 +176,7 @@ impl Default for GetContents {
     fn default() -> Self {
         GetContents {
             search: None,
+            category: None,
             display: Some(true)
         }
     }

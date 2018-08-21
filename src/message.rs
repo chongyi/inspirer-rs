@@ -1,4 +1,5 @@
 use error::ErrorDetail;
+use actix_web::HttpRequest;
 
 /// 错误消息体
 ///
@@ -56,6 +57,8 @@ pub struct Pagination<T> {
 }
 
 impl<T> Pagination<T> {
+    pub const DEFAULT_PER_PAGE: i64 = 15;
+
     pub fn new(page: Option<i64>, per_page: Option<i64>, filter: Option<T>) -> Self {
         Self {
             page: match page {
@@ -64,9 +67,26 @@ impl<T> Pagination<T> {
             },
             per_page: match per_page {
                 Some(v) => v,
-                None => 15,
+                None => Self::DEFAULT_PER_PAGE,
             },
             filter,
+        }
+    }
+
+    pub fn from_request<S, R: AsRef<HttpRequest<S>>>(req: R) -> Self {
+        let query = req.as_ref().query();
+
+        let page = query.get("page")
+            .map(|v| v.parse::<i64>().unwrap_or(1))
+            .unwrap_or(1);
+        let per_page = query.get("per_page")
+            .map(|v| v.parse::<i64>().unwrap_or(Self::DEFAULT_PER_PAGE))
+            .unwrap_or(Self::DEFAULT_PER_PAGE);
+
+        Pagination::<T> {
+            page,
+            per_page,
+            filter: None
         }
     }
 }

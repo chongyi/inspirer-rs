@@ -1,4 +1,6 @@
 @import "variables";
+@import "content";
+@import "list";
 
 body {
   font-family: $base-font-family;
@@ -17,9 +19,13 @@ a {
 }
 
 .container {
-  width: 960px;
+  width: 1200px;
   margin: auto;
   position: relative;
+}
+
+.flex {
+  display: flex;
 }
 
 .nav-main, .nav {
@@ -56,12 +62,12 @@ a {
 }
 
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 1200px) {
   .container {
     width: 100%;
   }
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (max-width: 960px) {
 
 }

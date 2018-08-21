@@ -12,8 +12,6 @@ let mix = require('laravel-mix');
  */
 
 mix.sass('res/assets/app.scss', 'res/public/assets/')
-    .sass('res/assets/home.scss', 'res/public/assets/')
-    .sass('res/assets/content.scss', 'res/public/assets/')
     .copy('res/assets/highlight.pack.js', 'res/public/assets/highlight.min.js')
 
 // Full API

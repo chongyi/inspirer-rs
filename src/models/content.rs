@@ -9,6 +9,7 @@ use message::{PaginatedListMessage, Pagination, UpdateByID};
 use error::{Error, database::map_database_error};
 use schema::contents;
 use schema::contents::dsl as column;
+use models::category::FindCategory;
 
 #[derive(Deserialize, Insertable, Debug)]
 #[table_name = "contents"]
@@ -156,6 +157,21 @@ impl Content {
                     query = query.filter(display.eq(v));
                 }
 
+                if let Some(v) = filter.content_type {
+                    query = query.filter(content_type.eq(v));
+                }
+
+                if let Some(v) = filter.category {
+                    match v {
+                        CategoryMatcher::NotZero => query = query.filter(category_id.ne(0)),
+                        CategoryMatcher::Index(index) => {
+                            match index {
+                                FindCategory::Id(cid) => query = query.filter(category_id.eq(cid)),
+                                FindCategory::Name(cname) => panic!("Unsupport search condition"),
+                            }
+                        }
+                    }
+                }
             }
 
             query.order((sort.desc(), published_at.desc(), id.desc(), created_at.desc()))
@@ -165,11 +181,18 @@ impl Content {
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum CategoryMatcher {
+    NotZero,
+    Index(FindCategory),
+}
+
 #[derive(Clone, Debug)]
 pub struct GetContents {
     pub search: Option<String>,
-    pub category: Option<String>,
+    pub category: Option<CategoryMatcher>,
     pub display: Option<bool>,
+    pub content_type: Option<u16>,
 }
 
 impl Default for GetContents {
@@ -177,7 +200,8 @@ impl Default for GetContents {
         GetContents {
             search: None,
             category: None,
-            display: Some(true)
+            display: Some(true),
+            content_type: None,
         }
     }
 }

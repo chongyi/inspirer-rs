@@ -1,0 +1,13 @@
+{% macro paginate(pages, current) %}
+{% if pages > 0 %}
+<div class="pagination">
+  <ul>
+    <li {% if current == 1 %}class="disable"{% endif %}><a href="?page={{ current - 1 }}">&raquo;</a></li>
+    {% for page in range(start = 1, end = (pages + 1)) %}
+    <li {% if page == current %}class="active"{% endif %}><a href="?page={{ page }}">{{ page }}</a></li>
+    {% endfor %}
+    <li {% if current == pages %}class="disable"{% endif %}><a href="?page={{ current + 1 }}">&raquo;</a></li>
+  </ul>
+</div>
+{% endif %}
+{% endmacro input %}

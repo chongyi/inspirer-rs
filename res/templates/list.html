@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 {% block body %}
 <div class="container">
   <div>
@@ -8,6 +9,7 @@
       <li><time datetime="{{ item.published_at_o }}">[{{ item.published_at }}]</time> <a href="article/{{ item.name }}">{{ item.title }}</a></li>
       {% endfor %}
     </ul>
+    {{ macros::paginate(pages = pages, current = current) }}
     {% else %}
     Nothing
     {% endif %}

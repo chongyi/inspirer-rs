@@ -61,6 +61,31 @@ a {
   }
 }
 
+.pagination {
+  & > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    &:after {
+      clear: both;
+      display: table;
+      content: " ";
+    }
+    & > li {
+      float: left;
+      cursor: pointer;
+
+      &.disable {
+        cursor: not-allowed;
+      }
+
+      &.active {
+        cursor: default;
+      }
+    }
+  }
+}
+
 
 @media screen and (max-width: 1200px) {
   .container {

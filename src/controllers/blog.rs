@@ -89,11 +89,17 @@ fn content_list(req: Rc<HttpRequest<AppState>>, filter: Pagination<content::GetC
             };
 
             let mut context = Context::new();
-            context.add("contents", &pagination);
+            let pages = (pagination.total as f64 / pagination.per_page as f64).ceil() as i64;
+            context.add("contents", &pagination.list);
+            context.add("pages", &pages);
+            context.add("current", &pagination.page);
 
             let rendered = match TEMPLATES.render("list.html", &context) {
                 Ok(r) => r,
-                Err(e) => "Render error".into()
+                Err(e) => {
+                    debug!("Error to render: list.html, error detail: {:?}", e);
+                    "Render error".into()
+                }
             };
             Ok(HttpResponse::Ok().body(rendered))
         })
@@ -104,6 +110,11 @@ fn content_list(req: Rc<HttpRequest<AppState>>, filter: Pagination<content::GetC
 pub fn article_list(req: HttpRequest<AppState>) -> impl Responder {
     let ref_req = Rc::new(req);
     let mut default_content = Pagination::<content::GetContents>::from_request(Rc::clone(&ref_req));
+    let mut default_getter = content::GetContents::default();
+
+    default_getter.category = Some(content::CategoryMatcher::NotZero);
+    default_getter.content_type = Some(1);
+    default_content.filter = Some(default_getter);
 
     content_list(ref_req, default_content)
 }

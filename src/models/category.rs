@@ -219,9 +219,20 @@ impl Handler<UpdateByID<UpdateCategory>> for DatabaseExecutor {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum FindCategory {
     Id(u32),
     Name(String),
+}
+
+impl From<String> for FindCategory {
+    fn from(origin: String) -> Self {
+        let result = origin.parse::<u32>();
+        match result {
+            Ok(v) => FindCategory::Id(v),
+            Err(_) => FindCategory::Name(origin),
+        }
+    }
 }
 
 impl Message for FindCategory {

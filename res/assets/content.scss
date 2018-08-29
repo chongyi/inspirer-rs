@@ -4,7 +4,7 @@
 article {
   & > header {
     margin: 5rem 0;
-    & > h1 {
+    h1 {
       line-height: $default-line-height * 2;
     }
   }
@@ -40,10 +40,18 @@ article {
   article {
     & > header {
       margin: 1.6rem 0;
-      & > h1 {
-        font-size: 1.2em;
-        line-height: $default-line-height;
-      }
+    }
+
+    h1 {
+      font-size: 1.2em;
+    }
+
+    h2, h3 {
+      font-size: 1.1em;
+    }
+
+    h4, h5, h6 {
+      font-size: 1.05em;
     }
   }
 }

@@ -17,6 +17,7 @@ table! {
         name -> Nullable<Varchar>,
         title -> Varchar,
         category_id -> Nullable<Unsigned<Integer>>,
+        as_page -> Bool,
         keywords -> Varchar,
         description -> Varchar,
         sort -> Smallint,

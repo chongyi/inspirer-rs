@@ -1,16 +1,18 @@
 use std::rc::Rc;
-use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder};
+use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder, error::Error as ActixError};
 use state::AppState;
 use futures::{Future, future::err as FutErr};
 use tera::{Tera, Context};
 use template::TEMPLATES;
-use models::content;
+use models::content::{self, FindFilter};
 use message::{PaginatedListMessage, Pagination};
 use error::error_handler;
 use chrono::NaiveDateTime;
 use error::Error;
+use std::result::Result as StdResult;
 use regex;
 use comrak::{markdown_to_html, ComrakOptions};
+use result::Result;
 
 #[derive(Serialize)]
 struct Content {
@@ -19,7 +21,7 @@ struct Content {
     title: String,
     description: String,
     published_at_o: Option<NaiveDateTime>,
-    published_at: Option<String>
+    published_at: Option<String>,
 }
 
 pub fn home(req: HttpRequest<AppState>) -> impl Responder {
@@ -29,7 +31,7 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
     let default_content = Pagination {
         page: 1,
         per_page: 10,
-        filter: Some(content::GetContents::default())
+        filter: Some(content::GetContents::default()),
     };
 
     req_for_contents.state().database.send(default_content).from_err()
@@ -43,8 +45,8 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
                     name: item.name,
                     title: item.title,
                     description: item.description,
-                    published_at_o : item.published_at,
-                    published_at: item.published_at.map(|v| v.format("%Y-%m-%d").to_string())
+                    published_at_o: item.published_at,
+                    published_at: item.published_at.map(|v| v.format("%Y-%m-%d").to_string()),
                 });
             }
 
@@ -76,8 +78,8 @@ fn content_list(req: Rc<HttpRequest<AppState>>, filter: Pagination<content::GetC
                     name: item.name,
                     title: item.title,
                     description: item.description,
-                    published_at_o : item.published_at,
-                    published_at: item.published_at.map(|v| v.format("%Y-%m-%d").to_string())
+                    published_at_o: item.published_at,
+                    published_at: item.published_at.map(|v| v.format("%Y-%m-%d").to_string()),
                 });
             }
 
@@ -85,7 +87,7 @@ fn content_list(req: Rc<HttpRequest<AppState>>, filter: Pagination<content::GetC
                 list,
                 page: contents.page,
                 per_page: contents.per_page,
-                total: contents.total
+                total: contents.total,
             };
 
             let mut context = Context::new();
@@ -119,10 +121,9 @@ pub fn article_list(req: HttpRequest<AppState>) -> impl Responder {
     content_list(ref_req, default_content)
 }
 
-pub fn content(req: HttpRequest<AppState>) -> impl Responder {
-    let ref_req = Rc::new(req);
-    let req_for_contents = Rc::clone(&ref_req);
-    let req_for_err = Rc::clone(&ref_req);
+fn find_content(req: Rc<HttpRequest<AppState>>, filter: Option<FindFilter>) -> StdResult<impl Future<Item=Result<content::ContentFullDisplay>, Error=Error>, ActixError> {
+    let req_for_contents = Rc::clone(&req);
+    let req_for_err = Rc::clone(&req);
     let name = match req_for_contents.match_info().get("name") {
         Some(name) => {
             let numeric = regex::Regex::new(r"^\d+$").unwrap();
@@ -130,48 +131,102 @@ pub fn content(req: HttpRequest<AppState>) -> impl Responder {
 
             if numeric.is_match(name) {
                 let id = name.parse::<u32>().unwrap();
-                content::FindContent::ById(id)
+                Ok(content::Find::ById(id))
             } else if name_string.is_match(name) {
-                content::FindContent::ByName(name.into())
+                Ok(content::Find::ByName(name.into()))
             } else {
-                return FutErr(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None))).responder();
+                Err(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None)))
             }
-        },
-        None => return FutErr(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None))).responder(),
+        }
+        None => Err(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None))),
     };
 
-    req_for_contents.state().database.send(name).from_err()
-        .and_then(|res| {
-            #[derive(Serialize)]
-            struct Content {
-                title: String,
-                content: String,
-                published_at_o: Option<NaiveDateTime>,
-                published_at: Option<String>
-            }
+    name.map(move |name| {
+        req_for_contents.state().database
+            .send(content::FindContent {
+                inner: name,
+                filter,
+            })
+            .from_err()
+    })
+}
 
-            let origin: content::ContentFullDisplay = res?;
-            let data = Content {
-                content: markdown_to_html(&origin.content.unwrap_or(String::from("")), &ComrakOptions::default()),
-                title: origin.title,
-                published_at_o : origin.published_at,
-                published_at: origin.published_at.map(|v| v.format("%Y-%m-%d").to_string())
-            };
+pub fn content(req: HttpRequest<AppState>) -> impl Responder {
+    let ref_req = Rc::new(req);
+    let req_for_err = Rc::clone(&ref_req);
 
-            let mut context = Context::new();
-            context.add("content", &data);
-            let rendered = match TEMPLATES.render("content.html", &context) {
-                Ok(r) => r,
-                Err(e) => "Render error".into()
-            };
-            Ok(HttpResponse::Ok().body(rendered))
-        })
-        .map_err(error_handler(req_for_err))
-        .responder()
+    match find_content(ref_req, None) {
+        Ok(fut) => {
+            fut
+                .and_then(|res| {
+                    #[derive(Serialize)]
+                    struct Content {
+                        title: String,
+                        content: String,
+                        published_at_o: Option<NaiveDateTime>,
+                        published_at: Option<String>,
+                    }
+
+                    let origin: content::ContentFullDisplay = res?;
+                    let data = Content {
+                        content: markdown_to_html(&origin.content.unwrap_or(String::from("")), &ComrakOptions::default()),
+                        title: origin.title,
+                        published_at_o: origin.published_at,
+                        published_at: origin.published_at.map(|v| v.format("%Y-%m-%d").to_string()),
+                    };
+
+                    let mut context = Context::new();
+                    context.add("content", &data);
+                    let rendered = match TEMPLATES.render("content.html", &context) {
+                        Ok(r) => r,
+                        Err(e) => "Render error".into()
+                    };
+                    Ok(HttpResponse::Ok().body(rendered))
+                })
+                .map_err(error_handler(req_for_err))
+                .responder()
+        }
+        Err(err) => FutErr(err).responder()
+    }
 }
 
 pub fn page(req: HttpRequest<AppState>) -> impl Responder {
-    "🚧🚧🚧"
+    let ref_req = Rc::new(req);
+    let req_for_err = Rc::clone(&ref_req);
+
+    let r = find_content(ref_req, Some(FindFilter {
+        as_page: Some(true)
+    }));
+
+    match r {
+        Ok(fut) => {
+            fut
+                .and_then(|res| {
+                    #[derive(Serialize)]
+                    struct Content {
+                        title: String,
+                        content: String,
+                    }
+
+                    let origin: content::ContentFullDisplay = res?;
+                    let data = Content {
+                        content: markdown_to_html(&origin.content.unwrap_or(String::from("")), &ComrakOptions::default()),
+                        title: origin.title,
+                    };
+
+                    let mut context = Context::new();
+                    context.add("content", &data);
+                    let rendered = match TEMPLATES.render("page.html", &context) {
+                        Ok(r) => r,
+                        Err(e) => "Render error".into()
+                    };
+                    Ok(HttpResponse::Ok().body(rendered))
+                })
+                .map_err(error_handler(req_for_err))
+                .responder()
+        },
+        Err(err) => FutErr(err).responder()
+    }
 }
 
 pub fn push_message_list(req: HttpRequest<AppState>) -> impl Responder {

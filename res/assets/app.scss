@@ -61,7 +61,19 @@ a {
   }
 }
 
+.disabled > a {
+  cursor: not-allowed;
+  color: $disabled-text-color;
+}
+
+.active > a {
+  cursor: default;
+  font-weight: bolder;
+  text-decoration: underline;
+}
+
 .pagination {
+  margin: 1rem 0;
   & > ul {
     list-style: none;
     margin: 0;
@@ -74,13 +86,9 @@ a {
     & > li {
       float: left;
       cursor: pointer;
-
-      &.disable {
-        cursor: not-allowed;
-      }
-
-      &.active {
-        cursor: default;
+      margin-left: .5rem;
+      &:first-child {
+        margin-left: 0;
       }
     }
   }

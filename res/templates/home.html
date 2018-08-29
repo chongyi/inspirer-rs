@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container">
-  <div>
+  <div class="col">
     {% if contents | length > 0 %}
     <ul class="content-list">
       {% for item in contents %}
       <li><time datetime="{{ item.published_at_o }}">[{{ item.published_at }}]</time> <a href="article/{{ item.name }}">{{ item.title }}</a></li>
       {% endfor %}
     </ul>
+    <div style="margin-top: 1.4rem"><a href="/article">&raquo; 更多文章</a></div>
     {% else %}
     Nothing
     {% endif %}

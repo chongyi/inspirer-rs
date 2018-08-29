@@ -63,6 +63,7 @@ pub struct ContentFullDisplay {
     pub name: Option<String>,
     pub title: String,
     pub category_id: Option<u32>,
+    pub as_page: bool,
     pub keywords: String,
     pub description: String,
     pub sort: i16,
@@ -113,20 +114,38 @@ impl Content {
         Ok(generated_id as u32)
     }
 
-    pub fn find_by_id(connection: &Conn, target: u32) -> Result<ContentFullDisplay> {
+    pub fn find_by_id(connection: &Conn, target: u32, find_filter: Option<FindFilter>) -> Result<ContentFullDisplay> {
         use schema::contents::dsl::*;
 
-        find_by_id!(connection => (
-            contents # = target => ContentFullDisplay
-        ))
+        let mut query = contents.filter(id.eq(target)).into_boxed();
+
+        match find_filter {
+            Some(filter) => {
+                if let Some(filter_as_page) = filter.as_page {
+                    query = query.filter(as_page.eq(filter_as_page));
+                }
+            },
+            None => (),
+        };
+
+        query.first::<ContentFullDisplay>(connection).map_err(map_database_error(Some("contents")))
     }
 
-    pub fn find_by_name(connection: &Conn, target: String) -> Result<ContentFullDisplay> {
+    pub fn find_by_name(connection: &Conn, target: String, find_filter: Option<FindFilter>) -> Result<ContentFullDisplay> {
         use schema::contents::dsl::*;
 
-        find_by_id!(connection => (
-            contents name = target => ContentFullDisplay
-        ))
+        let mut query = contents.filter(name.eq(target)).into_boxed();
+
+        match find_filter {
+            Some(filter) => {
+                if let Some(filter_as_page) = filter.as_page {
+                    query = query.filter(as_page.eq(filter_as_page));
+                }
+            },
+            None => (),
+        };
+
+        query.first::<ContentFullDisplay>(connection).map_err(map_database_error(Some("contents")))
     }
 
     pub fn update(connection: &Conn, target: u32, data: UpdateContent) -> Result<Option<ContentFullDisplay>> {
@@ -137,7 +156,7 @@ impl Content {
         ))?;
 
         if count > 0 {
-            Ok(Self::find_by_id(connection, target).ok())
+            Ok(Self::find_by_id(connection, target, None).ok())
         } else {
             Ok(None)
         }
@@ -218,9 +237,18 @@ impl Handler<Pagination<GetContents>> for DatabaseExecutor {
     }
 }
 
-pub enum FindContent {
+pub enum Find {
     ById(u32),
     ByName(String),
+}
+
+pub struct FindFilter {
+    pub as_page: Option<bool>
+}
+
+pub struct FindContent {
+    pub inner: Find,
+    pub filter: Option<FindFilter>
 }
 
 impl Message for FindContent {
@@ -231,9 +259,9 @@ impl Handler<FindContent> for DatabaseExecutor {
     type Result = <FindContent as Message>::Result;
 
     fn handle(&mut self, msg: FindContent, ctx: &mut Self::Context) -> Self::Result {
-        match msg {
-            FindContent::ByName(name) => Content::find_by_name(&self.connection()?, name),
-            FindContent::ById(id) => Content::find_by_id(&self.connection()?, id)
+        match msg.inner {
+            Find::ByName(name) => Content::find_by_name(&self.connection()?, name, msg.filter),
+            Find::ById(id) => Content::find_by_id(&self.connection()?, id, msg.filter)
         }
     }
 }

@@ -3,7 +3,7 @@ use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder, error::Err
 use state::AppState;
 use futures::{Future, future::err as FutErr};
 use tera::{Tera, Context};
-use template::TEMPLATES;
+use template::{TEMPLATES, get_global_context};
 use models::content::{self, FindFilter};
 use message::{PaginatedListMessage, Pagination};
 use error::error_handler;
@@ -52,6 +52,7 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
 
             let mut context = Context::new();
             context.add("contents", &list);
+            context.extend(get_global_context());
 
             let rendered = match TEMPLATES.render("home.html", &context) {
                 Ok(r) => r,
@@ -95,6 +96,7 @@ fn content_list(req: Rc<HttpRequest<AppState>>, filter: Pagination<content::GetC
             context.add("contents", &pagination.list);
             context.add("pages", &pages);
             context.add("current", &pagination.page);
+            context.extend(get_global_context());
 
             let rendered = match TEMPLATES.render("list.html", &context) {
                 Ok(r) => r,
@@ -177,6 +179,8 @@ pub fn content(req: HttpRequest<AppState>) -> impl Responder {
 
                     let mut context = Context::new();
                     context.add("content", &data);
+                    context.add("__sub_title", &data.title);
+                    context.extend(get_global_context());
                     let rendered = match TEMPLATES.render("content.html", &context) {
                         Ok(r) => r,
                         Err(e) => "Render error".into()
@@ -216,6 +220,8 @@ pub fn page(req: HttpRequest<AppState>) -> impl Responder {
 
                     let mut context = Context::new();
                     context.add("content", &data);
+                    context.add("__sub_title", &data.title);
+                    context.extend(get_global_context());
                     let rendered = match TEMPLATES.render("page.html", &context) {
                         Ok(r) => r,
                         Err(e) => "Render error".into()

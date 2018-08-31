@@ -7,6 +7,24 @@ article {
     h1 {
       line-height: $default-line-height * 2;
     }
+
+    .content-meta {
+      font-size: $default-font-size * 0.85;
+
+      &:after {
+        clear: both;
+        display: table;
+        content: " ";
+      }
+
+      & > * {
+        float: left;
+      }
+
+      & > time {
+        color: $unimportant-text-color;
+      }
+    }
   }
 
   p, ul, code {

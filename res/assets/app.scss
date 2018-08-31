@@ -25,6 +25,14 @@ a {
 
 .flex {
   display: flex;
+  margin-left: -20px;
+}
+
+@for $i from 1 through 12 {
+  .col-flex-#{$i} {
+    flex: $i;
+    margin-left: 20px;
+  }
 }
 
 .nav-main, .nav {

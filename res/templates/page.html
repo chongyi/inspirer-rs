@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container">
-    <article>
-        <header>
-            <h1>{{ content.title }}</h1>
-        </header>
-        <div>
-            {{ content.content | safe }}
+    <div class="flex">
+        <div class="col-flex-5">
+            <article>
+                <header>
+                    <h1>{{ content.title }}</h1>
+                </header>
+                <div>
+                    {{ content.content | safe }}
+                </div>
+            </article>
         </div>
-    </article>
+        <div class="col-flex-2"></div>
+    </div>
 </div>
 <script src="/assets/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>

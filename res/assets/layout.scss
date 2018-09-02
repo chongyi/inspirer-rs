@@ -1,0 +1,29 @@
+@import "variables";
+
+.container {
+  width: $default-container-width;
+  margin: auto;
+  position: relative;
+}
+
+.flex {
+  display: flex;
+  margin-left: -$column-space;
+}
+
+@for $i from 1 through 12 {
+  .col-flex-#{$i} {
+    flex: $i;
+    margin-left: $column-space;
+  }
+}
+
+.row {
+  position: relative;
+}
+
+@media screen and (max-width: $default-container-width) {
+  .container {
+    width: 100%;
+  }
+}

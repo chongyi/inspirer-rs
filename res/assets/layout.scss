@@ -18,12 +18,27 @@
   }
 }
 
-.row {
-  position: relative;
-}
-
 @media screen and (max-width: $default-container-width) {
   .container {
     width: 100%;
+  }
+}
+
+@media screen and (max-width: 960px) {
+  @for $i from 1 through 12 {
+    .col-flex-#{$i} {
+      flex: auto;
+      width: 100%;
+    }
+  }
+
+  .flex {
+    flex-direction: column;
+
+    @for $i from -3 through 3 {
+      .col-order-#{$i} {
+        order: $i;
+      }
+    }
   }
 }

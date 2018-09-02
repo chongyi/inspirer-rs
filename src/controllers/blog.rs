@@ -6,6 +6,7 @@ use futures::{Future, future::err as FutErr, future::result as FutResult};
 use tera::{Tera, Context};
 use template::{TEMPLATES, get_global_context};
 use models::content::{self, FindFilter};
+use models::push_message;
 use message::{PaginatedListMessage, Pagination};
 use error::error_handler;
 use chrono::NaiveDateTime;
@@ -25,20 +26,43 @@ struct Content {
     published_at: Option<String>,
 }
 
+#[derive(Serialize)]
+struct PushMessage {
+    id: u32,
+    content: String,
+    created_at: String,
+    created_at_o: NaiveDateTime
+}
+
 pub fn home(req: HttpRequest<AppState>) -> impl Responder {
     let ref_req = Rc::new(req);
     let req_for_contents = Rc::clone(&ref_req);
+    let req_for_pushes = Rc::clone(&ref_req);
     let req_for_err = Rc::clone(&ref_req);
+
     let default_content = Pagination {
         page: 1,
         per_page: 10,
         filter: Some(content::GetContents::default()),
     };
 
+    let default_pushes = Pagination {
+        page: 1,
+        per_page: 3,
+        filter: Some(push_message::GetPushMessages::default()),
+    };
+
     req_for_contents.state().database.send(default_content).from_err()
-        .and_then(|contents| {
-            let contents: PaginatedListMessage<content::ContentDisplay> = contents?;
+        .and_then(move |contents| {
+            req_for_pushes.state().database.send(default_pushes).from_err()
+                .and_then(move |pushes| {
+                    Ok((contents?, pushes?))
+                })
+        })
+        .and_then(|res| {
+            let (contents, push_messages) = res;
             let mut list: Vec<Content> = vec![];
+            let mut pushes: Vec<PushMessage> = vec![];
 
             for item in contents.list {
                 list.push(Content {
@@ -51,8 +75,18 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
                 });
             }
 
+            for item in push_messages.list {
+                pushes.push(PushMessage {
+                    id: item.id,
+                    content: item.content,
+                    created_at: item.created_at.format("%Y-%m-%d").to_string(),
+                    created_at_o: item.created_at,
+                })
+            }
+
             let mut context = Context::new();
             context.add("contents", &list);
+            context.add("pushes", &pushes);
             context.extend(get_global_context());
 
             let rendered = match TEMPLATES.render("home.html", &context) {

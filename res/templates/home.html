@@ -16,7 +16,7 @@
     <div class="col-flex-2 col-order-1">
       <div class="area">
         <header>
-          <div class="area-title">博客文章</div>
+          <div class="area-title">最新文章</div>
         </header>
         <div class="area-body">
           {% if contents | length > 0 %}
@@ -38,6 +38,20 @@
           <div class="area-title">最新 PUSH MESSAGE</div>
         </header>
         <div class="area-body">
+          {% if contents | length > 0 %}
+          <ul class="push-message-list">
+            {% for item in pushes %}
+            <li>
+              <time datetime="{{ item.created_at_o }}">{{ item.created_at }}</time>
+              <p>{{item.content}}</p>
+            </li>
+            {% endfor %}
+          </ul>
+          <div style="margin-top: 1.4rem"><a href="/push">&raquo; 更多 PUSH</a></div>
+          {% else %}
+          Nothing
+          {% endif %}
+
         </div>
       </div>
     </div>

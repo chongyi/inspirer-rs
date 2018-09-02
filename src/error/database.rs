@@ -27,7 +27,7 @@ pub fn map_database_error(target: Option<&'static str>) -> impl FnOnce(DieselErr
                 detail.insert("detail".to_string(), info.details().map(|v| ErrorDetail::String(v.to_string())));
 
                 match kind {
-                    DieselDatabaseErrorKind::UniqueViolation => Error::conflict::<DieselError>(None, Some(error_msg(NOT_FOUND, "Data conflict.", Some(ErrorDetail::Hash(detail))))),
+                    DieselDatabaseErrorKind::UniqueViolation => Error::conflict::<DieselError>(None, Some(error_msg(CONFLICT, "Data conflict.", Some(ErrorDetail::Hash(detail))))),
                     _ => Error::internal_server_error::<DieselError>(None, Some(error_msg(UNKNOWN_DB_ERROR, "Unknown database error.", Some(ErrorDetail::Hash(detail)))))
                 }
             }

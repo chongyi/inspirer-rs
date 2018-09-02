@@ -23,7 +23,6 @@ mod error;
 mod message;
 mod controllers;
 
-
 mod template {
     use tera::Tera;
     use tera::Context;
@@ -71,6 +70,7 @@ mod template {
 
 pub mod state;
 pub mod routes;
+pub mod utils;
 
 pub mod result {
     use std::result::Result as StdResult;

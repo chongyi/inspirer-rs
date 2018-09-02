@@ -1,7 +1,8 @@
 use std::rc::Rc;
-use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder, error::Error as ActixError};
+use std::sync::Arc;
+use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder, error::Error as ActixError, fs::NamedFile};
 use state::AppState;
-use futures::{Future, future::err as FutErr};
+use futures::{Future, future::err as FutErr, future::result as FutResult};
 use tera::{Tera, Context};
 use template::{TEMPLATES, get_global_context};
 use models::content::{self, FindFilter};
@@ -194,44 +195,87 @@ pub fn content(req: HttpRequest<AppState>) -> impl Responder {
     }
 }
 
-pub fn page(req: HttpRequest<AppState>) -> impl Responder {
+pub fn source(req: HttpRequest<AppState>) -> impl Responder {
     let ref_req = Rc::new(req);
+    let req_for_contents = Rc::clone(&ref_req);
     let req_for_err = Rc::clone(&ref_req);
 
-    let r = find_content(ref_req, Some(FindFilter {
-        as_page: Some(true)
-    }));
+    match req_for_contents.match_info().get("name") {
+        Some(name) => {
+            if req_for_contents.state().static_assets_handle {
+                if name == "favicon.ico" {
+                    use std::io::ErrorKind;
+                    use std::path::PathBuf;
 
-    match r {
-        Ok(fut) => {
-            fut
-                .and_then(|res| {
-                    #[derive(Serialize)]
-                    struct Content {
-                        title: String,
-                        content: String,
-                    }
-
-                    let origin: content::ContentFullDisplay = res?;
-                    let data = Content {
-                        content: markdown_to_html(&origin.content.unwrap_or(String::from("")), &ComrakOptions::default()),
-                        title: origin.title,
+                    let req_for_static = Rc::clone(&ref_req);
+                    let req_for_error = Rc::clone(&ref_req);
+                    let directory = Arc::clone(&req_for_static.state().public_path);
+                    let path = match *directory {
+                        Some(ref ref_directory) => PathBuf::from(ref_directory).join(name),
+                        None => panic!("Error: Fatal system logic error"),
                     };
 
-                    let mut context = Context::new();
-                    context.add("content", &data);
-                    context.add("__sub_title", &data.title);
-                    context.extend(get_global_context());
-                    let rendered = match TEMPLATES.render("page.html", &context) {
-                        Ok(r) => r,
-                        Err(e) => "Render error".into()
+                    let result = NamedFile::open(path).map_err(move |err| {
+                        match err.kind() {
+                            ErrorKind::NotFound => error_handler(req_for_error)(Error::not_found_error(Some(err), None)),
+                            _ => error_handler(req_for_error)(Error::bad_request_error(Some("[param]"), None))
+                        }
+                    });
+
+                    let r = match result {
+                        Ok(named) => {
+                            match named.respond_to(&*req_for_contents) {
+                                Ok(resp) => resp.respond_to(&*req_for_contents),
+                                Err(_) => Err(error_handler(req_for_err)(Error::internal_server_error(Some("[param]"), None)))
+                            }
+                        },
+                        Err(err) => Err(err),
                     };
-                    Ok(HttpResponse::Ok().body(rendered))
-                })
-                .map_err(error_handler(req_for_err))
-                .responder()
-        },
-        Err(err) => FutErr(err).responder()
+
+                    return match r {
+                        Ok(async_result) => async_result.responder(),
+                        Err(err) => FutErr(err).responder()
+                    };
+                }
+            }
+
+            let r = find_content(ref_req, Some(FindFilter {
+                as_page: Some(true)
+            }));
+
+            match r {
+                Ok(fut) => {
+                    fut
+                        .and_then(|res| {
+                            #[derive(Serialize)]
+                            struct Content {
+                                title: String,
+                                content: String,
+                            }
+
+                            let origin: content::ContentFullDisplay = res?;
+                            let data = Content {
+                                content: markdown_to_html(&origin.content.unwrap_or(String::from("")), &ComrakOptions::default()),
+                                title: origin.title,
+                            };
+
+                            let mut context = Context::new();
+                            context.add("content", &data);
+                            context.add("__sub_title", &data.title);
+                            context.extend(get_global_context());
+                            let rendered = match TEMPLATES.render("page.html", &context) {
+                                Ok(r) => r,
+                                Err(e) => "Render error".into()
+                            };
+                            Ok(HttpResponse::Ok().body(rendered))
+                        })
+                        .map_err(error_handler(req_for_err))
+                        .responder()
+                },
+                Err(err) => FutErr(err).responder()
+            }
+        }
+        None => FutErr(error_handler(req_for_err)(Error::bad_request_error(Some("[param]"), None))).responder(),
     }
 }
 

@@ -121,11 +121,12 @@ impl From<MailboxError> for Error {
 }
 
 impl Error {
-    pub fn build<T>(err: Option<T>) -> Self
+    pub fn build<T>(err: Option<T>, status: StatusCode) -> Self
         where T: fmt::Debug + Send + Sync + 'static
     {
         Error {
             cause: Box::new(err),
+            status,
             ..Default::default()
         }
     }
@@ -144,7 +145,7 @@ impl Error {
                 }
             },
             None => {
-                Self::build(err)
+                Self::build(err, status)
             }
         }
     }

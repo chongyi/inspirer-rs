@@ -10,5 +10,6 @@ pub fn blog_routes<S: 'static>(scope: Scope<S>) -> Scope<S>
         .route("/", Method::GET, blog::home)
         .route("/article", Method::GET, blog::article_list)
         .route("/article/{name}", Method::GET, blog::content)
+        .route("/push", Method::GET, blog::push_message_list)
         .route("/{name}", Method::GET, blog::source)
 }

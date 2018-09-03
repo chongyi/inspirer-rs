@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+{% block body %}
+<div class="container">
+  <div class="flex">
+    <div class="col-flex-1">
+      <div class="area">
+        <header>
+          <div class="area-title">PUSH MESSAGES</div>
+        </header>
+        <div class="area-body">
+          {% if pushes | length > 0 %}
+          <ul class="push-message-list">
+            {% for item in pushes %}
+            <li class="push-message">
+              <div class="push-message-content">{{item.content}}</div>
+              <time datetime="{{ item.created_at_o }}">{{ item.created_at }}</time>
+            </li>
+            {% endfor %}
+          </ul>
+          {{ macros::paginate(pages = pages, current = current) }}
+          {% else %}
+          没有任何 Push Message
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

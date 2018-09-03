@@ -38,20 +38,19 @@
           <div class="area-title">最新 PUSH MESSAGE</div>
         </header>
         <div class="area-body">
-          {% if contents | length > 0 %}
+          {% if pushes | length > 0 %}
           <ul class="push-message-list">
             {% for item in pushes %}
-            <li>
+            <li class="push-message">
+              <div class="push-message-content">{{item.content}}</div>
               <time datetime="{{ item.created_at_o }}">{{ item.created_at }}</time>
-              <p>{{item.content}}</p>
             </li>
             {% endfor %}
           </ul>
           <div style="margin-top: 1.4rem"><a href="/push">&raquo; 更多 PUSH</a></div>
           {% else %}
-          Nothing
+          没有任何 Push Message
           {% endif %}
-
         </div>
       </div>
     </div>

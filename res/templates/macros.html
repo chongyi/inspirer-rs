@@ -1,5 +1,5 @@
 {% macro paginate(pages, current) %}
-{% if pages > 0 %}
+{% if pages > 1 %}
 <div class="pagination">
   <ul>
     <li {% if current == 1 %}class="disabled"{% endif %}><a {% if current == 1 %}href="javascript:void(0);"{% else %}href="?page={{ current - 1 }}"{% endif %}>&laquo;</a></li>

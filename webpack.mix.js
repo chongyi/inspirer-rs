@@ -11,7 +11,9 @@ let mix = require('laravel-mix');
  |
  */
 
-mix.sass('res/assets/app.scss', 'res/public/assets/')
+mix
+    .setPublicPath('res/public')
+    .sass('res/assets/app.scss', 'res/public/assets/')
     .sass('res/assets/home.scss', 'res/public/assets/')
     .copy('res/assets/highlight.pack.js', 'res/public/assets/highlight.min.js')
     .js('res/assets/content.js', 'res/public/assets/')

@@ -24,5 +24,12 @@
   </nav>
 </header>
 {% block body %}{% endblock %}
+<footer>
+  <div class="container">
+    {% if __site_setting.site.registration_record is defined and __site_setting.site.registration_record | length > 0 %}
+    <div class="minor-text center-text">{{ __site_setting.site.registration_record }}</div>
+    {% endif %}
+  </div>
+</footer>
 </body>
 </html>

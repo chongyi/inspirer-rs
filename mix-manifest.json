@@ -1,4 +1,6 @@
 {
+    "/res/public/assets/content.js": "/res/public/assets/content.js",
     "/res/public/assets/app.css": "/res/public/assets/app.css",
+    "/res/public/assets/home.css": "/res/public/assets/home.css",
     "/res/public/assets/highlight.min.js": "/res/public/assets/highlight.min.js"
 }

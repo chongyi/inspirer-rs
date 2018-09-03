@@ -1,0 +1,18 @@
+@import "variables";
+
+.recommends {
+  & > article.content {
+    & > header {
+      margin: 0;
+      & + .content-body {
+        margin-top: 0;
+      }
+    }
+
+    & > .content-body {
+      p {
+        line-height: $default-line-height * 1.2;
+      }
+    }
+  }
+}

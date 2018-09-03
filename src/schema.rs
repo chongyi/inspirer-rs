@@ -42,6 +42,18 @@ table! {
 }
 
 table! {
+    recommend_contents (id) {
+        id -> Unsigned<Integer>,
+        content_id -> Nullable<Unsigned<Integer>>,
+        source -> Varchar,
+        title -> Varchar,
+        summary -> Varchar,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     subjects (id) {
         id -> Unsigned<Integer>,
         name -> Nullable<Varchar>,
@@ -68,26 +80,7 @@ allow_tables_to_appear_in_same_query!(
     categories,
     contents,
     push_messages,
+    recommend_contents,
     subjects,
     subject_relates,
 );
-
-#[derive(Deserialize, Serialize, Default)]
-pub struct SiteSetting {
-    pub site: SiteMetaData
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct SiteMetaData {
-    pub title: String,
-    pub registration_record: Option<String>,
-}
-
-impl Default for SiteMetaData {
-    fn default() -> Self {
-        SiteMetaData {
-            title: String::from("Inspirer"),
-            registration_record: None
-        }
-    }
-}

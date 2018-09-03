@@ -1,5 +1,14 @@
 @import "variables";
 
+.fixed {
+  position: fixed;
+}
+
+.fixed-zero-top {
+  @extend .fixed;
+  top: 0;
+}
+
 .container {
   width: $default-container-width;
   margin: auto;
@@ -28,12 +37,14 @@
   @for $i from 1 through 12 {
     .col-flex-#{$i} {
       flex: auto;
+      margin-left: 0;
       width: 100%;
     }
   }
 
   .flex {
     flex-direction: column;
+    margin-left: 0;
 
     @for $i from -3 through 3 {
       .col-order-#{$i} {

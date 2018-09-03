@@ -29,7 +29,7 @@ mod template {
     use std::fs::File;
     use std::env;
     use std::io::Read;
-    use schema::SiteSetting;
+    use models::site_setting::SiteSetting;
     use toml;
     lazy_static! {
         pub static ref TEMPLATES: Tera = {

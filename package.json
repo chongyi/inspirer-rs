@@ -23,5 +23,8 @@
   "devDependencies": {
     "cross-env": "^5.1.6",
     "laravel-mix": "^2.1.11"
+  },
+  "dependencies": {
+    "contents": "^5.0.0"
   }
 }

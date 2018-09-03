@@ -7,6 +7,7 @@ use tera::{Tera, Context};
 use template::{TEMPLATES, get_global_context};
 use models::content::{self, FindFilter};
 use models::push_message;
+use models::recommend;
 use message::{PaginatedListMessage, Pagination};
 use error::error_handler;
 use chrono::NaiveDateTime;
@@ -31,13 +32,14 @@ struct PushMessage {
     id: u32,
     content: String,
     created_at: String,
-    created_at_o: NaiveDateTime
+    created_at_o: NaiveDateTime,
 }
 
 pub fn home(req: HttpRequest<AppState>) -> impl Responder {
     let ref_req = Rc::new(req);
     let req_for_contents = Rc::clone(&ref_req);
     let req_for_pushes = Rc::clone(&ref_req);
+    let req_for_recommends = Rc::clone(&ref_req);
     let req_for_err = Rc::clone(&ref_req);
 
     let default_content = Pagination {
@@ -52,15 +54,20 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
         filter: Some(push_message::GetPushMessages::default()),
     };
 
+    let default_recommends = recommend::GetRecommendContents::default();
+
     req_for_contents.state().database.send(default_content).from_err()
         .and_then(move |contents| {
             req_for_pushes.state().database.send(default_pushes).from_err()
                 .and_then(move |pushes| {
-                    Ok((contents?, pushes?))
+                    req_for_recommends.state().database.send(default_recommends).from_err()
+                        .and_then(move |recommends| {
+                            Ok((contents?, pushes?, recommends?))
+                        })
                 })
         })
         .and_then(|res| {
-            let (contents, push_messages) = res;
+            let (contents, push_messages, mut recommends) = res;
             let mut list: Vec<Content> = vec![];
             let mut pushes: Vec<PushMessage> = vec![];
 
@@ -84,9 +91,18 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
                 })
             }
 
+            let recommends: Vec<recommend::RecommendContentDisplay> = recommends
+                .iter_mut()
+                .map(|mut item| {
+                    item.summary = markdown_to_html(&item.summary, &ComrakOptions::default());
+                    item.clone()
+                })
+                .collect();
+
             let mut context = Context::new();
             context.add("contents", &list);
             context.add("pushes", &pushes);
+            context.add("recommends", &recommends);
             context.extend(get_global_context());
 
             let rendered = match TEMPLATES.render("home.html", &context) {
@@ -262,7 +278,7 @@ pub fn source(req: HttpRequest<AppState>) -> impl Responder {
                                 Ok(resp) => resp.respond_to(&*req_for_contents),
                                 Err(_) => Err(error_handler(req_for_err)(Error::internal_server_error(Some("[param]"), None)))
                             }
-                        },
+                        }
                         Err(err) => Err(err),
                     };
 
@@ -305,7 +321,7 @@ pub fn source(req: HttpRequest<AppState>) -> impl Responder {
                         })
                         .map_err(error_handler(req_for_err))
                         .responder()
-                },
+                }
                 Err(err) => FutErr(err).responder()
             }
         }

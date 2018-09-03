@@ -2,7 +2,19 @@
 @import "vs2015.css";
 
 article.content {
+  h1, h2, h3, h4, h5, h6 {
+    & > a {
+      color: $base-text-color
+    }
+  }
+
   & > header {
+    margin: 3.6rem 0;
+
+    & > .content-title {
+      font-weight: bolder;
+    }
+
     h1 {
       line-height: $default-line-height * 2;
     }
@@ -31,21 +43,43 @@ article.content {
   }
 
   & > .content-body {
+    h3 {
+      font-size: 1.3em;
+    }
+    h4 {
+      font-size: 1.2em;
+    }
+    h5 {
+      font-size: 1.15em;
+    }
+    h6 {
+      font-size: 1.1em;
+    }
+
+    h2, h3 {
+      margin: 1.8rem 0;
+    }
+    h4, h5, h6 {
+      margin: 1.5rem 0;
+    }
+
     p, ul, code {
-      line-height: $default-line-height * 1.4;
+      line-height: $default-line-height * 1.6;
       overflow: auto;
     }
 
     blockquote {
       border-left: solid .4rem $lightness-border-color;
       margin: 0;
-      padding-left: 1.6rem;
+      padding: .6rem 1.6rem;
     }
 
     pre > code {
       padding: 1rem!important;
       color: #DCDCDC;
       background: #1E1E1E;
+      line-height: $default-line-height * 1.2;
+      tab-size: 4;
     }
 
     code {
@@ -56,6 +90,12 @@ article.content {
       border-radius: .4rem;
       font-size: 0.85em;
     }
+  }
+}
+
+.content-toc {
+  ol, ul {
+    padding-left: 1.5em;
   }
 }
 
@@ -72,15 +112,15 @@ article.content {
     }
 
     h1 {
-      font-size: 1.2em;
+      font-size: 1.4em;
     }
 
     h2, h3 {
-      font-size: 1.1em;
+      font-size: 1.26em;
     }
 
     h4, h5, h6 {
-      font-size: 1.05em;
+      font-size: 1.14em;
     }
   }
 }

@@ -71,6 +71,20 @@ a {
   }
 }
 
+.column {
+  & > header {
+    padding: 1rem 0;
+    border-bottom: solid 1px $light-border-color;
+    & > .column-title {
+      font-size: $default-font-size * 1.2;
+    }
+  }
+
+  & > .column-body {
+    position: relative;
+  }
+}
+
 .pagination {
   margin: 1rem 0;
   & > ul {

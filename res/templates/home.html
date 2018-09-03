@@ -1,6 +1,10 @@
 {% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="/assets/home.css">
+{% endblock %}
 {% block body %}
 <div class="container">
+  {% if recommends | length >= 3 %}
   <div class="flex row">
     <div class="col-flex-1">
       <div class="area">
@@ -8,10 +12,21 @@
           <div class="area-title">推荐内容</div>
         </header>
         <div class="area-body">
+          <div class="flex recommends">
+            {% for item in recommends %}
+            <article class="content col-flex-1">
+              <header><div class="content-title"><a href="{{ item.source }}" title="{{ item.title }}">{{ item.title }}</a></div></header>
+              <div class="content-body">
+                {{ item.summary | safe }}
+              </div>
+            </article>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
   </div>
+  {% endif %}
   <div class="flex row">
     <div class="col-flex-2 col-order-1">
       <div class="area">

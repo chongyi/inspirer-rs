@@ -96,6 +96,7 @@ article.content {
 .content-toc {
   ol, ul {
     padding-left: 1.5em;
+    line-height: $default-line-height * 1.4;
   }
 }
 

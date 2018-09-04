@@ -6,17 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     let hold = document.getElementsByClassName('hold')[0]
-    let parent = hold.offsetParent
     document.getElementById('toc').appendChild(contents.list())
     document.addEventListener('scroll', (e) => {
-        if (parent.offsetTop - document.documentElement.scrollTop < 0) {
-            if (!hold.classList.contains('fixed-zero-top')) {
-                hold.classList.add('fixed-zero-top')
-            }
-        } else {
-            if (hold.classList.contains('fixed-zero-top')) {
-                hold.classList.remove('fixed-zero-top')
-            }
-        }
+
     })
 })

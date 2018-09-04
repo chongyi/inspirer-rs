@@ -5,16 +5,16 @@
 {% block body %}
 <div class="container">
   {% if recommends | length >= 3 %}
-  <div class="flex row">
-    <div class="col-flex-1">
+  <div class="row">
+    <div class="col-md-12">
       <div class="area">
         <header>
           <div class="area-title">推荐内容</div>
         </header>
         <div class="area-body">
-          <div class="flex recommends">
+          <div class="row recommends">
             {% for item in recommends %}
-            <article class="content col-flex-1">
+            <article class="content col-md-4">
               <header><div class="content-title"><a href="{{ item.source }}" title="{{ item.title }}">{{ item.title }}</a></div></header>
               <div class="content-body">
                 {{ item.summary | safe }}
@@ -27,8 +27,8 @@
     </div>
   </div>
   {% endif %}
-  <div class="flex row">
-    <div class="col-flex-2 col-order-1">
+  <div class="row">
+    <div class="col-md-8">
       <div class="area">
         <header>
           <div class="area-title">最新文章</div>
@@ -47,7 +47,7 @@
         </div>
       </div>
     </div>
-    <div class="col-flex-1 col-order-0">
+    <div class="col-md-4">
       <div class="area">
         <header>
           <div class="area-title">最新 PUSH MESSAGE</div>

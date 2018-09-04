@@ -25,6 +25,7 @@
     "laravel-mix": "^2.1.11"
   },
   "dependencies": {
+    "bootstrap-sass": "^3.3.7",
     "contents": "^5.0.0"
   }
 }

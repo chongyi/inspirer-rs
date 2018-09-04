@@ -4,6 +4,7 @@
 @import "list";
 
 body {
+  margin: 0;
   font-family: $base-font-family;
   font-size: $default-font-size;
 
@@ -11,6 +12,18 @@ body {
     padding: 1rem 0;
     margin-top: 5rem;
   }
+}
+
+img.logo {
+  margin-right: 6px;
+}
+
+* {
+  @include box-sizing(border-box);
+}
+*:before,
+*:after {
+  @include box-sizing(border-box);
 }
 
 time {
@@ -21,6 +34,10 @@ time {
 a {
   text-decoration: none;
   color: $base-link-color;
+
+  &:hover {
+    color: darken($base-link-color, 20%);
+  }
 }
 
 .minor-text {
@@ -40,7 +57,8 @@ a {
 }
 
 .nav-main {
-  line-height: $default-line-height * 1.2;
+  line-height: $default-line-height * 2;
+  padding: .5rem 0;
 
   .nav-head {
     float: left;
@@ -48,6 +66,11 @@ a {
     font-weight: bold;
     & > a {
       color: $base-theme-color;
+
+      & > img {
+        vertical-align: text-top;
+        border: none;
+      }
     }
   }
 

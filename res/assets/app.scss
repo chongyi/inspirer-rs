@@ -42,6 +42,13 @@ a {
 
 .minor-text {
   color: $minor-text-color;
+  & > * {
+    color: $minor-text-color;
+  }
+}
+
+small {
+  font-size: 80%;
 }
 
 .center-text {

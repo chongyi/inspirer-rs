@@ -26,8 +26,9 @@
 {% block body %}{% endblock %}
 <footer>
   <div class="container">
+    <div><p class="center-text">灵感，来自生活的馈赠</p></div>
     {% if __site_setting.site.registration_record is defined and __site_setting.site.registration_record | length > 0 %}
-    <div class="minor-text center-text">{{ __site_setting.site.registration_record }}</div>
+    <div class="minor-text center-text"><a href="http://www.miitbeian.gov.cn/" alt="{{ __site_setting.site.registration_record }}"><small>{{ __site_setting.site.registration_record }}</small></a></div>
     {% endif %}
   </div>
 </footer>

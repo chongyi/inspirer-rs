@@ -114,6 +114,14 @@ impl Content {
         Ok(generated_id as u32)
     }
 
+    pub fn delete(connection: &Conn, target: u32) {
+        unimplemented!()
+    }
+
+    pub fn publish(connection: &Conn, target: u32) {
+        unimplemented!()
+    }
+
     pub fn find_by_id(connection: &Conn, target: u32, find_filter: Option<FindFilter>) -> Result<ContentFullDisplay> {
         use schema::contents::dsl::*;
 

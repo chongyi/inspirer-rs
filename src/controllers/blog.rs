@@ -375,15 +375,3 @@ pub fn push_message_list(req: HttpRequest<AppState>) -> impl Responder {
         .map_err(error_handler(req_for_err))
         .responder()
 }
-
-pub fn push_message(req: HttpRequest<AppState>) -> impl Responder {
-    "🚧🚧🚧"
-}
-
-pub fn subject_list(req: HttpRequest<AppState>) -> impl Responder {
-    "🚧🚧🚧"
-}
-
-pub fn subject(req: HttpRequest<AppState>) -> impl Responder {
-    "🚧🚧🚧"
-}

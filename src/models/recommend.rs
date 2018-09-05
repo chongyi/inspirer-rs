@@ -52,7 +52,7 @@ impl Message for GetRecommendContents {
 impl Handler<GetRecommendContents> for DatabaseExecutor {
     type Result = <GetRecommendContents as Message>::Result;
 
-    fn handle(&mut self, msg: GetRecommendContents, ctx: &mut Self::Context) -> <Self as Handler<GetRecommendContents>>::Result {
+    fn handle(&mut self, msg: GetRecommendContents, _: &mut Self::Context) -> <Self as Handler<GetRecommendContents>>::Result {
         RecommendContent::get_recommend_contents(&self.connection()?, msg.0)
     }
 }

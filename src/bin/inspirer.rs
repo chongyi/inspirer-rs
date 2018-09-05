@@ -11,8 +11,7 @@ extern crate r2d2;
 
 use std::path::PathBuf;
 use std::sync::Arc;
-use clap::{Arg, App as CommandApp, SubCommand, ArgMatches};
-use actix::SyncArbiter;
+use clap::{Arg, App as CommandApp};
 use actix_web::{server, fs, App};
 use inspirer::routes::blog::blog_routes;
 use inspirer::state;
@@ -63,6 +62,8 @@ fn start_server() {
         let static_assets_path = Arc::clone(&state.static_assets_path);
         let public_path = Arc::clone(&state.public_path);
         let mut app = App::with_state(state.clone());
+
+        debug!("Build app state.");
 
         if static_assets_handle {
             let path = match *static_assets_path {

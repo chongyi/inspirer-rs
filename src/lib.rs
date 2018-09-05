@@ -16,6 +16,7 @@ extern crate regex;
 extern crate comrak;
 extern crate toml;
 extern crate rss;
+extern crate url;
 
 #[macro_use] mod database;
 mod models;
@@ -40,29 +41,31 @@ mod template {
         };
     }
 
+    pub fn get_site_setting() -> SiteSetting {
+        match env::var("SITE_SETTING_FILE") {
+            Ok(file) => {
+                let mut file = File::open(&file);
+                match file {
+                    Ok(ref mut result) => {
+                        let mut contents = String::new();
+                        let state = result.read_to_string(&mut contents).is_ok();
+
+                        if state {
+                            toml::from_str(&contents).unwrap_or(SiteSetting::default())
+                        } else {
+                            SiteSetting::default()
+                        }
+                    },
+                    Err(_) => SiteSetting::default()
+                }
+            },
+            Err(_) => SiteSetting::default()
+        }
+    }
+
     pub fn get_global_context() -> Context {
         let mut context = Context::new();
-        let setting: SiteSetting = {
-            match env::var("SITE_SETTING_FILE") {
-                Ok(file) => {
-                    let mut file = File::open(&file);
-                    match file {
-                        Ok(ref mut result) => {
-                            let mut contents = String::new();
-                            let state = result.read_to_string(&mut contents).is_ok();
-
-                            if state {
-                                toml::from_str(&contents).unwrap_or(SiteSetting::default())
-                            } else {
-                                SiteSetting::default()
-                            }
-                        },
-                        Err(_) => SiteSetting::default()
-                    }
-                },
-                Err(_) => SiteSetting::default()
-            }
-        };
+        let setting: SiteSetting = get_site_setting();
 
         context.add("__site_setting", &setting);
         context

@@ -91,14 +91,6 @@ impl Content {
         column::published_at, column::modified_at
     );
 
-    pub const DISPLAY_BASE_COLUMNS: (
-        column::id, column::name, column::title,
-        column::category_id,  column::sort, column::content_type, column::display
-    ) = (
-        column::id, column::name, column::title,
-        column::category_id,  column::sort, column::content_type, column::display
-    );
-
     pub fn create(connection: &Conn, data: NewContent) -> Result<u32> {
         use schema::contents::dsl::*;
 
@@ -240,7 +232,7 @@ impl Message for Pagination<GetContents> {
 impl Handler<Pagination<GetContents>> for DatabaseExecutor {
     type Result = <Pagination<GetContents> as Message>::Result;
 
-    fn handle(&mut self, msg: Pagination<GetContents>, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: Pagination<GetContents>, _: &mut Self::Context) -> Self::Result {
         Content::get_list(&self.connection()?, msg)
     }
 }
@@ -266,7 +258,7 @@ impl Message for FindContent {
 impl Handler<FindContent> for DatabaseExecutor {
     type Result = <FindContent as Message>::Result;
 
-    fn handle(&mut self, msg: FindContent, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: FindContent, _: &mut Self::Context) -> Self::Result {
         match msg.inner {
             Find::ByName(name) => Content::find_by_name(&self.connection()?, name, msg.filter),
             Find::ById(id) => Content::find_by_id(&self.connection()?, id, msg.filter)

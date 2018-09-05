@@ -56,7 +56,7 @@ impl Default for Error {
     fn default() -> Self {
         Error {
             cause: Box::new("[unknown]"),
-            code: 65535,
+            code: UNKNOWN_ERROR,
             status: StatusCode::INTERNAL_SERVER_ERROR,
             message: "Unknown error".into(),
             detail: None
@@ -92,7 +92,7 @@ impl ResponseError for HtmlError {
         context.add("status", &self.0.status.as_u16());
         let rendered = match TEMPLATES.render("error.html", &context) {
             Ok(r) => r,
-            Err(e) => "Render error".into()
+            Err(_) => "Render error".into()
         };
 
         HttpResponse::build(self.0.status).body(rendered)

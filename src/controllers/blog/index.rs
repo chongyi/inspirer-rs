@@ -2,11 +2,15 @@ use super::{PushMessage, Content};
 
 use std::rc::Rc;
 use futures::future::{Future, ok as FutOk, err as FutErr};
-use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder};
+use actix_web::{HttpRequest, HttpResponse, Responder, AsyncResponder, HttpMessage};
+use comrak::{markdown_to_html, ComrakOptions};
+use tera::Context;
 
 use state::AppState;
 use message::Pagination;
 use models::{push_message, content, recommend};
+use template::{get_global_context, TEMPLATES};
+use error::error_handler;
 
 pub fn home(req: HttpRequest<AppState>) -> impl Responder {
     let ref_req = Rc::new(req);
@@ -66,7 +70,7 @@ pub fn home(req: HttpRequest<AppState>) -> impl Responder {
 
             let recommends: Vec<recommend::RecommendContentDisplay> = recommends
                 .iter_mut()
-                .map(|mut item| {
+                .map(|item| {
                     item.summary = markdown_to_html(&item.summary, &ComrakOptions::default());
                     item.clone()
                 })

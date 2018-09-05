@@ -3,6 +3,7 @@ use chrono::NaiveDateTime;
 pub mod index;
 pub mod content;
 pub mod push_message;
+pub mod rss;
 
 #[derive(Serialize)]
 pub struct Content {

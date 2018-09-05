@@ -109,7 +109,7 @@ impl Message for Pagination<GetPushMessages> {
 impl Handler<Pagination<GetPushMessages>> for DatabaseExecutor {
     type Result = <Pagination<GetPushMessages> as Message>::Result;
 
-    fn handle(&mut self, msg: Pagination<GetPushMessages>, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: Pagination<GetPushMessages>, _: &mut Self::Context) -> Self::Result {
         PushMessage::get_list(&self.connection()?, msg)
     }
 }
@@ -123,7 +123,7 @@ impl Message for FindPushMessage {
 impl Handler<FindPushMessage> for DatabaseExecutor {
     type Result = <FindPushMessage as Message>::Result;
 
-    fn handle(&mut self, msg: FindPushMessage, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: FindPushMessage, _: &mut Self::Context) -> Self::Result {
         PushMessage::find_by_id(&self.connection()?, msg.0)
     }
 }

@@ -7,11 +7,15 @@
       & + .content-body {
         margin-top: 0;
       }
+
+      & > .content-title {
+        font-size: 110%;
+      }
     }
 
     & > .content-body {
       p {
-        line-height: $default-line-height * 1.2;
+        line-height: $default-line-height * 1.4;
       }
     }
   }

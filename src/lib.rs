@@ -15,6 +15,7 @@ extern crate futures;
 extern crate regex;
 extern crate comrak;
 extern crate toml;
+extern crate rss;
 
 #[macro_use] mod database;
 mod models;

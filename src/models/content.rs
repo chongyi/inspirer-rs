@@ -24,6 +24,7 @@ pub struct NewContent {
     pub content: Option<String>,
     pub display: bool,
     pub published_at: Option<NaiveDateTime>,
+    pub as_page: bool,
 }
 
 #[derive(Deserialize, AsChangeset, Debug)]
@@ -299,4 +300,8 @@ impl Handler<FindContent> for DatabaseExecutor {
             Find::ById(id) => Content::find_by_id(&self.connection()?, id, msg.filter)
         }
     }
+}
+
+pub struct CreateContent {
+
 }

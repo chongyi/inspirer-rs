@@ -87,6 +87,16 @@ impl PushMessage {
 
         paginator()
     }
+
+    pub fn delete(connection: &Conn, target: u32) -> Result<usize> {
+        use schema::push_messages::dsl::*;
+
+        let count = delete_by_id!(connection => (
+            push_messages # = target
+        ))?;
+
+        Ok(count)
+    }
 }
 
 #[derive(Clone, Debug)]

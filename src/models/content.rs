@@ -106,12 +106,47 @@ impl Content {
         Ok(generated_id as u32)
     }
 
-    pub fn delete(connection: &Conn, target: u32) {
-        unimplemented!()
+    pub fn delete(connection: &Conn, target: u32) -> Result<usize> {
+        use schema::contents::dsl::*;
+
+        let count = delete_by_id!(connection => (
+            contents # = target
+        ))?;
+
+        Ok(count)
     }
 
-    pub fn publish(connection: &Conn, target: u32) {
-        unimplemented!()
+    pub fn publish(connection: &Conn, target: u32) -> Result<Option<ContentFullDisplay>> {
+        use schema::contents::dsl::*;
+        use chrono::Utc;
+
+        let count = diesel::update(contents)
+            .set((display.eq(true), published_at.eq(Some(Utc::now().naive_local()))))
+            .filter(id.eq(target))
+            .execute(connection)
+            .map_err(map_database_error(Some("contents")))?;
+
+        if count > 0 {
+            Ok(Self::find_by_id(connection, target, None).ok())
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn unpublish(connection: &Conn, target: u32) -> Result<Option<ContentFullDisplay>> {
+        use schema::contents::dsl::*;
+
+        let count = diesel::update(contents)
+            .set((display.eq(false), published_at.eq::<Option<NaiveDateTime>>(None)))
+            .filter(id.eq(target))
+            .execute(connection)
+            .map_err(map_database_error(Some("contents")))?;
+
+        if count > 0 {
+            Ok(Self::find_by_id(connection, target, None).ok())
+        } else {
+            Ok(None)
+        }
     }
 
     pub fn find_by_id(connection: &Conn, target: u32, find_filter: Option<FindFilter>) -> Result<ContentFullDisplay> {

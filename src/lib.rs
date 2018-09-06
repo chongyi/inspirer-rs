@@ -17,6 +17,7 @@ extern crate comrak;
 extern crate toml;
 extern crate rss;
 extern crate url;
+extern crate tempdir;
 
 #[macro_use] mod database;
 mod models;

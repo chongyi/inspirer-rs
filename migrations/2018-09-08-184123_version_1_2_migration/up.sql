@@ -37,16 +37,19 @@ create table if not exists `comments` (
 alter table `contents` add column `allow_comment` tinyint(1) not null default 1 comment '是否允许评论' after `as_page`;
 alter table `contents` add column `limit_comment` tinyint not null default 2 comment '限制评论，当 `allow_comment` 为 1 时该值有意义。 1 表不限制 2 表需审核' after `allow_comment`;
 
-alter table `push_messages` add column `allow_comment` tinyint(1) not null default 1 comment '是否允许评论' after `as_page`;
+alter table `push_messages` add column `allow_comment` tinyint(1) not null default 1 comment '是否允许评论' after `content`;
 alter table `push_messages` add column `limit_comment` tinyint not null default 1 comment '限制评论，当 `allow_comment` 为 1 时该值有意义。 1 表不限制 2 表需审核' after `allow_comment`;
 
 create table if not exists `blogrolls` (
   `id` int unsigned not null auto_increment,
-  `title` varchar character set utf8mb4 collate utf8mb4_general_ci not null,
-  `link` varchar not null,
+  `title` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `link` varchar(500) not null,
   `sort` smallint unsigned not null default 0,
-  `icon` varchar default null,
+  `icon` varchar(500) default null,
   `created_at` timestamp not null default current_timestamp ,
   `updated_at` timestamp null on update current_timestamp ,
   primary key (`id`)
 ) character set = utf8mb4 collate = utf8mb4_general_ci comment = '友情链接表';
+
+alter table `subjects` add column `cover` varchar(500) default null comment '专题封面' after `name`;
+alter table `contents` add column `cover` varchar(500) default null comment '内容封面' after `name`;

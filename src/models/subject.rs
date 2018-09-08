@@ -39,6 +39,7 @@ pub struct UpdateSubject {
 pub struct SubjectDisplay {
     pub id: u32,
     pub name: Option<String>,
+    pub cover: Option<String>,
     pub title: String,
     pub keywords: String,
     pub description: String,

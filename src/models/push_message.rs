@@ -25,6 +25,8 @@ pub struct UpdatePushMessage {
 pub struct PushMessageDisplay {
     pub id: u32,
     pub content: String,
+    pub allow_comment: bool,
+    pub limit_comment: i8,
     pub sort: i16,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,

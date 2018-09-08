@@ -62,9 +62,12 @@ pub struct ContentDisplay {
 pub struct ContentFullDisplay {
     pub id: u32,
     pub name: Option<String>,
+    pub cover: Option<String>,
     pub title: String,
     pub category_id: Option<u32>,
     pub as_page: bool,
+    pub allow_comment: bool,
+    pub limit_comment: i8,
     pub keywords: String,
     pub description: String,
     pub sort: i16,

@@ -1,11 +1,15 @@
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::Mutex;
+use std::collections::{BTreeMap};
 use actix::*;
 use actix::dev::{Request, ToEnvelope};
 use diesel::{sql_query, RunQueryDsl};
 use diesel::prelude::MysqlConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use database::DatabaseExecutor;
+
+use models::category::CategoryBase;
 
 pub struct Config {
     pub static_assets_handle: bool,
@@ -22,6 +26,8 @@ pub struct AppState {
     pub public_path: Arc<Option<String>>,
     /// 通过该字段对数据库进行访问以及操作
     pub database: Addr<DatabaseExecutor>,
+    /// 内置缓存
+    pub built_in_cache: Arc<BuiltInCache>
 }
 
 impl AppState {
@@ -51,7 +57,34 @@ impl AppState {
             static_assets_handle: config.static_assets_handle,
             static_assets_path,
             public_path,
-            database: addr
+            database: addr,
+            built_in_cache: Arc::new(BuiltInCache::default()),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct BuiltInCache {
+    content_category: Arc<Mutex<BTreeMap<u32, CategoryBase>>>
+}
+
+impl Default for BuiltInCache {
+    fn default() -> Self {
+        BuiltInCache {
+            content_category: Arc::new(Mutex::new(BTreeMap::new())),
+        }
+    }
+}
+
+impl BuiltInCache {
+    pub fn get_category_by_id(&self, target: u32) -> Option<CategoryBase> {
+        let resource = self.content_category.lock().unwrap();
+        resource.get(&target).map(Clone::clone)
+    }
+
+    pub fn update_category(&self, source: CategoryBase) {
+        let mut resource = self.content_category.lock().unwrap();
+        let id = source.id;
+        resource.insert(id, source);
     }
 }

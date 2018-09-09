@@ -52,6 +52,16 @@ pub struct CategoryFullDisplay {
     pub updated_at: Option<NaiveDateTime>,
 }
 
+impl From<CategoryFullDisplay> for CategoryBase {
+    fn from(origin: CategoryFullDisplay) -> Self {
+        CategoryBase {
+            id: origin.id,
+            name: origin.name.clone(),
+            display_name: origin.display_name.clone(),
+        }
+    }
+}
+
 pub struct Category;
 
 impl Category {

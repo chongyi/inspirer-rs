@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container">
-    <div class="row">
+    <div class="row" style="margin-top: 2rem">
       <div class="col-md-8">
         <article class="content">
           <header>
-            <h1>{{ content.title }}</h1>
             <div class="content-meta">
               <time datetime="{{ content.published_at_o }}">发布于 {{ content.published_at }}</time>
             </div>
+            <h1>{{ content.title }}</h1>
           </header>
           <div class="content-body">
             {{ content.content | safe }}

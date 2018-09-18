@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
         while (p !== document.body) {
             top += p.offsetTop
             p = p.offsetParent
-            console.log(top)
         }
 
         handlers.push({w: el.offsetWidth, top, el})

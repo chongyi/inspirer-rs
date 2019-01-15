@@ -1,16 +1,4 @@
 table! {
-    blogrolls (id) {
-        id -> Unsigned<Integer>,
-        title -> Varchar,
-        link -> Varchar,
-        sort -> Unsigned<Smallint>,
-        icon -> Nullable<Varchar>,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-    }
-}
-
-table! {
     categories (id) {
         id -> Unsigned<Integer>,
         name -> Varchar,
@@ -18,26 +6,6 @@ table! {
         keywords -> Varchar,
         description -> Varchar,
         sort -> Smallint,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-    }
-}
-
-table! {
-    comments (id) {
-        id -> Unsigned<Integer>,
-        channel -> Unsigned<Smallint>,
-        discussant_id -> Unsigned<Integer>,
-        subject_id -> Unsigned<Integer>,
-        discussion_id -> Unsigned<Integer>,
-        reply_id -> Unsigned<Integer>,
-        reply_discussant_id -> Nullable<Unsigned<Integer>>,
-        replyable -> Bool,
-        content -> Text,
-        display -> Bool,
-        verified -> Bool,
-        verifier_type -> Tinyint,
-        verified_at -> Timestamp,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
     }
@@ -67,10 +35,26 @@ table! {
 }
 
 table! {
-    discussants (id) {
+    links (id) {
+        id -> Unsigned<Integer>,
+        title -> Varchar,
+        link -> Varchar,
+        sort -> Unsigned<Smallint>,
+        icon -> Nullable<Varchar>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    members (id) {
         id -> Unsigned<Integer>,
         nickname -> Varchar,
+        avatar -> Nullable<Varchar>,
+        gender -> Tinyint,
         email -> Varchar,
+        email_is_valid -> Bool,
+        email_verified_at -> Nullable<Timestamp>,
         password -> Nullable<Varchar>,
         status -> Tinyint,
         activated_at -> Nullable<Timestamp>,
@@ -128,11 +112,10 @@ table! {
 }
 
 allow_tables_to_appear_in_same_query!(
-    blogrolls,
     categories,
-    comments,
     contents,
-    discussants,
+    links,
+    members,
     push_messages,
     recommend_contents,
     subjects,

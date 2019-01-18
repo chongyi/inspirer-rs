@@ -108,5 +108,83 @@ create table if not exists `members` (
   `created_at` timestamp not null default current_timestamp ,
   `updated_at` timestamp null on update current_timestamp ,
   primary key (`id`),
-  unique key email_account (`email`)
+  unique key email_account (`email`),
+  key index_nickname (`nickname`),
+  key index_gender (`gender`),
+  key index_status (`status`)
 ) character set = utf8mb4 collate = utf8mb4_general_ci comment = '会员表';
+
+create table if not exists `platform_accounts` (
+  `id` int unsigned not null auto_increment,
+  `account` varchar(40) not null,
+  `password` varchar(255) default null,
+  `is_system` tinyint(1) not null default 0 comment '是否为系统账户',
+  `email` varchar(80) not null,
+  `email_is_valid` tinyint(1) not null default 0 comment '邮箱是否有效',
+  `email_verified_at` timestamp null comment '邮箱验证时间',
+  `member_id` int unsigned default null comment '绑定的会员 ID',
+  `member_bound_at` timestamp null comment '绑定会员的时间',
+  `role_id` int unsigned not null default 0 comment '角色 ID',
+  `status` tinyint(1) not null default 1 comment '可用状态',
+  `activated_at` timestamp null comment '上次活跃时间',
+  `created_at` timestamp not null default current_timestamp ,
+  `updated_at` timestamp null on update current_timestamp ,
+  primary key (`id`),
+  unique key unique_accounr (`account`),
+  unique key unique_bound (`account`, `member_id`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '平台账户表';
+
+create table if not exists `platform_roles` (
+  `id` int unsigned not null auto_increment,
+  `name` varchar(60) not null comment '角色标识符',
+  `display_name` varchar(80) not null comment '角色名称',
+  `description` varchar(500) not null default '' comment '角色描述',
+  `icon` varchar(500) default null comment '角色图标',
+  `is_system` tinyint(1) not null default 0 comment '是否为系统角色',
+  `is_super` tinyint(1) not null default 0 comment '是否为最高权限角色（忽略授权表）',
+  `status` tinyint(1) not null default 1 comment '可用状态',
+  `created_at` timestamp not null default current_timestamp ,
+  `updated_at` timestamp null on update current_timestamp ,
+  primary key (`id`),
+  unique key unique_name (`name`),
+  key index_display_name (`display_name`),
+  key index_description (`description`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '平台角色表';
+
+create table if not exists `platform_role_relates` (
+  `account_id` int unsigned not null,
+  `role_id` int unsigned not null,
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`account_id`, `role_id`),
+  key index_account (`account_id`),
+  key index_role (`role_id`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '平台角色关联表';
+
+create table if not exists `platform_permissions` (
+  `id` int unsigned not null auto_increment,
+  `name` varchar(60) not null comment '权限标识符',
+  `display_name` varchar(80) not null comment '权限名称',
+  `description` varchar(500) not null default '' comment '权限描述',
+  `model` varchar(120) not null comment '权限模型',
+  `model_parameters` text comment '默认权限模型参数',
+  `is_system` tinyint(1) not null default 0 comment '是否为系统权限',
+  `created_at` timestamp not null default current_timestamp ,
+  `updated_at` timestamp null on update current_timestamp ,
+  primary key (`id`),
+  unique key unique_name (`name`),
+  key index_display_name (`display_name`),
+  key index_description (`description`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '平台权限表';
+
+create table if not exists `platform_permission_relates` (
+  `target_id` int unsigned not null,
+  `target_type` tinyint not null comment '关联对象类型，1 表角色 2 表平台账户',
+  `permission_id` int unsigned not null,
+  `status` tinyint(1) not null default 1 comment '启用状态',
+  `created_at` timestamp not null default current_timestamp,
+  `updated_at` timestamp null on update current_timestamp,
+  primary key (`target_id`, `target_type`, `permission_id`),
+  key index_target (`target_id`, `target_type`),
+  key index_permission (`permission_id`)
+) character set = utf8mb4 collate = utf8mb4_general_ci comment = '平台权限关联表';

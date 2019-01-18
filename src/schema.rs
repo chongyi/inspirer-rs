@@ -64,6 +64,74 @@ table! {
 }
 
 table! {
+    platform_accounts (id) {
+        id -> Unsigned<Integer>,
+        account -> Varchar,
+        password -> Nullable<Varchar>,
+        is_system -> Bool,
+        email -> Varchar,
+        email_is_valid -> Bool,
+        email_verified_at -> Nullable<Timestamp>,
+        member_id -> Nullable<Unsigned<Integer>>,
+        member_bound_at -> Nullable<Timestamp>,
+        role_id -> Unsigned<Integer>,
+        status -> Bool,
+        activated_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    platform_permissions (id) {
+        id -> Unsigned<Integer>,
+        name -> Varchar,
+        display_name -> Varchar,
+        description -> Varchar,
+        model -> Varchar,
+        model_parameters -> Nullable<Text>,
+        is_system -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    platform_permission_relates (target_id, target_type, permission_id) {
+        target_id -> Unsigned<Integer>,
+        target_type -> Tinyint,
+        permission_id -> Unsigned<Integer>,
+        status -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    platform_roles (id) {
+        id -> Unsigned<Integer>,
+        name -> Varchar,
+        display_name -> Varchar,
+        description -> Varchar,
+        icon -> Nullable<Varchar>,
+        is_system -> Bool,
+        is_super -> Bool,
+        status -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    platform_role_relates (account_id, role_id) {
+        account_id -> Unsigned<Integer>,
+        role_id -> Unsigned<Integer>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     push_messages (id) {
         id -> Unsigned<Integer>,
         content -> Varchar,
@@ -116,6 +184,11 @@ allow_tables_to_appear_in_same_query!(
     contents,
     links,
     members,
+    platform_accounts,
+    platform_permissions,
+    platform_permission_relates,
+    platform_roles,
+    platform_role_relates,
     push_messages,
     recommend_contents,
     subjects,

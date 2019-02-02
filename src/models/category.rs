@@ -65,7 +65,7 @@ impl From<CategoryFullDisplay> for CategoryBase {
 pub struct Category;
 
 impl Category {
-    const DISPLAY_COLUMNS: (
+    const COLUMNS_DISPLAY: (
         column::id, column::name, column::display_name,
         column::description, column::created_at, column::updated_at
     ) = (
@@ -73,10 +73,18 @@ impl Category {
         column::description, column::created_at, column::updated_at
     );
 
+    const COLUMNS_FULL_DISPLAY: (
+        column::id, column::name, column::display_name, column::keywords, column::description,
+        column::sort, column::created_at, column::updated_at
+    ) = (
+        column::id, column::name, column::display_name, column::keywords, column::description,
+        column::sort, column::created_at, column::updated_at
+    );
+
     pub fn get_list(connection: &Conn, c: Pagination<GetCategoryList>) -> PaginatedCategoryList {
         use schema::categories::dsl::*;
 
-        let paginator = paginator!(connection, Self::DISPLAY_COLUMNS, c, CategoryDisplay, {
+        let paginator = paginator!(connection, Self::COLUMNS_DISPLAY, c, CategoryDisplay, {
             let mut query = categories.into_boxed();
             if let Some(filter) = c.clone().filter {
                 if let Some(v) = filter.name {
@@ -95,6 +103,7 @@ impl Category {
 
         Ok(
             categories
+                .select(Self::COLUMNS_FULL_DISPLAY)
                 .filter(id.eq(category_id))
                 .first::<CategoryFullDisplay>(connection)
                 .map_err(map_database_error(Some("categories")))?
@@ -106,6 +115,7 @@ impl Category {
 
         Ok(
             categories
+                .select(Self::COLUMNS_FULL_DISPLAY)
                 .filter(name.eq(category_name))
                 .first::<CategoryFullDisplay>(connection)
                 .map_err(map_database_error(Some("categories")))?

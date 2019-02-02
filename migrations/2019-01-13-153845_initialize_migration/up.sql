@@ -1,5 +1,7 @@
 create table if not exists `categories` (
   `id` int unsigned not null auto_increment,
+  `parent_id` int unsigned not null default 0 comment '父分类 ID',
+  `path` varchar(500) not null default '0' comment '分类路径',
   `name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
   `display_name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
   `keywords` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null default '',
@@ -8,11 +10,17 @@ create table if not exists `categories` (
   `created_at` timestamp not null default current_timestamp,
   `updated_at` timestamp null on update current_timestamp,
   primary key (`id`),
-  unique key `union_name` (`name`)
+  unique key `union_name` (`name`),
+  key `index_parent` (`parent_id`),
+  key `index_path` (`path`),
+  key `index_display_name` (`display_name`)
 ) character set = utf8mb4 collate = utf8mb4_general_ci comment = '内容分类表';
 
 create table if not exists `contents` (
   `id` int unsigned not null auto_increment,
+  `creator_id` int unsigned not null comment '创建人 ID（会员 ID）',
+  `creator_nickname` varchar(40) not null comment '创建人昵称',
+  `creator_avatar` varchar(500) default null comment '头像',
   `name` varchar(255) character set utf8mb4 collate utf8mb4_general_ci,
   `cover` varchar(500) default null comment '内容封面',
   `title` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
@@ -32,7 +40,10 @@ create table if not exists `contents` (
   `updated_at` timestamp null on update current_timestamp,
   primary key (`id`),
   unique key `union_name` (`name`),
-  key `search_title` (`name`, `title`)
+  key `index_title` (`title`),
+  key `index_name` (`name`),
+  key `index_search` (`name`, `title`),
+  key `index_creator` (`creator_id`)
 ) character set = utf8mb4 collate = utf8mb4_general_ci comment = '内容表';
 
 create table if not exists `push_messages` (
@@ -76,7 +87,7 @@ create table if not exists `recommend_contents` (
   `content_id` int unsigned default null,
   `source` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null,
   `title` varchar(255) character set utf8mb4 collate utf8mb4_general_ci not null,
-  `summary` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null,
+  `summary` varchar(500) character set utf8mb4 collate utf8mb4_general_ci not null comment '内容摘要',
   `created_at` timestamp not null default current_timestamp,
   `updated_at` timestamp null on update current_timestamp,
   primary key (`id`),
@@ -99,6 +110,8 @@ create table if not exists `members` (
   `nickname` varchar(40) not null,
   `avatar` varchar(500) default null comment '头像',
   `gender` tinyint not null default 0 comment '性别，0 未知 1 男 2 女',
+  `mobile_phone` varchar(30) default null comment '手机号码',
+  `country_code` varchar(8) not null default '86' comment '国家代码，默认 86',
   `email` varchar(80) not null,
   `email_is_valid` tinyint(1) not null default 0 comment '邮箱是否有效',
   `email_verified_at` timestamp null comment '邮箱验证时间',

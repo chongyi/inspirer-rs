@@ -64,6 +64,8 @@ pub struct ContentFullDisplay {
     pub name: Option<String>,
     pub cover: Option<String>,
     pub title: String,
+    pub creator_id: u32,
+    pub creator_nickname: String,
     pub category_id: Option<u32>,
     pub as_page: bool,
     pub allow_comment: bool,
@@ -83,7 +85,7 @@ pub struct ContentFullDisplay {
 pub struct Content;
 
 impl Content {
-    pub const DISPLAY_COLUMNS: (
+    pub const COLUMNS_DISPLAY: (
         column::id, column::name, column::title,
         column::category_id, column::keywords, column::description,
         column::sort, column::content_type, column::display,
@@ -93,6 +95,22 @@ impl Content {
         column::category_id, column::keywords, column::description,
         column::sort, column::content_type, column::display,
         column::published_at, column::modified_at
+    );
+
+    pub const FULL_DISPLAY_COLUMNS: (
+        column::id, column::name, column::cover, column::title,
+        column::creator_id, column::creator_nickname,
+        column::category_id, column::as_page, column::allow_comment, column::limit_comment,
+        column::keywords, column::description,
+        column::sort, column::content_type, column::content, column::display,
+        column::published_at, column::modified_at, column::created_at, column::updated_at
+    ) = (
+        column::id, column::name, column::cover, column::title,
+        column::creator_id, column::creator_nickname,
+        column::category_id, column::as_page, column::allow_comment, column::limit_comment,
+        column::keywords, column::description,
+        column::sort, column::content_type, column::content, column::display,
+        column::published_at, column::modified_at, column::created_at, column::updated_at
     );
 
     pub fn create(connection: &Conn, data: NewContent) -> Result<u32> {
@@ -167,7 +185,10 @@ impl Content {
             None => (),
         };
 
-        query.first::<ContentFullDisplay>(connection).map_err(map_database_error(Some("contents")))
+        query
+            .select(Self::FULL_DISPLAY_COLUMNS)
+            .first::<ContentFullDisplay>(connection)
+            .map_err(map_database_error(Some("contents")))
     }
 
     pub fn find_by_name(connection: &Conn, target: String, find_filter: Option<FindFilter>) -> Result<ContentFullDisplay> {
@@ -184,7 +205,10 @@ impl Content {
             None => (),
         };
 
-        query.first::<ContentFullDisplay>(connection).map_err(map_database_error(Some("contents")))
+        query
+            .select(Self::FULL_DISPLAY_COLUMNS)
+            .first::<ContentFullDisplay>(connection)
+            .map_err(map_database_error(Some("contents")))
     }
 
     pub fn update(connection: &Conn, target: u32, data: UpdateContent) -> Result<Option<ContentFullDisplay>> {
@@ -204,7 +228,7 @@ impl Content {
     pub fn get_list(connection: &Conn, c: Pagination<GetContents>) -> Result<PaginatedListMessage<ContentDisplay>> {
         use schema::contents::dsl::*;
 
-        let paginator = paginator!(connection, Self::DISPLAY_COLUMNS, c, ContentDisplay, {
+        let paginator = paginator!(connection, Self::COLUMNS_DISPLAY, c, ContentDisplay, {
             let mut query = contents.into_boxed();
             if let Some(filter) = c.clone().filter {
                 if let Some(v) = filter.search {

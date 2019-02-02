@@ -1,6 +1,8 @@
 table! {
     categories (id) {
         id -> Unsigned<Integer>,
+        parent_id -> Unsigned<Integer>,
+        path -> Varchar,
         name -> Varchar,
         display_name -> Varchar,
         keywords -> Varchar,
@@ -14,6 +16,9 @@ table! {
 table! {
     contents (id) {
         id -> Unsigned<Integer>,
+        creator_id -> Unsigned<Integer>,
+        creator_nickname -> Varchar,
+        creator_avatar -> Nullable<Varchar>,
         name -> Nullable<Varchar>,
         cover -> Nullable<Varchar>,
         title -> Varchar,
@@ -52,6 +57,8 @@ table! {
         nickname -> Varchar,
         avatar -> Nullable<Varchar>,
         gender -> Tinyint,
+        mobile_phone -> Nullable<Varchar>,
+        country_code -> Varchar,
         email -> Varchar,
         email_is_valid -> Bool,
         email_verified_at -> Nullable<Timestamp>,

@@ -26,9 +26,6 @@ comment on column contents.content_type is '内容类型';
 comment on column contents.published is '是否已经发布';
 comment on column contents.published_at is '发布时间';
 
-alter table contents
-    owner to postgres;
-
 create unique index contents_content_name_uindex
     on contents (content_name);
 
@@ -45,6 +42,7 @@ create table users
         constraint users_pk
             primary key,
     user_uuid char(32) not null,
+    invitor_uuid char(32) default null,
     email varchar(140) default null,
     mobile_phone varchar(40) default null,
     country_code varchar(12) default null,
@@ -63,6 +61,7 @@ create table users
 
 comment on table users is '用户表';
 
+comment on column users.invitor_uuid is '邀请人 UUID';
 comment on column users.email is '邮箱';
 comment on column users.mobile_phone is '手机号';
 comment on column users.country_code is '国家代码';

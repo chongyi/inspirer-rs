@@ -19,6 +19,7 @@ table! {
     users (id) {
         id -> Int8,
         user_uuid -> Bpchar,
+        invitor_uuid -> Nullable<Bpchar>,
         email -> Nullable<Varchar>,
         mobile_phone -> Nullable<Varchar>,
         country_code -> Nullable<Varchar>,

@@ -4,44 +4,43 @@ version = "0.1.1"
 authors = ["chongyi <xpz3847878@163.com>"]
 edition = "2018"
 
-[[bin]]
-name = "inspirer"
-path = "src/bin/inspirer.rs"
+#[[bin]]
+#name = "inspirer"
+#path = "src/bin/inspirer.rs"
 
-[[bin]]
-name = "tools"
-path = "src/bin/tools.rs"
+#[[bin]]
+#name = "tools"
+#path = "src/bin/tools.rs"
 
 [workspace]
 members = [
-    ".",
     "inspirer-common",
     "inspirer-data-provider",
 ]
 
 [dependencies]
-actix = "0.7"
-actix-web = "0.7"
-diesel = { version = "^1.3.0", features = ["mysql", "r2d2", "chrono", "serde_json"] }
-dotenv = "^0.13.0"
-futures = "0.1"
-serde = "^1.0.0"
-serde_derive = "^1.0.0"
-serde_json = "^1.0.0"
-chrono = { version = "^0.4.3", features = ["serde", "clock"] }
-http = "~0.1"
-failure = "~0.1"
-tera = "0.11"
-mime = "0.3.7"
-r2d2 = "0.8.2"
-pwhash = "0.2"
-clap = "2.32.0"
-lazy_static = "~1.0.0"
-log = "0.4"
-env_logger = "0.5.10"
-regex = "1.0.2"
-comrak = "0.2"
-toml = "0.4.2"
-rss = "1.5.0"
-url = "1.7.1"
-tempdir = "0.3.7"
+#actix = "0.7"
+#actix-web = "0.7"
+#diesel = { version = "^1.3.0", features = ["mysql", "r2d2", "chrono", "serde_json"] }
+#dotenv = "^0.13.0"
+#futures = "0.1"
+#serde = "^1.0.0"
+#serde_derive = "^1.0.0"
+#serde_json = "^1.0.0"
+#chrono = { version = "^0.4.3", features = ["serde", "clock"] }
+#http = "~0.1"
+#failure = "~0.1"
+#tera = "0.11"
+#mime = "0.3.7"
+#r2d2 = "0.8.2"
+#pwhash = "0.2"
+#clap = "2.32.0"
+#lazy_static = "~1.0.0"
+#log = "0.4"
+#env_logger = "0.5.10"
+#regex = "1.0.2"
+#comrak = "0.2"
+#toml = "0.4.2"
+#rss = "1.5.0"
+#url = "1.7.1"
+#tempdir = "0.3.7"

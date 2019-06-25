@@ -15,7 +15,7 @@ pub fn password_hash<P: AsRef<[u8]>>(password: P) -> String {
 }
 
 pub fn convert_to_native_datetime<T: AsRef<str>>(source: T) -> Result<NaiveDateTime, result::ErrorKind> {
-    Ok(Utc.datetime_from_str(source.as_ref(), "%y-%m-%d %H:%M:%S")
+    Ok(Utc.datetime_from_str(source.as_ref(), "%Y-%m-%d %H:%M:%S")
         .map_err(|_| utils::biz_err(result::DeserializeResourceError))?
         .naive_local())
 }

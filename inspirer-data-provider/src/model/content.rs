@@ -1,0 +1,51 @@
+use crate::schema::contents;
+use chrono::prelude::*;
+
+#[allow(non_upper_case_globals)]
+pub const content_base_columns: (
+    contents::id,
+    contents::creator_uuid,
+    contents::title,
+    contents::content_type,
+    contents::display,
+    contents::published,
+    contents::created_at,
+    contents::updated_at,
+) = (
+    contents::id,
+    contents::creator_uuid,
+    contents::title,
+    contents::content_type,
+    contents::display,
+    contents::published,
+    contents::created_at,
+    contents::updated_at,
+);
+
+#[derive(Queryable, Debug, Clone, PartialEq)]
+pub struct ContentBase {
+    pub id: i64,
+    pub creator_uuid: String,
+    pub title: Option<String>,
+    pub content_type: i16,
+    pub display: bool,
+    pub published: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Queryable, Debug, Clone, PartialEq)]
+pub struct ContentFull {
+    pub id: i64,
+    pub creator_uuid: String,
+    pub title: Option<String>,
+    pub content_name: Option<String>,
+    pub content_type: i16,
+    pub keywords: String,
+    pub description: String,
+    pub display: bool,
+    pub published: bool,
+    pub published_at: Option<NaiveDateTime>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}

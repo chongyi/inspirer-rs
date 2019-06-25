@@ -338,7 +338,7 @@ where
     T: QueryFragment<DbType>,
 {
     fn walk_ast(&self, mut out: AstPass<DbType>) -> QueryResult<()> {
-        out.push_sql("select *, count(*), over () from (");
+        out.push_sql("select *, count(*) over () from (");
         self.data.walk_ast(out.reborrow())?;
         out.push_sql(") t limit ");
         out.push_bind_param::<BigInt, _>(&self.per_page)?;

@@ -798,6 +798,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "inspirer-common"
+version = "0.1.0"
+dependencies = [
+ "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "inspirer-data-provider"
+version = "0.1.0"
+
+[[package]]
 name = "iovec"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

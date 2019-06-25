@@ -2,6 +2,7 @@
 name = "inspirer"
 version = "0.1.1"
 authors = ["chongyi <xpz3847878@163.com>"]
+edition = "2018"
 
 [[bin]]
 name = "inspirer"
@@ -10,6 +11,13 @@ path = "src/bin/inspirer.rs"
 [[bin]]
 name = "tools"
 path = "src/bin/tools.rs"
+
+[workspace]
+members = [
+    ".",
+    "inspirer-common",
+    "inspirer-data-provider",
+]
 
 [dependencies]
 actix = "0.7"

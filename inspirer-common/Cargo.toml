@@ -1,0 +1,9 @@
+[package]
+name = "inspirer-common"
+version = "0.1.0"
+authors = ["chongyi <xpz3847878@163.com>"]
+edition = "2018"
+
+[dependencies]
+failure = "0.1.5"
+failure_derive = "0.1.5"

@@ -1,0 +1,10 @@
+[package]
+name = "inspirer-application"
+version = "0.1.0"
+authors = ["chongyi <xpz3847878@163.com>"]
+edition = "2018"
+
+[dependencies]
+inspirer-common = { path = "../inspirer-common" }
+inspirer-data-provider = { path = "../inspirer-data-provider" }
+actix-web = "1.0"

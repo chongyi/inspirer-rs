@@ -16,6 +16,7 @@ edition = "2018"
 members = [
     "inspirer-common",
     "inspirer-data-provider",
+    "inspirer-application"
 ]
 
 [dependencies]

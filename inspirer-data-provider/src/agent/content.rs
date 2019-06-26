@@ -4,8 +4,11 @@ use chrono::prelude::*;
 use crate::prelude::*;
 use crate::schema::contents;
 use crate::schema::users;
+use crate::schema::content_entities;
 use diesel::pg::expression::dsl::any;
 use crate::model::user::BeJoinedUserBase;
+use crate::model::content_entity::{ContentEntity, ContentEntityInsert};
+use crate::utils::biz_err;
 
 #[derive(Default)]
 pub struct GetContentsIndex<'i> {
@@ -94,11 +97,12 @@ pub enum GetContent<'i> {
 }
 
 impl<'i> ActiveModel for GetContent<'i> {
-    type Result = QueryResult<(ContentFull, BeJoinedUserBase)>;
+    type Result = QueryResult<(ContentFull, ContentEntity, BeJoinedUserBase)>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let mut query = contents::table
             .left_join(users::table.on(users::user_uuid.eq(contents::creator_uuid)))
+            .left_join(content_entities::table.on(content_entities::id.eq(contents::id).and(content_entities::version.eq(contents::version))))
             .into_boxed();
 
         match self {
@@ -107,17 +111,113 @@ impl<'i> ActiveModel for GetContent<'i> {
         };
 
         query.select((
-                contents::all_columns,
-                (
-                    users::id.nullable(),
-                    users::user_uuid.nullable(),
-                    users::nickname.nullable(),
-                    users::avatar.nullable(),
-                    users::status.nullable(),
-                    users::user_type.nullable()
-                )
+            contents::all_columns,
+            (
+                content_entities::content_body.nullable(),
+                content_entities::creator_uuid.nullable(),
+            ),
+            (
+                users::id.nullable(),
+                users::user_uuid.nullable(),
+                users::nickname.nullable(),
+                users::avatar.nullable(),
+                users::status.nullable(),
+                users::user_type.nullable()
+            )
+        ))
+            .first::<(ContentFull, ContentEntity, BeJoinedUserBase)>(conn)
+    }
+}
+
+pub struct CreateContent<'i> {
+    pub creator_uuid: &'i str,
+    pub title: Option<&'i str>,
+    pub content_name: Option<&'i str>,
+    pub content_type: Option<i16>,
+    pub keywords: Option<&'i str>,
+    pub description: Option<&'i str>,
+    pub display: Option<bool>,
+    pub published: Option<bool>,
+    pub published_at: Option<NaiveDateTime>,
+    pub content: &'i str,
+}
+
+impl<'i> ActiveModel for CreateContent<'i> {
+    type Result = QueryResult<i64>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        let content = ContentInsert {
+            version: 1,
+            creator_uuid: self.creator_uuid,
+            title: self.title,
+            content_name: self.content_name,
+            content_type: self.content_type.unwrap_or(1),
+            keywords: self.keywords.unwrap_or(""),
+            description: self.description.unwrap_or(""),
+            display: self.display.unwrap_or(true),
+            published: self.published.unwrap_or(false),
+            published_at: self.published_at.or_else(|| {
+                if let Some(published) = self.published {
+                    if published {
+                        return Some(Utc::now().naive_local());
+                    }
+                }
+                None
+            }),
+        };
+
+        let (id, version) = diesel::insert_into(contents::table)
+            .values(&content)
+            .returning((contents::id, contents::version))
+            .get_result::<(i64, i32)>(conn)?;
+
+        let content_entity = ContentEntityInsert {
+            id,
+            version,
+            content_body: Some(self.content),
+            creator_uuid: Some(self.creator_uuid),
+        };
+
+        diesel::insert_into(content_entities::table)
+            .values(&content_entity)
+            .execute(conn)?;
+
+        Ok(id)
+    }
+}
+
+pub enum PublishContent {
+    Publish { id: i64, published_at: Option<NaiveDateTime> },
+    Unpublish { id: i64 },
+}
+
+impl ActiveModel for PublishContent {
+    type Result = QueryResult<usize>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        let now = Utc::now().naive_local();
+        let (target, published, published_at) = match self {
+            PublishContent::Publish { id, published_at } => {
+                let target = contents::table
+                    .filter(contents::id.eq(id).and(contents::published.eq(false)));
+
+                (target, true, Some(published_at.as_ref().unwrap_or(&now)))
+            }
+            PublishContent::Unpublish { id } => {
+                let target = contents::table
+                    .filter(contents::id.eq(id).and(contents::published.eq(true)));
+
+                (target, false, None)
+            }
+        };
+
+        diesel::update(contents::table)
+            .set((
+                contents::published.eq(published),
+                contents::published_at.eq(published_at),
+                contents::updated_at.eq(&now)
             ))
-            .first::<(ContentFull, BeJoinedUserBase)>(conn)
+            .execute(conn)
     }
 }
 

@@ -31,6 +31,12 @@ pub struct UpdateUserLastLogin<'i> {
     pub last_login: NaiveDateTime,
 }
 
+#[derive(AsChangeset)]
+#[table_name = "users"]
+pub struct UpdateUserActivatedTime {
+    pub activated_at: NaiveDateTime,
+}
+
 #[allow(non_upper_case_globals)]
 pub const user_base_columns: (
     users::id,

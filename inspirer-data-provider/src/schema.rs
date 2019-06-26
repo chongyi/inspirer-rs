@@ -1,6 +1,16 @@
 table! {
+    content_entities (id, version) {
+        id -> Int8,
+        version -> Int4,
+        content_body -> Nullable<Text>,
+        creator_uuid -> Nullable<Bpchar>,
+    }
+}
+
+table! {
     contents (id) {
         id -> Int8,
+        version -> Int4,
         creator_uuid -> Bpchar,
         title -> Nullable<Varchar>,
         content_name -> Nullable<Varchar>,
@@ -32,6 +42,7 @@ table! {
         last_login_ip -> Nullable<Varchar>,
         login_count -> Int4,
         status -> Int2,
+        activated_at -> Nullable<Timestamp>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
@@ -52,6 +63,7 @@ table! {
 }
 
 allow_tables_to_appear_in_same_query!(
+    content_entities,
     contents,
     users,
     validate_codes,

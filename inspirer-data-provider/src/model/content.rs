@@ -37,6 +37,7 @@ pub struct ContentBase {
 #[derive(Queryable, Debug, Clone, PartialEq)]
 pub struct ContentFull {
     pub id: i64,
+    pub version: i32,
     pub creator_uuid: String,
     pub title: Option<String>,
     pub content_name: Option<String>,
@@ -48,4 +49,19 @@ pub struct ContentFull {
     pub published_at: Option<NaiveDateTime>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+}
+
+#[derive(Deserialize, Insertable)]
+#[table_name = "contents"]
+pub struct ContentInsert<'i> {
+    pub version: i32,
+    pub creator_uuid: &'i str,
+    pub title: Option<&'i str>,
+    pub content_name: Option<&'i str>,
+    pub content_type: i16,
+    pub keywords: &'i str,
+    pub description: &'i str,
+    pub display: bool,
+    pub published: bool,
+    pub published_at: Option<NaiveDateTime>,
 }

@@ -72,4 +72,5 @@ impl Into<Error> for ErrorKind {
 }
 
 coded_error!(DeserializeResourceError (10014) "内部资源解析错误");
+coded_error!(ForbiddenError (10005) "资源访问被拒绝");
 coded_error!(ValidateCodeExistsError (10021) "验证码已创建，指定时间内不可重复创建");

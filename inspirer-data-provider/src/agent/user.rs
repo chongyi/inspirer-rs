@@ -73,7 +73,7 @@ impl<'i> ActiveModel for EmailRegister<'i> {
 /// 用户登录触发模型
 #[derive(Default)]
 pub struct UserLoginTrigger<'i> {
-    pub member_uuid: &'i str,
+    pub user_uuid: &'i str,
     pub ip: Option<&'i str>,
     pub event_time: Option<NaiveDateTime>,
 }
@@ -82,12 +82,32 @@ impl<'i> ActiveModel for UserLoginTrigger<'i> {
     type Result = ActionResult<()>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
-        let target = users::table.filter(users::columns::user_uuid.eq(self.member_uuid));
+        let target = users::table.filter(users::columns::user_uuid.eq(self.user_uuid));
         diesel::update(target)
             .set((&UpdateUserLastLogin {
                 last_login_ip: self.ip,
                 last_login: self.event_time.unwrap_or(Utc::now().naive_utc()),
             }, users::columns::login_count.eq(users::columns::login_count + 1)))
+            .execute(conn)
+            .map(|_| ()).map_err(From::from)
+    }
+}
+
+/// 用户活跃状态触发模型
+pub struct UserActiveTrigger<'i> {
+    pub user_uuid: &'i str,
+    pub event_time: Option<NaiveDateTime>,
+}
+
+impl<'i> ActiveModel for UserActiveTrigger<'i> {
+    type Result = ActionResult<()>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        let target = users::table.filter(users::columns::user_uuid.eq(self.user_uuid));
+        diesel::update(target)
+            .set(&UpdateUserActivatedTime {
+                activated_at: self.event_time.unwrap_or(Utc::now().naive_utc()),
+            })
             .execute(conn)
             .map(|_| ()).map_err(From::from)
     }

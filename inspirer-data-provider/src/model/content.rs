@@ -22,7 +22,7 @@ pub const content_base_columns: (
     contents::updated_at,
 );
 
-#[derive(Queryable, Debug, Clone, PartialEq)]
+#[derive(Queryable, Debug, Clone, PartialEq, Serialize)]
 pub struct ContentBase {
     pub id: i64,
     pub creator_uuid: String,

@@ -8,7 +8,7 @@ use std::fmt;
 
 pub type ActionResult<T> = std::result::Result<T, ErrorKind>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct PaginateWrapper<T> {
     pub data: Vec<T>,
     pub last_page: i64,

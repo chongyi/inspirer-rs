@@ -10,19 +10,19 @@ use crate::model::user::BeJoinedUserBase;
 use crate::model::content_entity::{ContentEntity, ContentEntityInsert};
 use crate::utils::biz_err;
 
-#[derive(Default)]
-pub struct GetContentsIndex<'i> {
+#[derive(Default, Deserialize)]
+pub struct GetContentsIndex {
     pub per_page: Option<i64>,
     pub page: Option<i64>,
     pub content_type: Option<i16>,
-    pub creator: Option<&'i str>,
-    pub title: Option<&'i str>,
+    pub creator: Option<String>,
+    pub title: Option<String>,
     pub published: Option<bool>,
     pub display: Option<bool>,
-    pub owner: Option<&'i str>,
+    pub owner: Option<String>,
 }
 
-impl<'i> ActiveModel for GetContentsIndex<'i> {
+impl ActiveModel for GetContentsIndex {
     type Result = QueryResult<PaginateWrapper<(ContentBase, BeJoinedUserBase)>>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
@@ -31,7 +31,7 @@ impl<'i> ActiveModel for GetContentsIndex<'i> {
             .order((contents::published_at.desc(), contents::created_at.desc()))
             .into_boxed();
 
-        if let Some(title) = self.title {
+        if let Some(ref title) = self.title {
             query = query.filter(contents::title.ilike(format!("%{}%", title)));
         }
 
@@ -47,11 +47,11 @@ impl<'i> ActiveModel for GetContentsIndex<'i> {
             query = query.filter(contents::display.eq(display));
         }
 
-        if let Some(owner) = self.owner {
+        if let Some(ref owner) = self.owner {
             query = query.filter(contents::creator_uuid.eq(owner));
         }
 
-        if let Some(creator) = self.creator {
+        if let Some(ref creator) = self.creator {
             let user_uuids = users::table
                 .filter(
                     users::email.ilike(format!("%{}%", creator))

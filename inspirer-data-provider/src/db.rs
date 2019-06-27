@@ -8,6 +8,7 @@ use diesel::sql_types::BigInt;
 use crate::prelude::*;
 use crate::utils;
 use std::fmt::{Formatter, Error};
+use rand::{thread_rng, Rng};
 
 /// 重命名 `PgConnection` 为 `DbConnection`
 pub type DbConnection = PgConnection;
@@ -272,6 +273,27 @@ impl ConnPoolManager {
 
     pub fn pool(&self) -> &Pool {
         &self.w
+    }
+
+    pub fn read(&self) -> &Pool {
+        match self.r {
+            Some(ref r) => {
+                if r.len() > 0 {
+                    let mut rng = thread_rng();
+                    r.get(rng.gen_range(0, r.len())).unwrap_or(&self.w)
+                } else {
+                    &self.w
+                }
+            },
+            None => &self.w
+        }
+    }
+
+    pub fn select_read(&self, index: usize) -> Option<&Pool> {
+        match self.r {
+            Some(ref r) => r.get(index),
+            None => None
+        }
     }
 }
 

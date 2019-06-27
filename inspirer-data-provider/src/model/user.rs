@@ -64,7 +64,7 @@ pub struct UserBase {
     pub member_type: i16,
 }
 
-#[derive(Queryable, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Queryable, Deserialize, Debug, Clone, PartialEq, Serialize)]
 pub struct BeJoinedUserBase {
     pub id: Option<i64>,
     pub user_uuid: Option<String>,

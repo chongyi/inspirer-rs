@@ -1,6 +1,7 @@
-pub mod result;
+pub mod error;
 #[macro_use]
 pub mod macros;
+pub mod response;
 
 #[cfg(test)]
 mod tests {

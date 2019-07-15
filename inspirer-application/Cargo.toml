@@ -9,8 +9,8 @@ name = "inspirer-server"
 path = "bin/inspirer_server.rs"
 
 [dependencies]
-inspirer-common = { path = "../inspirer-common" }
 inspirer-data-provider = { path = "../inspirer-data-provider" }
+inspirer-actix = { path = "../inspirer-actix" }
 actix-web = "1.0"
 actix-identity = "*"
 actix-rt = "*"

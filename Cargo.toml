@@ -14,9 +14,9 @@ edition = "2018"
 
 [workspace]
 members = [
-    "inspirer-common",
     "inspirer-data-provider",
-    "inspirer-application"
+    "inspirer-application",
+    "inspirer-actix",
 ]
 
 #[dependencies]

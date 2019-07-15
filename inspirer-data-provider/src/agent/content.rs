@@ -84,7 +84,7 @@ impl ActiveModel for GetContentsIndex {
         let (result, last_page, total) = query.load_and_count_pages::<(ContentBase, BeJoinedUserBase)>(conn)?;
 
         Ok(PaginateWrapper {
-            data: result,
+            list: result,
             last_page,
             total,
         })
@@ -242,7 +242,7 @@ mod tests {
             let result = getter.activate(conn).unwrap();
             println!("{:?}", result);
             let expect = PaginateWrapper {
-                data: vec![
+                list: vec![
                     (ContentBase { id: 12, creator_uuid: "b9e87a68d0dd4748806e7ddb403701f5".to_string(), title: Some("ORANGE MARMALADE".to_string()), content_type: 2, display: true, published: true, created_at: utils::convert_to_native_datetime("2019-06-20 19:09:00").unwrap(), updated_at: utils::convert_to_native_datetime("2019-06-20 19:09:00").unwrap() }, BeJoinedUserBase { id: Some(1), user_uuid: Some("b9e87a68d0dd4748806e7ddb403701f5".to_string()), nickname: Some("administrator".to_string()), avatar: None, status: Some(1), member_type: Some(32767) }),
                     (ContentBase { id: 11, creator_uuid: "b9e87a68d0dd4748806e7ddb403701f5".to_string(), title: Some("Either the well was very deep".to_string()), content_type: 1, display: true, published: true, created_at: utils::convert_to_native_datetime("2019-06-20 19:08:00").unwrap(), updated_at: utils::convert_to_native_datetime("2019-06-20 19:08:00").unwrap() }, BeJoinedUserBase { id: Some(1), user_uuid: Some("b9e87a68d0dd4748806e7ddb403701f5".to_string()), nickname: Some("administrator".to_string()), avatar: None, status: Some(1), member_type: Some(32767) })
                 ],

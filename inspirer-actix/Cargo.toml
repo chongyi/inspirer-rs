@@ -1,5 +1,5 @@
 [package]
-name = "inspirer-common"
+name = "inspirer-actix"
 version = "0.1.0"
 authors = ["chongyi <xpz3847878@163.com>"]
 edition = "2018"
@@ -7,3 +7,7 @@ edition = "2018"
 [dependencies]
 failure = "0.1.5"
 failure_derive = "0.1.5"
+http = "0.1"
+actix-web = "1.0"
+serde = "1.0"
+serde_derive = "1.0"

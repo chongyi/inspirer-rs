@@ -17,7 +17,8 @@
 
 use std::error::Error as StdError;
 use std::any::TypeId;
-use std::fmt::Formatter;
+use std::fmt::{Formatter, Debug, Display};
+pub use http::StatusCode;
 
 /// 未知系统错误代码（或未定义的错误）
 pub const UNKNOWN_ERROR_CODE: i16 = -1;
@@ -28,7 +29,11 @@ pub const UNHANDLE_SYSTEM_ERROR_CODE: i16 = -2;
 pub struct Error(pub Box<dyn CodedError>);
 
 /// 编入错误代码的错误信息
-pub trait CodedError: StdError {
+pub trait CodedError: Debug + Display + Send {
+    fn http_status(&self) -> StatusCode {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
+
     /// 获取错误代码
     fn error_code(&self) -> i16 {
         UNKNOWN_ERROR_CODE
@@ -36,16 +41,6 @@ pub trait CodedError: StdError {
 
     fn error_message(&self) -> &str {
         "未知异常"
-    }
-}
-
-impl StdError for Error {
-    fn description(&self) -> &str {
-        self.0.as_ref().description()
-    }
-
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        self.0.as_ref().source()
     }
 }
 
@@ -59,8 +54,15 @@ impl CodedError for Error {
     }
 }
 
-impl std::fmt::Display for Error {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
         write!(f, "{:?}", self)
     }
 }
+
+impl CodedError for &'static str {
+    fn error_message(&self) -> &str {
+        self
+    }
+}
+

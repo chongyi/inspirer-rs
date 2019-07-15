@@ -28,8 +28,9 @@ pub mod prelude {
     pub use crate::result::{self, ErrorKind, ActionResult, PaginateWrapper};
     pub use super::{PooledConn, Pool};
     pub use super::utils;
-    pub use inspirer_common::result::CodedError;
+    pub use inspirer_actix::error::CodedError;
     pub use diesel::prelude::*;
+    pub use http::StatusCode;
     #[cfg(test)]
     pub use crate::tests::helper::*;
 }

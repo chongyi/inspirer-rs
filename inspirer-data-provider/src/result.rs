@@ -5,6 +5,7 @@ use inspirer_actix::error::*;
 use inspirer_actix::coded_error;
 use std::error::Error as StdError;
 use std::fmt;
+pub use diesel::result::Error as DieselError;
 
 pub type ActionResult<T> = std::result::Result<T, ErrorKind>;
 

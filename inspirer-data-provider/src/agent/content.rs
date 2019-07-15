@@ -23,7 +23,7 @@ pub struct GetContentsIndex {
 }
 
 impl ActiveModel for GetContentsIndex {
-    type Result = QueryResult<PaginateWrapper<(ContentBase, BeJoinedUserBase)>>;
+    type Result = ActionResult<PaginateWrapper<(ContentBase, BeJoinedUserBase)>>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let mut query = contents::table
@@ -59,7 +59,8 @@ impl ActiveModel for GetContentsIndex {
                         .or(users::user_uuid.eq(creator))
                 )
                 .select(users::user_uuid)
-                .load::<String>(conn)?;
+                .load::<String>(conn)
+                .map_err(ErrorKind::from)?;
 
             query = query.filter(contents::creator_uuid.eq(any(user_uuids)));
         }
@@ -81,7 +82,7 @@ impl ActiveModel for GetContentsIndex {
             query = query.per_page(per_page);
         }
 
-        let (result, last_page, total) = query.load_and_count_pages::<(ContentBase, BeJoinedUserBase)>(conn)?;
+        let (result, last_page, total) = query.load_and_count_pages::<(ContentBase, BeJoinedUserBase)>(conn).map_err(ErrorKind::from)?;
 
         Ok(PaginateWrapper {
             list: result,

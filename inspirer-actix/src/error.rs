@@ -19,6 +19,13 @@ use std::error::Error as StdError;
 use std::any::TypeId;
 use std::fmt::{Formatter, Debug, Display};
 pub use http::StatusCode;
+use serde::Serialize;
+use actix_web::{ResponseError, HttpResponse, HttpRequest};
+use actix_web::dev::{HttpResponseBuilder, Body};
+use actix_web::http::header;
+use crate::response::ResponseMessage;
+use derive_more::Display;
+pub use actix_web::error::*;
 
 /// 未知系统错误代码（或未定义的错误）
 pub const UNKNOWN_ERROR_CODE: i16 = -1;
@@ -54,6 +61,12 @@ impl CodedError for Error {
     }
 }
 
+impl AsRef<CodedError> for Error {
+    fn as_ref(&self) -> &(dyn CodedError + 'static) {
+        self.0.as_ref()
+    }
+}
+
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
         write!(f, "{:?}", self)
@@ -66,3 +79,130 @@ impl CodedError for &'static str {
     }
 }
 
+#[derive(Debug, Display)]
+pub enum InspirerResponseError {
+    #[display(fmt = "{}", _0)]
+    Json(Error),
+    #[display(fmt = "{}", _0)]
+    Template(Error, &'static str)
+}
+
+impl ResponseError for InspirerResponseError {
+    fn error_response(&self) -> HttpResponse {
+        let err = match self {
+            InspirerResponseError::Json(err) => err,
+            InspirerResponseError::Template(err, _) => err,
+        };
+
+        HttpResponse::new(err.http_status())
+    }
+
+    fn render_response(&self) -> HttpResponse {
+        let mut resp = self.error_response();
+        match self {
+            InspirerResponseError::Json(err) => {
+                let json = serde_json::to_string(&ResponseMessage::error(err, &Option::<String>::None)).unwrap_or_else(|err| {
+                    error!("Convert 'error' to json failed, error info: {:?}", err);
+                    String::from("{}")
+                });
+                resp.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"));
+                resp.set_body(Body::from(json))
+            },
+            InspirerResponseError::Template(err, template) => {
+                resp.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("text/html"));
+                resp.set_body(Body::from(err.error_message().to_string()))
+            }
+        }
+    }
+}
+
+pub fn map_to_inspirer_response_err<T: CodedError + 'static>(req: &HttpRequest) -> impl FnOnce(T) -> actix_web::Error {
+    let json = match req.headers().get(header::ACCEPT) {
+        Some(value) => {
+            let v = value.to_str().unwrap_or("");
+            if v.contains("application/json") {
+                true
+            } else {
+                false
+            }
+        }
+        _ => false
+    };
+
+    move |err| {
+        let error = Error(Box::new(err));
+        if json {
+            actix_web::Error::from(InspirerResponseError::Json(error))
+        } else {
+            actix_web::Error::from(InspirerResponseError::Template(error, ""))
+        }
+    }
+}
+
+#[derive(Debug, Display)]
+#[display(fmt = "{}", msg)]
+pub struct ActixErrorWrapper<T> {
+    err: T,
+    msg: String,
+}
+
+impl<T: ResponseError + 'static> From<T> for ActixErrorWrapper<T>
+{
+    fn from(err: T) -> Self {
+        let msg = err.to_string();
+        ActixErrorWrapper {
+            err,
+            msg,
+        }
+    }
+}
+
+macro_rules! map_actix_error {
+    ($error:path, $code:expr) => {
+        impl CodedError for ActixErrorWrapper<$error>
+        {
+            fn http_status(&self) -> StatusCode {
+                self.err.error_response().status()
+            }
+
+            fn error_message(&self) -> &str {
+                self.msg.as_str()
+            }
+
+            fn error_code(&self) -> i16 {
+                $code
+            }
+        }
+    };
+
+    ($error:path { $($matcher:pat $(if $pred:expr)* => $result:expr),* }) => {
+        impl CodedError for ActixErrorWrapper<$error>
+        {
+            fn http_status(&self) -> StatusCode {
+                self.err.error_response().status()
+            }
+
+            fn error_message(&self) -> &str {
+                self.msg.as_str()
+            }
+
+            fn error_code(&self) -> i16 {
+                match &self.err {
+                    $($matcher $(if $pred)* => $result),*
+                }
+            }
+        }
+    }
+}
+
+
+impl<T: Display + Debug + CodedError> CodedError for BlockingError<T> {
+    fn error_code(&self) -> i16 {
+        match self {
+            BlockingError::Error(err) => err.error_code(),
+            BlockingError::Canceled => UNHANDLE_SYSTEM_ERROR_CODE
+        }
+    }
+}
+
+impl CodedError for ParseError {}

@@ -72,7 +72,7 @@ impl<'a, T> ResponseMessage<'a, T>
         }
     }
 
-    pub fn error(error: &'a Box<CodedError>, data: &'a T) -> Self {
+    pub fn error<E: AsRef<CodedError>>(error: &'a E, data: &'a T) -> Self {
         ResponseMessage {
             code: error.as_ref().error_code(),
             msg: error.as_ref().error_message(),

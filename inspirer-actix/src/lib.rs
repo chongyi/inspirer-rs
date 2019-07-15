@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+
 pub mod error;
 #[macro_use]
 pub mod macros;

@@ -29,6 +29,13 @@ impl fmt::Display for ErrorKind {
 }
 
 impl CodedError for ErrorKind {
+    fn http_status(&self) -> StatusCode {
+        match self {
+            ErrorKind::DBError(err) => StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorKind::BizError(err) => err.as_ref().http_status(),
+        }
+    }
+
     fn error_code(&self) -> i16 {
         match self {
             ErrorKind::DBError(err) => UNHANDLE_SYSTEM_ERROR_CODE,
@@ -46,7 +53,10 @@ impl CodedError for ErrorKind {
 
 impl From<diesel::result::Error> for ErrorKind {
     fn from(err: diesel::result::Error) -> ErrorKind {
-        ErrorKind::DBError(err)
+        match err {
+            diesel::result::Error::NotFound => ErrorKind::BizError(Box::new(NotFoundError)),
+            _ => ErrorKind::DBError(err)
+        }
     }
 }
 
@@ -59,3 +69,4 @@ impl Into<Error> for ErrorKind {
 coded_error!(DeserializeResourceError (10014) http(500) "内部资源解析错误");
 coded_error!(ForbiddenError (10005) http(403) "资源访问被拒绝");
 coded_error!(ValidateCodeExistsError (10021) http(403) "验证码已创建，指定时间内不可重复创建");
+coded_error!(NotFoundError (10004) http(404) "内容不可查，请确认资源是否存在");

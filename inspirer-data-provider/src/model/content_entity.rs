@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::schema::content_entities;
 
-#[derive(Queryable, Debug, Clone, PartialEq)]
+#[derive(Queryable, Debug, Clone, PartialEq, Serialize)]
 pub struct ContentEntity {
     pub content_body: Option<String>,
     pub creator_uuid: Option<String>,

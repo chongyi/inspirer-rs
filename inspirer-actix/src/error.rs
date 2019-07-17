@@ -52,6 +52,10 @@ pub trait CodedError: Debug + Display + Send {
 }
 
 impl CodedError for Error {
+    fn http_status(&self) -> StatusCode {
+        self.0.as_ref().http_status()
+    }
+
     fn error_code(&self) -> i16 {
         self.0.as_ref().error_code()
     }
@@ -197,10 +201,24 @@ macro_rules! map_actix_error {
 
 
 impl<T: Display + Debug + CodedError> CodedError for BlockingError<T> {
+    fn http_status(&self) -> StatusCode {
+        match self {
+            BlockingError::Error(err) => err.http_status(),
+            BlockingError::Canceled => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
     fn error_code(&self) -> i16 {
         match self {
             BlockingError::Error(err) => err.error_code(),
             BlockingError::Canceled => UNHANDLE_SYSTEM_ERROR_CODE
+        }
+    }
+
+    fn error_message(&self) -> &str {
+        match self {
+            BlockingError::Error(err) => err.error_message(),
+            BlockingError::Canceled => "System blocked",
         }
     }
 }

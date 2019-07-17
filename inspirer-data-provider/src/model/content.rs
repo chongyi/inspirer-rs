@@ -34,7 +34,7 @@ pub struct ContentBase {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Queryable, Debug, Clone, PartialEq)]
+#[derive(Queryable, Debug, Clone, PartialEq, Serialize)]
 pub struct ContentFull {
     pub id: i64,
     pub version: i32,

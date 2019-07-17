@@ -98,7 +98,7 @@ pub enum GetContent<'i> {
 }
 
 impl<'i> ActiveModel for GetContent<'i> {
-    type Result = QueryResult<(ContentFull, ContentEntity, BeJoinedUserBase)>;
+    type Result = ActionResult<(ContentFull, ContentEntity, BeJoinedUserBase)>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let mut query = contents::table
@@ -127,6 +127,7 @@ impl<'i> ActiveModel for GetContent<'i> {
             )
         ))
             .first::<(ContentFull, ContentEntity, BeJoinedUserBase)>(conn)
+            .map_err(From::from)
     }
 }
 

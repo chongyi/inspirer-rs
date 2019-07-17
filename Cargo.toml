@@ -17,6 +17,7 @@ members = [
     "inspirer-data-provider",
     "inspirer-application",
     "inspirer-actix",
+    "inspirer-common",
 ]
 
 #[dependencies]

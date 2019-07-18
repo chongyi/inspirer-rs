@@ -7,8 +7,10 @@ use crate::schema::users;
 use crate::schema::content_entities;
 use diesel::pg::expression::dsl::any;
 use crate::model::user::BeJoinedUserBase;
-use crate::model::content_entity::{ContentEntity, ContentEntityInsert};
+use crate::model::content_entity::{ContentEntity, ContentEntityInsert, ContentEntityUpdate};
 use crate::utils::biz_err;
+use inspirer_common::digest;
+use crate::agent::WithId;
 
 #[derive(Default, Deserialize)]
 pub struct GetContentsIndex {
@@ -148,8 +150,9 @@ impl<'i> ActiveModel for CreateContent<'i> {
     type Result = QueryResult<i64>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
+        let content_hash = digest::sha1(self.content);
         let content = ContentInsert {
-            version: 1,
+            version: content_hash.as_str(),
             creator_uuid: self.creator_uuid,
             title: self.title,
             content_name: self.content_name,
@@ -171,11 +174,11 @@ impl<'i> ActiveModel for CreateContent<'i> {
         let (id, version) = diesel::insert_into(contents::table)
             .values(&content)
             .returning((contents::id, contents::version))
-            .get_result::<(i64, i32)>(conn)?;
+            .get_result::<(i64, String)>(conn)?;
 
         let content_entity = ContentEntityInsert {
             id,
-            version,
+            version: version.as_str(),
             content_body: Some(self.content),
             creator_uuid: Some(self.creator_uuid),
         };
@@ -189,25 +192,25 @@ impl<'i> ActiveModel for CreateContent<'i> {
 }
 
 pub enum PublishContent {
-    Publish { id: i64, published_at: Option<NaiveDateTime> },
-    Unpublish { id: i64 },
+    Publish(Option<NaiveDateTime>),
+    Unpublish,
 }
 
-impl ActiveModel for PublishContent {
+impl ActiveModel for WithId<i64, PublishContent> {
     type Result = QueryResult<usize>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let now = Utc::now().naive_local();
-        let (target, published, published_at) = match self {
-            PublishContent::Publish { id, published_at } => {
+        let (target, published, published_at) = match self.data {
+            PublishContent::Publish(ref published_at) => {
                 let target = contents::table
-                    .filter(contents::id.eq(id).and(contents::published.eq(false)));
+                    .filter(contents::id.eq(self.id).and(contents::published.eq(false)));
 
                 (target, true, Some(published_at.as_ref().unwrap_or(&now)))
             }
-            PublishContent::Unpublish { id } => {
+            PublishContent::Unpublish => {
                 let target = contents::table
-                    .filter(contents::id.eq(id).and(contents::published.eq(true)));
+                    .filter(contents::id.eq(self.id).and(contents::published.eq(true)));
 
                 (target, false, None)
             }
@@ -220,6 +223,98 @@ impl ActiveModel for PublishContent {
                 contents::updated_at.eq(&now)
             ))
             .execute(conn)
+    }
+}
+
+pub struct UpdateContent<'i> {
+    pub title: Option<&'i str>,
+    pub content_name: Option<&'i str>,
+    pub content_type: Option<i16>,
+    pub keywords: Option<&'i str>,
+    pub description: Option<&'i str>,
+    pub display: Option<bool>,
+    pub published: Option<bool>,
+    pub published_at: Option<NaiveDateTime>,
+    pub content: Option<&'i str>,
+}
+
+impl<'i> ActiveModel for WithId<i64, UpdateContent<'i>> {
+    type Result = ActionResult<usize>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        // 检查内容是否存在变更
+        let new_version = if let Some(content) = self.data.content {
+            let version = contents::table
+                .filter(contents::id.eq(self.id))
+                .select(contents::version)
+                .get_result::<String>(conn)
+                .map_err(ErrorKind::from)?;
+
+            let new_version = digest::sha1(content);
+            if new_version == version {
+                None
+            } else {
+                Some(new_version)
+            }
+        } else {
+            None
+        };
+
+        let update_content = ContentUpdate {
+            title: self.data.title,
+            content_name: self.data.content_name,
+            content_type: self.data.content_type,
+            keywords: self.data.keywords,
+            description: self.data.description,
+            display: self.data.display,
+            published: self.data.published,
+            published_at: self.data.published_at,
+            version: new_version.as_ref().map(String::as_str),
+        };
+
+        let r = diesel::update(contents::table)
+            .set(&update_content)
+            .filter(contents::id.eq(self.id))
+            .execute(conn)
+            .map_err(ErrorKind::from)?;
+
+        if let Some(ref version) = new_version {
+            let update_entity = ContentEntityUpdate {
+                creator_uuid: None,
+                version: version.as_str(),
+                content_body: self.data.content.unwrap()
+            };
+
+            diesel::update(content_entities::table)
+                .set(&update_entity)
+                .filter(content_entities::id.eq(self.id))
+                .execute(conn)
+                .map_err(ErrorKind::from)?;
+        }
+
+        Ok(r)
+    }
+}
+
+pub struct DeleteContent;
+
+impl ActiveModel for WithId<Vec<i64>, DeleteContent> {
+    type Result = ActionResult<usize>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        if self.id.len() > 0 {
+            diesel::delete(content_entities::table)
+                .filter(content_entities::id.eq(any(&self.id)))
+                .execute(conn)
+                .map_err(ErrorKind::from)?;
+
+            diesel::delete(contents::table)
+                .filter(contents::id.eq(any(&self.id)))
+                .execute(conn)
+                .map_err(ErrorKind::from)
+        } else {
+            Ok(0)
+        }
     }
 }
 

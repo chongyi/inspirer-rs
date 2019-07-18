@@ -4,7 +4,7 @@ create table if not exists contents
     id           bigserial                                  not null
         constraint contents_pk
             primary key,
-    version      int          default 0                     not null,
+    version      varchar(64)                                not null,
     creator_uuid char(32)                                   not null,
     title        varchar,
     content_name varchar(255) default NULL::character varying,
@@ -20,7 +20,7 @@ create table if not exists contents
 
 comment on table contents is '内容表';
 
-comment on column contents.version is '版本序号';
+comment on column contents.version is '版本 hash';
 comment on column contents.creator_uuid is '创建人 UUID';
 comment on column contents.title is '内容标题';
 comment on column contents.content_name is '内容名称';
@@ -41,7 +41,7 @@ create index contents_title_index
 create table content_entities
 (
     id           bigint             not null,
-    version      int      default 1 not null,
+    version      varchar(64)        not null,
     content_body text,
     creator_uuid char(32) default null,
     constraint content_entities_pk
@@ -51,7 +51,7 @@ create table content_entities
 comment on table content_entities is '内容实体表';
 
 comment on column content_entities.id is '内容 ID';
-comment on column content_entities.version is '版本序号';
+comment on column content_entities.version is '版本 hash';
 comment on column content_entities.creator_uuid is '内容贡献者';
 
 create index content_entities_creator_index

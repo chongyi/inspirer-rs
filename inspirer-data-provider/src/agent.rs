@@ -91,6 +91,12 @@ impl<T> ActiveModel for Transaction<T> {
     }
 }
 
+#[derive(Deserialize)]
+pub struct WithId<I, D> {
+    pub id: I,
+    pub data: D,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;

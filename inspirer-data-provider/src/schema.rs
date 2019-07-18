@@ -1,7 +1,7 @@
 table! {
     content_entities (id, version) {
         id -> Int8,
-        version -> Int4,
+        version -> Varchar,
         content_body -> Nullable<Text>,
         creator_uuid -> Nullable<Bpchar>,
     }
@@ -10,7 +10,7 @@ table! {
 table! {
     contents (id) {
         id -> Int8,
-        version -> Int4,
+        version -> Varchar,
         creator_uuid -> Bpchar,
         title -> Nullable<Varchar>,
         content_name -> Nullable<Varchar>,

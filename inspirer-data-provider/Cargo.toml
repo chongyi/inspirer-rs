@@ -14,6 +14,7 @@ pwhash = "0.3"
 log = "0.4.6"
 chrono = { version = "0.4", features = ["serde"] }
 inspirer-actix = { path = "../inspirer-actix" }
+inspirer-common = { path = "../inspirer-common" }
 rand = "0.6.5"
 time = "0.1"
 http = "0.1"

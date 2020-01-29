@@ -1,6 +1,6 @@
 table! {
-    content_entities (id, version) {
-        id -> Int8,
+    content_entities (content_uuid, version) {
+        content_uuid -> Bpchar,
         version -> Varchar,
         content_body -> Nullable<Text>,
         creator_uuid -> Nullable<Bpchar>,
@@ -11,6 +11,7 @@ table! {
     contents (id) {
         id -> Int8,
         version -> Varchar,
+        uuid -> Bpchar,
         creator_uuid -> Bpchar,
         title -> Nullable<Varchar>,
         content_name -> Nullable<Varchar>,
@@ -26,17 +27,43 @@ table! {
 }
 
 table! {
+    user_base_profiles (user_uuid) {
+        user_uuid -> Bpchar,
+        nickname -> Varchar,
+        avatar -> Varchar,
+        gender -> Int2,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
+    user_email_credentials (email) {
+        email -> Varchar,
+        user_uuid -> Bpchar,
+        status -> Int2,
+        activated_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
+    user_mobile_phone_credentials (country_code, mobile_phone) {
+        country_code -> Varchar,
+        mobile_phone -> Varchar,
+        status -> Int2,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
     users (id) {
         id -> Int8,
-        user_uuid -> Bpchar,
+        uuid -> Bpchar,
         invitor_uuid -> Nullable<Bpchar>,
-        email -> Nullable<Varchar>,
-        mobile_phone -> Nullable<Varchar>,
-        country_code -> Nullable<Varchar>,
         password -> Nullable<Varchar>,
-        nickname -> Varchar,
-        gender -> Nullable<Bool>,
-        avatar -> Nullable<Varchar>,
         user_type -> Int2,
         last_login -> Nullable<Timestamp>,
         last_login_ip -> Nullable<Varchar>,
@@ -65,6 +92,9 @@ table! {
 allow_tables_to_appear_in_same_query!(
     content_entities,
     contents,
+    user_base_profiles,
+    user_email_credentials,
+    user_mobile_phone_credentials,
     users,
     validate_codes,
 );

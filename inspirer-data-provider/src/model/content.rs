@@ -4,6 +4,7 @@ use chrono::prelude::*;
 #[allow(non_upper_case_globals)]
 pub const content_base_columns: (
     contents::id,
+    contents::uuid,
     contents::creator_uuid,
     contents::title,
     contents::content_type,
@@ -13,6 +14,7 @@ pub const content_base_columns: (
     contents::updated_at,
 ) = (
     contents::id,
+    contents::uuid,
     contents::creator_uuid,
     contents::title,
     contents::content_type,
@@ -25,6 +27,7 @@ pub const content_base_columns: (
 #[derive(Queryable, Debug, Clone, PartialEq, Serialize)]
 pub struct ContentBase {
     pub id: i64,
+    pub uuid: String,
     pub creator_uuid: String,
     pub title: Option<String>,
     pub content_type: i16,
@@ -37,6 +40,7 @@ pub struct ContentBase {
 #[derive(Queryable, Debug, Clone, PartialEq, Serialize)]
 pub struct ContentFull {
     pub id: i64,
+    pub uuid: String,
     pub version: String,
     pub creator_uuid: String,
     pub title: Option<String>,
@@ -54,6 +58,7 @@ pub struct ContentFull {
 #[derive(Deserialize, Insertable)]
 #[table_name = "contents"]
 pub struct ContentInsert<'i> {
+    pub uuid: &'i str,
     pub version: &'i str,
     pub creator_uuid: &'i str,
     pub title: Option<&'i str>,

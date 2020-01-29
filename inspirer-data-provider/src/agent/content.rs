@@ -105,7 +105,7 @@ impl<'i> ActiveModel for GetContent<'i> {
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let mut query = contents::table
             .left_join(users::table.on(users::user_uuid.eq(contents::creator_uuid)))
-            .left_join(content_entities::table.on(content_entities::id.eq(contents::id).and(content_entities::version.eq(contents::version))))
+            .left_join(content_entities::table.on(content_entities::content_uuid.eq(contents::uuid).and(content_entities::version.eq(contents::version))))
             .into_boxed();
 
         match self {
@@ -147,11 +147,14 @@ pub struct CreateContent<'i> {
 }
 
 impl<'i> ActiveModel for CreateContent<'i> {
-    type Result = QueryResult<i64>;
+    type Result = QueryResult<String>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
+        let mut uuid_buffer = [0; 32];
         let content_hash = digest::sha1(self.content);
+        let content_uuid = utils::generate_uuid(&mut uuid_buffer);
         let content = ContentInsert {
+            uuid: content_uuid,
             version: content_hash.as_str(),
             creator_uuid: self.creator_uuid,
             title: self.title,
@@ -171,13 +174,13 @@ impl<'i> ActiveModel for CreateContent<'i> {
             }),
         };
 
-        let (id, version) = diesel::insert_into(contents::table)
+        let (uuid, version) = diesel::insert_into(contents::table)
             .values(&content)
-            .returning((contents::id, contents::version))
-            .get_result::<(i64, String)>(conn)?;
+            .returning((contents::uuid, contents::version))
+            .get_result::<(String, String)>(conn)?;
 
         let content_entity = ContentEntityInsert {
-            id,
+            content_uuid,
             version: version.as_str(),
             content_body: Some(self.content),
             creator_uuid: Some(self.creator_uuid),
@@ -187,7 +190,7 @@ impl<'i> ActiveModel for CreateContent<'i> {
             .values(&content_entity)
             .execute(conn)?;
 
-        Ok(id)
+        Ok(uuid)
     }
 }
 
@@ -196,7 +199,7 @@ pub enum PublishContent {
     Unpublish,
 }
 
-impl ActiveModel for WithId<i64, PublishContent> {
+impl<'a> ActiveModel for WithId<&'a str, PublishContent> {
     type Result = QueryResult<usize>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
@@ -204,13 +207,13 @@ impl ActiveModel for WithId<i64, PublishContent> {
         let (target, published, published_at) = match self.data {
             PublishContent::Publish(ref published_at) => {
                 let target = contents::table
-                    .filter(contents::id.eq(self.id).and(contents::published.eq(false)));
+                    .filter(contents::uuid.eq(self.id).and(contents::published.eq(false)));
 
                 (target, true, Some(published_at.as_ref().unwrap_or(&now)))
             }
             PublishContent::Unpublish => {
                 let target = contents::table
-                    .filter(contents::id.eq(self.id).and(contents::published.eq(true)));
+                    .filter(contents::uuid.eq(self.id).and(contents::published.eq(true)));
 
                 (target, false, None)
             }
@@ -238,14 +241,14 @@ pub struct UpdateContent<'i> {
     pub content: Option<&'i str>,
 }
 
-impl<'i> ActiveModel for WithId<i64, UpdateContent<'i>> {
+impl<'i> ActiveModel for WithId<&'i str, UpdateContent<'i>> {
     type Result = ActionResult<usize>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         // 检查内容是否存在变更
         let new_version = if let Some(content) = self.data.content {
             let version = contents::table
-                .filter(contents::id.eq(self.id))
+                .filter(contents::uuid.eq(self.id))
                 .select(contents::version)
                 .get_result::<String>(conn)
                 .map_err(ErrorKind::from)?;
@@ -274,7 +277,7 @@ impl<'i> ActiveModel for WithId<i64, UpdateContent<'i>> {
 
         let r = diesel::update(contents::table)
             .set(&update_content)
-            .filter(contents::id.eq(self.id))
+            .filter(contents::uuid.eq(self.id))
             .execute(conn)
             .map_err(ErrorKind::from)?;
 
@@ -287,7 +290,7 @@ impl<'i> ActiveModel for WithId<i64, UpdateContent<'i>> {
 
             diesel::update(content_entities::table)
                 .set(&update_entity)
-                .filter(content_entities::id.eq(self.id))
+                .filter(content_entities::content_uuid.eq(self.id))
                 .execute(conn)
                 .map_err(ErrorKind::from)?;
         }
@@ -298,18 +301,18 @@ impl<'i> ActiveModel for WithId<i64, UpdateContent<'i>> {
 
 pub struct DeleteContent;
 
-impl ActiveModel for WithId<Vec<i64>, DeleteContent> {
+impl<'a> ActiveModel for WithId<Vec<&'a str>, DeleteContent> {
     type Result = ActionResult<usize>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         if self.id.len() > 0 {
             diesel::delete(content_entities::table)
-                .filter(content_entities::id.eq(any(&self.id)))
+                .filter(content_entities::content_uuid.eq(any(&self.id)))
                 .execute(conn)
                 .map_err(ErrorKind::from)?;
 
             diesel::delete(contents::table)
-                .filter(contents::id.eq(any(&self.id)))
+                .filter(contents::uuid.eq(any(&self.id)))
                 .execute(conn)
                 .map_err(ErrorKind::from)
         } else {
@@ -340,8 +343,8 @@ mod tests {
             println!("{:?}", result);
             let expect = PaginateWrapper {
                 list: vec![
-                    (ContentBase { id: 12, creator_uuid: "b9e87a68d0dd4748806e7ddb403701f5".to_string(), title: Some("ORANGE MARMALADE".to_string()), content_type: 2, display: true, published: true, created_at: utils::convert_to_native_datetime("2019-06-20 19:09:00").unwrap(), updated_at: utils::convert_to_native_datetime("2019-06-20 19:09:00").unwrap() }, BeJoinedUserBase { id: Some(1), user_uuid: Some("b9e87a68d0dd4748806e7ddb403701f5".to_string()), nickname: Some("administrator".to_string()), avatar: None, status: Some(1), member_type: Some(32767) }),
-                    (ContentBase { id: 11, creator_uuid: "b9e87a68d0dd4748806e7ddb403701f5".to_string(), title: Some("Either the well was very deep".to_string()), content_type: 1, display: true, published: true, created_at: utils::convert_to_native_datetime("2019-06-20 19:08:00").unwrap(), updated_at: utils::convert_to_native_datetime("2019-06-20 19:08:00").unwrap() }, BeJoinedUserBase { id: Some(1), user_uuid: Some("b9e87a68d0dd4748806e7ddb403701f5".to_string()), nickname: Some("administrator".to_string()), avatar: None, status: Some(1), member_type: Some(32767) })
+                    (ContentBase { id: 12, uuid: "".to_string(), creator_uuid: "b9e87a68d0dd4748806e7ddb403701f5".to_string(), title: Some("ORANGE MARMALADE".to_string()), content_type: 2, display: true, published: true, created_at: utils::convert_to_native_datetime("2019-06-20 19:09:00").unwrap(), updated_at: utils::convert_to_native_datetime("2019-06-20 19:09:00").unwrap() }, BeJoinedUserBase { id: Some(1), user_uuid: Some("b9e87a68d0dd4748806e7ddb403701f5".to_string()), nickname: Some("administrator".to_string()), avatar: None, status: Some(1), member_type: Some(32767) }),
+                    (ContentBase { id: 11, uuid: "".to_string(), creator_uuid: "b9e87a68d0dd4748806e7ddb403701f5".to_string(), title: Some("Either the well was very deep".to_string()), content_type: 1, display: true, published: true, created_at: utils::convert_to_native_datetime("2019-06-20 19:08:00").unwrap(), updated_at: utils::convert_to_native_datetime("2019-06-20 19:08:00").unwrap() }, BeJoinedUserBase { id: Some(1), user_uuid: Some("b9e87a68d0dd4748806e7ddb403701f5".to_string()), nickname: Some("administrator".to_string()), avatar: None, status: Some(1), member_type: Some(32767) })
                 ],
                 last_page: 6,
                 total: 12,

@@ -5,8 +5,8 @@ use crate::db::{EventHandler, ErrorHandler, ConnectionMeta, ErrorHandlerWrapper,
 use crate::prelude::*;
 use chrono::prelude::*;
 
-/// 生成会员 UUID
-pub fn generate_user_uuid(uuid: &mut [u8]) -> &mut str {
+/// 生成 UUID
+pub fn generate_uuid(uuid: &mut [u8]) -> &mut str {
     Uuid::new_v4().to_simple().encode_lower(uuid)
 }
 

@@ -4,6 +4,12 @@ use chrono::prelude::*;
 use crate::prelude::*;
 use crate::schema::users;
 
+pub struct CreateUser<'i> {
+    pub invitor_uuid: &'i str,
+    pub status: Option<i16>,
+    pub password: Option<&'i str>,
+}
+
 /// 手机号注册模型
 pub struct MobilePhoneRegister<'i> {
     pub mobile_phone: &'i str,
@@ -22,7 +28,7 @@ impl<'i> ActiveModel for MobilePhoneRegister<'i> {
         let mut uuid_buffer = [0; 32];
 
         let insert = MobilePhoneRegisterUser {
-            user_uuid: utils::generate_user_uuid(&mut uuid_buffer),
+            user_uuid: utils::generate_uuid(&mut uuid_buffer),
             mobile_phone: self.mobile_phone,
             country_code: self.country_code.unwrap_or("86"),
             password: self.password.map(utils::password_hash),
@@ -55,7 +61,7 @@ impl<'i> ActiveModel for EmailRegister<'i> {
         let mut uuid_buffer = [0; 32];
 
         let insert = EmailRegisterUser {
-            user_uuid: utils::generate_user_uuid(&mut uuid_buffer),
+            user_uuid: utils::generate_uuid(&mut uuid_buffer),
             email: self.email,
             password: self.password.map(utils::password_hash),
             status: self.status.unwrap_or(0),

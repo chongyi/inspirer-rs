@@ -10,7 +10,7 @@ pub struct ContentEntity {
 #[derive(Deserialize, Insertable)]
 #[table_name = "content_entities"]
 pub struct ContentEntityInsert<'i> {
-    pub id: i64,
+    pub content_uuid: &'i str,
     pub version: &'i str,
     pub content_body: Option<&'i str>,
     pub creator_uuid: Option<&'i str>,

@@ -40,14 +40,14 @@ pub struct UpdateUserActivatedTime {
 #[allow(non_upper_case_globals)]
 pub const user_base_columns: (
     users::id,
-    users::user_uuid,
+    users::uuid,
     users::nickname,
     users::avatar,
     users::status,
     users::user_type
 ) = (
     users::id,
-    users::user_uuid,
+    users::uuid,
     users::nickname,
     users::avatar,
     users::status,

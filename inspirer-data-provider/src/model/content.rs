@@ -40,8 +40,8 @@ pub struct ContentBase {
 #[derive(Queryable, Debug, Clone, PartialEq, Serialize)]
 pub struct ContentFull {
     pub id: i64,
-    pub uuid: String,
     pub version: String,
+    pub uuid: String,
     pub creator_uuid: String,
     pub title: Option<String>,
     pub content_name: Option<String>,

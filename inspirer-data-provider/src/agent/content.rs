@@ -2,15 +2,14 @@ use crate::model::content::*;
 use crate::utils;
 use chrono::prelude::*;
 use crate::prelude::*;
-use crate::schema::contents;
-use crate::schema::users;
-use crate::schema::content_entities;
+use crate::schema::*;
 use diesel::pg::expression::dsl::any;
 use crate::model::user::BeJoinedUserBase;
 use crate::model::content_entity::{ContentEntity, ContentEntityInsert, ContentEntityUpdate};
 use crate::utils::biz_err;
 use inspirer_common::digest;
 use crate::agent::WithId;
+use crate::model::user_base_profiles::BeJoinedUserBaseProfile;
 
 #[derive(Default, Deserialize)]
 pub struct GetContentsIndex {
@@ -25,11 +24,12 @@ pub struct GetContentsIndex {
 }
 
 impl ActiveModel for GetContentsIndex {
-    type Result = ActionResult<PaginateWrapper<(ContentBase, BeJoinedUserBase)>>;
+    type Result = ActionResult<PaginateWrapper<(ContentBase, BeJoinedUserBase, BeJoinedUserBaseProfile)>>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let mut query = contents::table
-            .left_join(users::table.on(users::user_uuid.eq(contents::creator_uuid)))
+            .left_join(users::table.on(users::uuid.eq(contents::creator_uuid)))
+            .left_join(user_base_profiles::table.on(user_base_profiles::user_uuid.eq(contents::creator_uuid)))
             .order((contents::published_at.desc(), contents::created_at.desc()))
             .into_boxed();
 
@@ -55,12 +55,20 @@ impl ActiveModel for GetContentsIndex {
 
         if let Some(ref creator) = self.creator {
             let user_uuids = users::table
-                .filter(
-                    users::email.ilike(format!("%{}%", creator))
-                        .or(users::mobile_phone.ilike(format!("%{}%", creator)))
-                        .or(users::user_uuid.eq(creator))
+                .left_join(
+                    user_mobile_phone_credentials::table
+                        .on(user_mobile_phone_credentials::user_uuid.eq(users::uuid))
                 )
-                .select(users::user_uuid)
+                .left_join(
+                    user_email_credentials::table
+                        .on(user_email_credentials::user_uuid.eq(users::uuid))
+                )
+                .filter(
+                    users::uuid.eq(creator)
+                        .or(user_mobile_phone_credentials::mobile_phone.ilike(format!("%{}%", creator)))
+                        .or(user_email_credentials::email.ilike(format!("%{}%", creator)))
+                )
+                .select(users::uuid)
                 .load::<String>(conn)
                 .map_err(ErrorKind::from)?;
 
@@ -70,12 +78,13 @@ impl ActiveModel for GetContentsIndex {
         let mut query = query.select((
             content_base_columns,
             (
-                users::id.nullable(),
-                users::user_uuid.nullable(),
-                users::nickname.nullable(),
-                users::avatar.nullable(),
+                users::uuid.nullable(),
                 users::status.nullable(),
                 users::user_type.nullable()
+            ),
+            (
+                user_base_profiles::nickname.nullable(),
+                user_base_profiles::avatar.nullable()
             )
         ))
             .paginate(self.page.unwrap_or(1));
@@ -84,7 +93,9 @@ impl ActiveModel for GetContentsIndex {
             query = query.per_page(per_page);
         }
 
-        let (result, last_page, total) = query.load_and_count_pages::<(ContentBase, BeJoinedUserBase)>(conn).map_err(ErrorKind::from)?;
+        let (result, last_page, total) = query
+            .load_and_count_pages::<(ContentBase, BeJoinedUserBase, BeJoinedUserBaseProfile)>(conn)
+            .map_err(ErrorKind::from)?;
 
         Ok(PaginateWrapper {
             list: result,
@@ -100,12 +111,23 @@ pub enum GetContent<'i> {
 }
 
 impl<'i> ActiveModel for GetContent<'i> {
-    type Result = ActionResult<(ContentFull, ContentEntity, BeJoinedUserBase)>;
+    type Result = ActionResult<(ContentFull, ContentEntity, BeJoinedUserBase, BeJoinedUserBaseProfile)>;
 
     fn activate(&self, conn: &PooledConn) -> Self::Result {
         let mut query = contents::table
-            .left_join(users::table.on(users::user_uuid.eq(contents::creator_uuid)))
-            .left_join(content_entities::table.on(content_entities::content_uuid.eq(contents::uuid).and(content_entities::version.eq(contents::version))))
+            .left_join(users::table.on(users::uuid.eq(contents::creator_uuid)))
+            .left_join(
+                user_base_profiles::table
+                    .on(user_base_profiles::user_uuid.eq(contents::creator_uuid))
+            )
+            .left_join(
+                content_entities::table
+                    .on(
+                        content_entities::content_uuid
+                            .eq(contents::uuid)
+                            .and(content_entities::version.eq(contents::version))
+                    )
+            )
             .into_boxed();
 
         match self {
@@ -120,15 +142,16 @@ impl<'i> ActiveModel for GetContent<'i> {
                 content_entities::creator_uuid.nullable(),
             ),
             (
-                users::id.nullable(),
-                users::user_uuid.nullable(),
-                users::nickname.nullable(),
-                users::avatar.nullable(),
+                users::uuid.nullable(),
                 users::status.nullable(),
                 users::user_type.nullable()
+            ),
+            (
+                user_base_profiles::nickname.nullable(),
+                user_base_profiles::avatar.nullable()
             )
         ))
-            .first::<(ContentFull, ContentEntity, BeJoinedUserBase)>(conn)
+            .first::<(ContentFull, ContentEntity, BeJoinedUserBase, BeJoinedUserBaseProfile)>(conn)
             .map_err(From::from)
     }
 }
@@ -285,7 +308,7 @@ impl<'i> ActiveModel for WithId<&'i str, UpdateContent<'i>> {
             let update_entity = ContentEntityUpdate {
                 creator_uuid: None,
                 version: version.as_str(),
-                content_body: self.data.content.unwrap()
+                content_body: self.data.content.unwrap(),
             };
 
             diesel::update(content_entities::table)

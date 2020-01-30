@@ -52,6 +52,7 @@ table! {
     user_mobile_phone_credentials (country_code, mobile_phone) {
         country_code -> Varchar,
         mobile_phone -> Varchar,
+        user_uuid -> Bpchar,
         status -> Int2,
         created_at -> Timestamp,
         updated_at -> Timestamp,

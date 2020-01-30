@@ -127,7 +127,7 @@ comment on table user_email_credentials is '用户邮箱凭据表';
 
 comment on column user_email_credentials.activated_at is '邮箱激活时间';
 
-create unique index user_email_credentials_user_uuid
+create unique index user_email_credentials_user_uuid_uindex
     on user_email_credentials (user_uuid);
 
 -- 用户手机号凭据表
@@ -135,6 +135,7 @@ create table user_mobile_phone_credentials
 (
     country_code varchar(8) not null,
     mobile_phone varchar(32) not null,
+    user_uuid char(32) not null,
     status smallint default 0 not null,
     created_at timestamp default current_timestamp not null,
     updated_at timestamp default current_timestamp not null,
@@ -145,6 +146,9 @@ comment on table user_mobile_phone_credentials is '用户手机号凭据表';
 
 comment on column user_mobile_phone_credentials.country_code is '国家编号';
 comment on column user_mobile_phone_credentials.mobile_phone is '手机号码';
+
+create unique index user_mobile_phone_credentials_user_uuid_uindex
+    on user_mobile_phone_credentials (user_uuid);
 
 -- 验证代码表
 create table validate_codes

@@ -5,6 +5,7 @@ pub mod error;
 #[macro_use]
 pub mod macros;
 pub mod response;
+pub mod middleware;
 
 #[cfg(test)]
 mod tests {

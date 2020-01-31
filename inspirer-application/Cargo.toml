@@ -11,9 +11,9 @@ path = "bin/inspirer_server.rs"
 [dependencies]
 inspirer-data-provider = { path = "../inspirer-data-provider" }
 inspirer-actix = { path = "../inspirer-actix" }
-actix-web = "1.0"
+actix-web = "2.0"
+actix-rt = "1.0"
 actix-identity = "*"
-actix-rt = "*"
 clap = "2.33.0"
 daemonize = "0.4.1"
 serde = "1.0"

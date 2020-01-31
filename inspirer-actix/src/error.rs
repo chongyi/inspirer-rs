@@ -26,6 +26,7 @@ use actix_web::http::header;
 use crate::response::ResponseMessage;
 use derive_more::Display;
 pub use actix_web::error::*;
+use actix_http::ResponseBuilder;
 
 /// 未知系统错误代码（或未定义的错误）
 pub const UNKNOWN_ERROR_CODE: i16 = -1;
@@ -65,7 +66,7 @@ impl CodedError for Error {
     }
 }
 
-impl AsRef<CodedError> for Error {
+impl AsRef<dyn CodedError> for Error {
     fn as_ref(&self) -> &(dyn CodedError + 'static) {
         self.0.as_ref()
     }
@@ -92,29 +93,30 @@ pub enum InspirerResponseError {
 }
 
 impl ResponseError for InspirerResponseError {
-    fn error_response(&self) -> HttpResponse {
+    fn status_code(&self) -> StatusCode {
         let err = match self {
             InspirerResponseError::Json(err) => err,
             InspirerResponseError::Template(err, _) => err,
         };
 
-        HttpResponse::new(err.http_status())
+        err.http_status()
     }
 
-    fn render_response(&self) -> HttpResponse {
-        let mut resp = self.error_response();
+    fn error_response(&self) -> HttpResponse {
+        let mut resp = ResponseBuilder::new(self.status_code());
         match self {
             InspirerResponseError::Json(err) => {
                 let json = serde_json::to_string(&ResponseMessage::error(err, &Option::<String>::None)).unwrap_or_else(|err| {
                     error!("Convert 'error' to json failed, error info: {:?}", err);
                     String::from("{}")
                 });
-                resp.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"));
-                resp.set_body(Body::from(json))
+
+                resp.set_header(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"))
+                    .body(Body::from(json))
             },
             InspirerResponseError::Template(err, template) => {
-                resp.headers_mut().insert(header::CONTENT_TYPE, header::HeaderValue::from_static("text/html"));
-                resp.set_body(Body::from(err.error_message().to_string()))
+                resp.set_header(header::CONTENT_TYPE, header::HeaderValue::from_static("text/html"))
+                    .body(Body::from(err.error_message().to_string()))
             }
         }
     }

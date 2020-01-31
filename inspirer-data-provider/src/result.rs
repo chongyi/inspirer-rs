@@ -38,7 +38,7 @@ impl CodedError for ErrorKind {
 
     fn error_code(&self) -> i16 {
         match self {
-            ErrorKind::DBError(err) => UNHANDLE_SYSTEM_ERROR_CODE,
+            ErrorKind::DBError(err) => UNHANDLE_SYSTEM_ERROR_CODE.0,
             ErrorKind::BizError(err) => err.as_ref().error_code()
         }
     }

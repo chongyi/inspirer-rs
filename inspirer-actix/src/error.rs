@@ -28,10 +28,7 @@ use derive_more::Display;
 pub use actix_web::error::*;
 use actix_http::ResponseBuilder;
 
-/// 未知系统错误代码（或未定义的错误）
-pub const UNKNOWN_ERROR_CODE: i16 = -1;
-/// 未受控制的系统（或组件）错误代码
-pub const UNHANDLE_SYSTEM_ERROR_CODE: i16 = -2;
+pub use error_code::*;
 
 #[derive(Debug)]
 pub struct Error(pub Box<dyn CodedError>);
@@ -44,11 +41,11 @@ pub trait CodedError: Debug + Display + Send {
 
     /// 获取错误代码
     fn error_code(&self) -> i16 {
-        UNKNOWN_ERROR_CODE
+        UNKNOWN_ERROR_CODE.0
     }
 
     fn error_message(&self) -> &str {
-        "未知异常"
+        UNKNOWN_ERROR_CODE.1
     }
 }
 
@@ -213,7 +210,7 @@ impl<T: Display + Debug + CodedError> CodedError for BlockingError<T> {
     fn error_code(&self) -> i16 {
         match self {
             BlockingError::Error(err) => err.error_code(),
-            BlockingError::Canceled => UNHANDLE_SYSTEM_ERROR_CODE
+            BlockingError::Canceled => UNHANDLE_SYSTEM_ERROR_CODE.0
         }
     }
 
@@ -226,3 +223,15 @@ impl<T: Display + Debug + CodedError> CodedError for BlockingError<T> {
 }
 
 impl CodedError for ParseError {}
+
+pub mod error_code {
+    /// 未知系统错误代码（或未定义的错误）
+    pub const UNKNOWN_ERROR_CODE: (i16, &'static str) = (-1, "未知异常");
+    /// 未受控制的系统（或组件）错误代码
+    pub const UNHANDLE_SYSTEM_ERROR_CODE: (i16, &'static str) = (-2, "未知异常（组件错误）");
+
+    /// 非法请求
+    pub const INVALID_OR_BAD_REQUEST: (i16, &'static str) = (-3, "非法请求");
+    /// 授权校验未通过
+    pub const UNAUTHORIZED: (i16, &'static str) = (-4, " 授权校验未通过，请重新获取授权");
+}

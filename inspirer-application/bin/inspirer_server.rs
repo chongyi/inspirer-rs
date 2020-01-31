@@ -1,6 +1,6 @@
 use actix_web::{HttpServer, App, web, HttpResponse};
 use actix_service::ServiceFactory;
-use inspirer_application::app::{Config, State, create_app};
+use inspirer_application::app::{Config, State};
 use inspirer_data_provider::db::ConnPoolManager;
 use inspirer_application::routes::scoped_admin;
 

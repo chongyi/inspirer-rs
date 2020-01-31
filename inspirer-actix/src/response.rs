@@ -10,9 +10,9 @@ use crate::error::CodedError;
 pub struct ResponseMessage<'a, T>
     where T: Serialize
 {
-    code: i16,
-    msg: &'a str,
-    data: &'a T,
+    pub code: i16,
+    pub msg: &'a str,
+    pub data: &'a T,
 }
 
 impl<'a, T> ResponseMessage<'a, T>
@@ -26,7 +26,7 @@ impl<'a, T> ResponseMessage<'a, T>
         }
     }
 
-    pub fn error<E: AsRef<CodedError>>(error: &'a E, data: &'a T) -> Self {
+    pub fn error<E: AsRef<dyn CodedError>>(error: &'a E, data: &'a T) -> Self {
         ResponseMessage {
             code: error.as_ref().error_code(),
             msg: error.as_ref().error_message(),

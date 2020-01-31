@@ -6,6 +6,7 @@ pub mod error;
 pub mod macros;
 pub mod response;
 pub mod middleware;
+pub mod auth;
 
 #[cfg(test)]
 mod tests {

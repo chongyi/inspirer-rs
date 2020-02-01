@@ -7,10 +7,11 @@ extern crate actix_web;
 #[macro_use]
 extern crate inspirer_actix;
 
-pub(crate) mod handler;
+pub mod auth;
 pub mod middleware;
 pub mod routes;
 pub mod app;
+pub(crate) mod controller;
 
 pub mod result {
     pub use inspirer_actix::response::*;

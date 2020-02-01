@@ -2,7 +2,7 @@
 //!
 
 use actix_service::{Service, Transform};
-use actix_web::dev::{ServiceRequest, ServiceResponse};
+use actix_web::dev::{ServiceRequest, ServiceResponse, Payload};
 use futures::future::{ok, Ready, Either};
 use std::pin::Pin;
 use std::future::Future;
@@ -12,16 +12,28 @@ use actix_web::http::HeaderValue;
 use failure::_core::marker::PhantomData;
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::de::DeserializeOwned;
-use actix_http::HttpMessage;
-use actix_web::HttpResponse;
+use actix_http::{HttpMessage, Error};
+use actix_web::{HttpResponse, FromRequest, HttpRequest};
 use crate::response::ResponseMessage;
 use crate::error::{INVALID_OR_BAD_REQUEST, UNAUTHORIZED};
+use std::rc::Rc;
+use actix_web::web::Bytes;
+use futures::Stream;
+use actix_http::error::PayloadError;
 
 pub struct JwtTokenAuth<'a, K>
     where K: DeserializeOwned + 'static
 {
     secret: &'a str,
     _phantom: PhantomData<K>,
+}
+
+impl<'a, K> JwtTokenAuth<'a, K>
+    where K: DeserializeOwned + 'static
+{
+    pub fn new(secret: &'a str) -> Self {
+        JwtTokenAuth { secret, _phantom: PhantomData }
+    }
 }
 
 impl<'a, S, B, K> Transform<S> for JwtTokenAuth<'a, K>
@@ -93,7 +105,8 @@ impl<'a, S, B, K> Service for JwtTokenAuthMiddleware<'a, S, K>
 
         match token_decode {
             Some(token) => {
-                req.extensions_mut().insert(token);
+                let claims = token.claims;
+                req.extensions_mut().insert(TokenGuard (Rc::new(claims)));
                 Either::Left(self.service.call(req))
             }
             None => Either::Right(ok(req.into_response(
@@ -106,5 +119,19 @@ impl<'a, S, B, K> Service for JwtTokenAuthMiddleware<'a, S, K>
                     .into_body()
             )))
         }
+    }
+}
+
+pub struct TokenGuard<K: DeserializeOwned + 'static> (pub Rc<K>);
+
+impl<K: DeserializeOwned + 'static> FromRequest for TokenGuard<K> {
+    type Error = actix_web::Error;
+    type Future = Ready<Result<TokenGuard<K>, actix_web::Error>>;
+    type Config = ();
+
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        ok(req.extensions().get::<TokenGuard<K>>().map(|v| {
+            TokenGuard (Rc::clone(&v.0))
+        }).unwrap())
     }
 }

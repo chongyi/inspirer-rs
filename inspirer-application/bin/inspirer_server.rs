@@ -6,7 +6,7 @@ use redis_async::resp_array;
 
 use inspirer_actix::middleware::auth::JwtToken;
 use inspirer_application::app::{Config, State};
-use inspirer_application::middleware::auth::Credential;
+use inspirer_application::middleware::auth::{Credential, Auth};
 use inspirer_application::routes::scoped_admin;
 use inspirer_data_provider::db::ConnPoolManager;
 
@@ -30,8 +30,9 @@ async fn start_server() -> std::io::Result<()> {
             .data(State {
                 db_conn: db_conn.clone()
             })
+            .wrap(JwtToken::<Credential>::new("secret"))
             .service(web::scope("/api/admin")
-                .wrap(JwtToken::<Credential>::new("secret"))
+                .wrap(Auth)
                 .configure(scoped_admin)
             )
             .route("/", web::get().to(|| {

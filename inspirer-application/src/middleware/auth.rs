@@ -70,7 +70,7 @@ impl<S, B> Service for AuthMiddleware<S>
         Box::pin(async move {
             let valid = match req.extensions().get::<TokenGuard<Credential>>() {
                 Some(token) => {
-                    if let Some(redis_actor) = req.app_data::<Addr<RedisActor>>() {
+                    let not_block = if let Some(redis_actor) = req.app_data::<Addr<RedisActor>>() {
                         let result = redis_actor
                             .send(Command(resp_array!("GET", format!("blocked:token:{}", token.get_origin_token()))))
                             .await
@@ -82,7 +82,9 @@ impl<S, B> Service for AuthMiddleware<S>
                         }
                     } else {
                         true
-                    }
+                    };
+
+                    not_block && token.has_token()
                 }
                 None => false
             };

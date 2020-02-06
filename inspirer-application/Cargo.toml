@@ -11,10 +11,13 @@ path = "bin/inspirer_server.rs"
 [dependencies]
 inspirer-data-provider = { path = "../inspirer-data-provider" }
 inspirer-actix = { path = "../inspirer-actix" }
+actix = "0.9"
 actix-web = "2.0"
 actix-service = "^1.0.1"
 actix-rt = "^1.0.0"
+actix-http = "^1.0.0"
 actix-identity = "*"
+actix-redis = "*"
 clap = "2.33.0"
 serde = "1.0"
 serde_derive = "1.0"
@@ -24,6 +27,7 @@ num_cpus = "1.10.1"
 regex = "1"
 jsonwebtoken = "7"
 chrono = { version = "0.4", features = ["serde"] }
+redis-async = { version = "0.6" }
 
 [target.'cfg(unix)'.dependencies]
 daemonize = "0.4.1"

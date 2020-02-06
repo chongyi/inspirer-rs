@@ -7,7 +7,6 @@ extern crate actix_web;
 #[macro_use]
 extern crate inspirer_actix;
 
-pub mod auth;
 pub mod middleware;
 pub mod routes;
 pub mod app;

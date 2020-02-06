@@ -15,20 +15,24 @@
 //!
 //! 错误消息是对错误的具体描述，建议一般不要超过 160 个全角字符或 255 个半角字符即可。
 
-use std::error::Error as StdError;
 use std::any::TypeId;
-use std::fmt::{Formatter, Debug, Display};
+use std::error::Error as StdError;
+use std::fmt::{Debug, Display, Formatter};
+
+pub use actix::MailboxError;
+pub use actix_redis::Error as ActixRedisError;
+use actix_http::{ResponseBuilder, HttpMessage};
+use actix_web::{HttpRequest, HttpResponse, ResponseError};
+use actix_web::dev::{Body, HttpResponseBuilder};
+pub use actix_web::error::*;
+use actix_web::http::header;
+use derive_more::Display;
 pub use http::StatusCode;
 use serde::Serialize;
-use actix_web::{ResponseError, HttpResponse, HttpRequest};
-use actix_web::dev::{HttpResponseBuilder, Body};
-use actix_web::http::header;
-use crate::response::ResponseMessage;
-use derive_more::Display;
-pub use actix_web::error::*;
-use actix_http::ResponseBuilder;
 
 pub use error_code::*;
+
+use crate::response::ResponseMessage;
 
 #[derive(Debug)]
 pub struct Error(pub Box<dyn CodedError>);
@@ -119,7 +123,7 @@ impl ResponseError for InspirerResponseError {
     }
 }
 
-pub fn map_to_inspirer_response_err<T: CodedError + 'static>(req: &HttpRequest) -> impl FnOnce(T) -> actix_web::Error {
+pub fn map_to_inspirer_response_err<T: CodedError + 'static, R: HttpMessage>(req: &R) -> impl FnOnce(T) -> actix_web::Error {
     let json = match req.headers().get(header::ACCEPT) {
         Some(value) => {
             let v = value.to_str().unwrap_or("");
@@ -198,7 +202,6 @@ macro_rules! map_actix_error {
     }
 }
 
-
 impl<T: Display + Debug + CodedError> CodedError for BlockingError<T> {
     fn http_status(&self) -> StatusCode {
         match self {
@@ -223,6 +226,7 @@ impl<T: Display + Debug + CodedError> CodedError for BlockingError<T> {
 }
 
 impl CodedError for ParseError {}
+impl CodedError for MailboxError {}
 
 pub mod error_code {
     /// 未知系统错误代码（或未定义的错误）

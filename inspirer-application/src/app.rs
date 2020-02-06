@@ -8,7 +8,9 @@ pub struct Config {
     pub listen: String,
     pub worker_num: Option<usize>,
     pub pid_file: Option<String>,
-    pub db: ConnectionConfig
+    pub db: ConnectionConfig,
+    pub redis_url: String,
+    pub redis_password: Option<String>,
 }
 
 impl Default for Config {
@@ -17,7 +19,9 @@ impl Default for Config {
             listen: "127.0.0.1:8088".into(),
             worker_num: Some(num_cpus::get()),
             pid_file: None,
-            db: ConnectionConfig::default()
+            db: ConnectionConfig::default(),
+            redis_url: "127.0.0.1:6379".into(),
+            redis_password: None,
         }
     }
 }

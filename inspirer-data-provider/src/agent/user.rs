@@ -1,12 +1,13 @@
-use crate::model::user::*;
-use crate::utils;
 use chrono::prelude::*;
-use crate::prelude::*;
-use crate::schema::{users, user_base_profiles, user_mobile_phone_credentials, user_email_credentials};
 use diesel::r2d2::ConnectionManager;
+
+use crate::model::user::*;
 use crate::model::user_base_profiles::InsertUserBaseProfile;
-use crate::model::user_email_credentials::InsertUserEmailCredential;
-use crate::model::user_mobile_phone_credentials::InsertUserMobilePhoneCredential;
+use crate::model::user_email_credentials::{InsertUserEmailCredential, user_email_credential_base, UserEmailCredentialBase};
+use crate::model::user_mobile_phone_credentials::{InsertUserMobilePhoneCredential, user_mobile_phone_credential_base, UserMobilePhoneCredentialBase};
+use crate::prelude::*;
+use crate::schema::{user_base_profiles, user_email_credentials, user_mobile_phone_credentials, users};
+use crate::utils;
 
 pub struct CreateUser<'i> {
     pub invitor_uuid: Option<&'i str>,
@@ -130,7 +131,7 @@ impl<'i> ActiveModel for MobilePhoneRegister<'i> {
         );
 
         let (avatar, gender) = (None, None);
-        let (id, uuid) = CreateUser {invitor_uuid, password, status}.activate(conn)?;
+        let (id, uuid) = CreateUser { invitor_uuid, password, status }.activate(conn)?;
         let user_uuid = uuid.as_str();
 
         CreateUserBaseProfile { user_uuid, nickname, avatar, gender }.activate(conn)?;
@@ -162,7 +163,7 @@ impl<'i> ActiveModel for EmailRegister<'i> {
         );
 
         let (avatar, gender) = (None, None);
-        let (id, uuid) = CreateUser {invitor_uuid, password, status}.activate(conn)?;
+        let (id, uuid) = CreateUser { invitor_uuid, password, status }.activate(conn)?;
         let user_uuid = uuid.as_str();
 
         CreateUserBaseProfile { user_uuid, nickname, avatar, gender }.activate(conn)?;
@@ -212,5 +213,66 @@ impl<'i> ActiveModel for UserActiveTrigger<'i> {
             })
             .execute(conn)
             .map(|_| ()).map_err(From::from)
+    }
+}
+
+pub struct FindUserEmailCredential<'a> {
+    pub email: &'a str,
+    pub status: Option<i16>,
+}
+
+impl<'a> ActiveModel for FindUserEmailCredential<'a> {
+    type Result = ActionResult<Option<(UserEmailCredentialBase, BejoinedUserCredentialBase)>>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        user_email_credentials::table
+            .inner_join(
+                users::table.on(
+                    users::status.eq(1).and(users::uuid.eq(user_email_credentials::user_uuid))
+                )
+            )
+            .filter(
+                user_email_credentials::status.eq(self.status.unwrap_or(1)).and(
+                    user_email_credentials::email.eq(self.email)
+                )
+            )
+            .select((
+                user_email_credential_base,
+                user_credential_base,
+            ))
+            .first::<(UserEmailCredentialBase, BejoinedUserCredentialBase)>(conn)
+            .optional()
+            .map_err(From::from)
+    }
+}
+
+pub struct FindUserMobilePhoneCredential<'a> {
+    pub country_code: &'a str,
+    pub mobile_phone: &'a str,
+    pub status: Option<i16>,
+}
+
+impl<'a> ActiveModel for FindUserMobilePhoneCredential<'a> {
+    type Result = ActionResult<Option<(UserMobilePhoneCredentialBase, BejoinedUserCredentialBase)>>;
+
+    fn activate(&self, conn: &PooledConn) -> Self::Result {
+        user_mobile_phone_credentials::table
+            .inner_join(
+                users::table.on(
+                    users::status.eq(1).and(users::uuid.eq(user_mobile_phone_credentials::user_uuid))
+                )
+            )
+            .filter(
+                user_mobile_phone_credentials::status.eq(self.status.unwrap_or(1))
+                    .and(user_mobile_phone_credentials::country_code.eq(self.country_code))
+                    .and(user_mobile_phone_credentials::mobile_phone.eq(self.mobile_phone))
+            )
+            .select((
+                user_mobile_phone_credential_base,
+                user_credential_base,
+            ))
+            .first::<(UserMobilePhoneCredentialBase, BejoinedUserCredentialBase)>(conn)
+            .optional()
+            .map_err(From::from)
     }
 }

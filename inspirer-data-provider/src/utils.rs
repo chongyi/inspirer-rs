@@ -10,8 +10,14 @@ pub fn generate_uuid(uuid: &mut [u8]) -> &mut str {
     Uuid::new_v4().to_simple().encode_lower(uuid)
 }
 
+/// 通过 Bcrypt 对密码文本加密
 pub fn password_hash<P: AsRef<[u8]>>(password: P) -> String {
     pwhash::bcrypt::hash(password).unwrap()
+}
+
+/// 验证密码和密码的加密文本
+pub fn password_validate<P: AsRef<[u8]>, S: AsRef<str>>(password: P, hashed_password: S) -> bool {
+    pwhash::bcrypt::verify(password, hashed_password.as_ref())
 }
 
 pub fn convert_to_native_datetime<T: AsRef<str>>(source: T) -> Result<NaiveDateTime, result::ErrorKind> {

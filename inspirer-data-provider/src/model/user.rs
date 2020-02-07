@@ -36,12 +36,33 @@ pub const user_base_columns: (
     users::user_type
 );
 
+#[allow(non_upper_case_globals)]
+pub const user_credential_base: (
+    users::uuid,
+    users::status,
+    users::user_type,
+    users::password
+) = (
+    users::uuid,
+    users::status,
+    users::user_type,
+    users::password
+);
+
 #[derive(Queryable, Deserialize, Debug, Clone)]
 pub struct UserBase {
     pub id: i64,
-    pub user_uuid: String,
+    pub uuid: String,
     pub status: i16,
     pub member_type: i16,
+}
+
+#[derive(Queryable, Deserialize, Debug, Clone, PartialEq, Serialize)]
+pub struct BejoinedUserCredentialBase {
+    pub uuid: String,
+    pub status: i16,
+    pub member_type: i16,
+    pub password: Option<String>,
 }
 
 #[derive(Queryable, Deserialize, Debug, Clone, PartialEq, Serialize)]

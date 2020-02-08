@@ -40,3 +40,42 @@ macro_rules! coded_error {
         }
     }
 }
+
+#[macro_export]
+macro_rules! map_actix_error {
+    ($error:path, $code:expr) => {
+        impl CodedError for ActixErrorWrapper<$error>
+        {
+            fn http_status(&self) -> StatusCode {
+                self.err.error_response().status()
+            }
+
+            fn error_message(&self) -> &str {
+                self.msg.as_str()
+            }
+
+            fn error_code(&self) -> i16 {
+                $code
+            }
+        }
+    };
+
+    ($error:path { $($matcher:pat $(if $pred:expr)* => $result:expr),* }) => {
+        impl CodedError for ActixErrorWrapper<$error>
+        {
+            fn http_status(&self) -> StatusCode {
+                self.err.error_response().status()
+            }
+
+            fn error_message(&self) -> &str {
+                self.msg.as_str()
+            }
+
+            fn error_code(&self) -> i16 {
+                match &self.err {
+                    $($matcher $(if $pred)* => $result),*
+                }
+            }
+        }
+    }
+}

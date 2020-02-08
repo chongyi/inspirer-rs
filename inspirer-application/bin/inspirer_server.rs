@@ -7,7 +7,7 @@ use redis_async::resp_array;
 use inspirer_actix::middleware::auth::JwtToken;
 use inspirer_application::app::{Config, State};
 use inspirer_application::middleware::auth::{Credential, Auth};
-use inspirer_application::routes::scoped_admin;
+use inspirer_application::routes::inspirer_routes;
 use inspirer_data_provider::db::ConnPoolManager;
 
 #[actix_rt::main]
@@ -19,6 +19,7 @@ async fn start_server() -> std::io::Result<()> {
     let config = Config::default();
     let db_conn = ConnPoolManager::builder().writer(config.db.writer.clone()).build();
     let redis_actor = RedisActor::start(config.redis_url.as_str());
+    let state = State::new();
 
     if let Some(password) = config.redis_password.as_ref() {
         redis_actor.send(Command(resp_array!["AUTH", password])).await.unwrap();
@@ -27,14 +28,10 @@ async fn start_server() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(redis_actor.clone())
-            .data(State {
-                db_conn: db_conn.clone()
-            })
+            .data(db_conn.clone())
+            .data(state.clone())
             .wrap(JwtToken::<Credential>::new("secret"))
-            .service(web::scope("/api/admin")
-                .wrap(Auth)
-                .configure(scoped_admin)
-            )
+            .configure(inspirer_routes)
             .route("/", web::get().to(|| {
                 HttpResponse::Ok().body(encode(
                     &Header::new(Algorithm::HS256),

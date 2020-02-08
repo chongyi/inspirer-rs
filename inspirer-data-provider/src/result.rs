@@ -60,13 +60,28 @@ impl From<diesel::result::Error> for ErrorKind {
     }
 }
 
+impl From<r2d2::Error> for ErrorKind {
+    fn from(err: r2d2::Error) -> ErrorKind {
+        ErrorKind::biz_err(DeserializeResourceError)
+    }
+}
+
 impl Into<Error> for ErrorKind {
     fn into(self) -> Error {
         Error(Box::new(self))
     }
 }
 
+impl ErrorKind {
+    pub fn biz_err<T: 'static + CodedError>(err: T) -> Self {
+        ErrorKind::BizError(Box::new(err))
+    }
+}
+
 coded_error!(DeserializeResourceError (10014) http(500) "内部资源解析错误");
+coded_error!(AuthenticationFailedError (10002) http(400) "登录或获取授权凭据令牌失败，请检查登录凭据");
+coded_error!(UnauthorizedError (10003) http(401) "认证或授权未通过");
 coded_error!(ForbiddenError (10005) http(403) "资源访问被拒绝");
+coded_error!(ForbiddenRequestError (10006) http(403) "不受支持的操作或提交的数据类型");
 coded_error!(ValidateCodeExistsError (10021) http(403) "验证码已创建，指定时间内不可重复创建");
 coded_error!(NotFoundError (10004) http(404) "内容不可查，请确认资源是否存在");

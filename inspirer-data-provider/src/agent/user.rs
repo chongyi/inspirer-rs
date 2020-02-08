@@ -242,7 +242,7 @@ impl<'a> ActiveModel for FindUserEmailCredential<'a> {
             ))
             .first::<(UserEmailCredentialBase, BejoinedUserCredentialBase)>(conn)
             .optional()
-            .map_err(From::from)
+            .map_err(ErrorKind::from)
     }
 }
 
@@ -273,6 +273,6 @@ impl<'a> ActiveModel for FindUserMobilePhoneCredential<'a> {
             ))
             .first::<(UserMobilePhoneCredentialBase, BejoinedUserCredentialBase)>(conn)
             .optional()
-            .map_err(From::from)
+            .map_err(ErrorKind::from)
     }
 }

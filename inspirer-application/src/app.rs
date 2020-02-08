@@ -27,6 +27,11 @@ impl Default for Config {
 }
 
 #[derive(Clone)]
-pub struct State {
-    pub db_conn: ConnPoolManager
+pub struct State;
+
+impl State {
+    pub fn new() -> Self {
+        // TODO 后续管理全局注册的状态、配置信息
+        State
+    }
 }

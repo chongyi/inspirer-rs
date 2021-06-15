@@ -1095,7 +1095,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#311ab24da95602e8bc46a5f9090f86bb26111b51"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
 dependencies = [
  "inspirer-actix-ext-core",
  "inspirer-actix-ext-derive",
@@ -1106,7 +1106,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-core"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#311ab24da95602e8bc46a5f9090f86bb26111b51"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
 dependencies = [
  "actix-web",
  "ahash 0.7.4",
@@ -1120,7 +1120,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-derive"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#311ab24da95602e8bc46a5f9090f86bb26111b51"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1130,7 +1130,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-database-sqlx"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#311ab24da95602e8bc46a5f9090f86bb26111b51"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
 dependencies = [
  "async-trait",
  "inspirer-actix-ext-core",
@@ -1142,7 +1142,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-redis"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#311ab24da95602e8bc46a5f9090f86bb26111b51"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
 dependencies = [
  "inspirer-actix-ext-core",
  "log",

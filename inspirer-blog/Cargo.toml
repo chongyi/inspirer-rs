@@ -1,0 +1,22 @@
+[package]
+name = "inspirer-blog"
+version = "0.1.0"
+authors = ["Chongyi <xpz3847878@163.com>"]
+edition = "2018"
+
+[dependencies]
+async-trait = "0.1"
+actix-web = "3"
+sqlx = { version = "0.4.2", features = ["mysql", "chrono"] }
+inspirer-actix-ext = { git = "https://gitee.com/chongyi/inspirer-actix-ext-support.git", features = ["database", "redis"] }
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
+clap = "2"
+log = "0.4"
+env_logger = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+
+[features]
+default = ["runtime-actix-rustls"]
+runtime-actix-rustls = ["sqlx/runtime-actix-rustls", "inspirer-actix-ext/runtime-actix-rustls"]
+runtime-actix-native-rustls = ["sqlx/runtime-actix-native-tls", "inspirer-actix-ext/runtime-actix-native-tls"]

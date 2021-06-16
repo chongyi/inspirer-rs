@@ -11,7 +11,7 @@ extern crate strum;
 
 use std::io;
 use inspirer_actix_ext::ModuleProvider;
-use inspirer_actix_ext::config::config_provider;
+use inspirer_actix_ext::config::{config_provider, ConfigProvider};
 use inspirer_actix_ext::database;
 use clap::{App, Arg};
 
@@ -34,7 +34,7 @@ async fn main() -> io::Result<()> {
         .get_matches();
 
     let config_file = matches.value_of("config")
-        .map(|config_file_name| vec![String::from(config_file_name)])
+        .map(|config_file_name| vec![ConfigProvider::String(config_file_name.into())])
         .unwrap_or(vec![]);
 
     let mut module_provider = ModuleProvider::new();

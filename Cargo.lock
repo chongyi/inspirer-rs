@@ -575,7 +575,7 @@ dependencies = [
  "futures-util",
  "memchr",
  "pin-project-lite 0.2.6",
- "tokio 1.6.1",
+ "tokio 1.7.0",
 ]
 
 [[package]]
@@ -1095,7 +1095,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#50a7b1fc2cae8f0fb38e1ea84efbe322c9d84595"
 dependencies = [
  "inspirer-actix-ext-core",
  "inspirer-actix-ext-derive",
@@ -1106,7 +1106,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-core"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#50a7b1fc2cae8f0fb38e1ea84efbe322c9d84595"
 dependencies = [
  "actix-web",
  "ahash 0.7.4",
@@ -1120,7 +1120,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-derive"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#50a7b1fc2cae8f0fb38e1ea84efbe322c9d84595"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1130,19 +1130,20 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-database-sqlx"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#50a7b1fc2cae8f0fb38e1ea84efbe322c9d84595"
 dependencies = [
  "async-trait",
  "inspirer-actix-ext-core",
  "log",
  "serde 1.0.126",
  "sqlx",
+ "strum",
 ]
 
 [[package]]
 name = "inspirer-actix-module-redis"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#5e4d4b5c25e1729ba84a0bb54bafe56d89844ba0"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#50a7b1fc2cae8f0fb38e1ea84efbe322c9d84595"
 dependencies = [
  "inspirer-actix-ext-core",
  "log",
@@ -1774,14 +1775,14 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ef9e7e66b4468674bfcb0c81af8b7fa0bb154fa9f28eb840da5c447baeb8d7e"
+checksum = "2e7573632e6454cf6b99d7aac4ccca54be06da05aca2ef7423d22d27d4d4bcd8"
 dependencies = [
  "libc",
  "rand_chacha 0.3.1",
- "rand_core 0.6.2",
- "rand_hc 0.3.0",
+ "rand_core 0.6.3",
+ "rand_hc 0.3.1",
 ]
 
 [[package]]
@@ -1801,7 +1802,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
- "rand_core 0.6.2",
+ "rand_core 0.6.3",
 ]
 
 [[package]]
@@ -1815,9 +1816,9 @@ dependencies = [
 
 [[package]]
 name = "rand_core"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34cf66eb183df1c5876e2dcf6b13d57340741e8dc255b48e40a26de954d06ae7"
+checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
 dependencies = [
  "getrandom 0.2.3",
 ]
@@ -1833,11 +1834,11 @@ dependencies = [
 
 [[package]]
 name = "rand_hc"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3190ef7066a446f2e7f42e239d161e905420ccab01eb967c9eb27d21b2322a73"
+checksum = "d51e9f596de227fda2ea6c84607f5558e196eeaf43c986b724ba4fb8fdf497e7"
 dependencies = [
- "rand_core 0.6.2",
+ "rand_core 0.6.3",
 ]
 
 [[package]]
@@ -1855,7 +1856,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite 0.2.6",
  "sha1",
- "tokio 1.6.1",
+ "tokio 1.7.0",
  "tokio-util 0.6.7",
  "url",
 ]
@@ -2453,7 +2454,7 @@ checksum = "dac1c663cfc93810f88aed9b8941d48cabf856a1b111c29a40439018d870eb22"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
- "rand 0.8.3",
+ "rand 0.8.4",
  "redox_syscall",
  "remove_dir_all",
  "winapi 0.3.9",
@@ -2593,9 +2594,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.6.1"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a38d31d7831c6ed7aad00aa4c12d9375fd225a6dd77da1d25b707346319a975"
+checksum = "c79ba603c337335df6ba6dd6afc38c38a7d5e1b0c871678439ea973cd62a118e"
 dependencies = [
  "autocfg 1.0.1",
  "bytes 1.0.1",
@@ -2603,6 +2604,7 @@ dependencies = [
  "memchr",
  "mio 0.7.13",
  "pin-project-lite 0.2.6",
+ "winapi 0.3.9",
 ]
 
 [[package]]
@@ -2663,7 +2665,7 @@ dependencies = [
  "futures-sink",
  "log",
  "pin-project-lite 0.2.6",
- "tokio 1.6.1",
+ "tokio 1.7.0",
 ]
 
 [[package]]

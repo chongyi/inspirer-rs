@@ -1,10 +1,12 @@
 use inspirer_actix_ext::database::{CreateDAO, DAO, ReadDAO, UpdateDAO};
 use inspirer_actix_ext::database::sqlx::{MySql, Executor, Done, Arguments, FromRow};
 use crate::model::content::{NewContent, NewContentEntity, NewContentEntityWithContent, ContentEntityBasic, ContentBasic};
-use crate::model::{Paginator, Pagination, SortCondition, IntoPaginate, Paginate};
 use sqlx::mysql::{MySqlArguments, MySqlRow};
 use sqlx::Row;
 use crate::dao::condition_str;
+use inspirer_actix_ext::database::statement::IntoStatement;
+use inspirer_actix_ext::database::statement::pagination::{Paginated, Paginate, IntoPaginated};
+use inspirer_actix_ext::database::statement::sort::SortStatement;
 
 #[async_trait]
 impl<'s> CreateDAO<MySql> for NewContent<'s> {
@@ -176,13 +178,13 @@ pub struct ContentQueryCondition {
     pub creator_id: Option<u64>,
     pub is_display: Option<bool>,
     pub is_published: Option<bool>,
-    pub paginator: Option<Paginator>,
-    pub sort: SortCondition<ContentQuerySort>
+    pub paginate: Option<Paginate>,
+    pub sort: SortStatement<ContentQuerySort>
 }
 
 #[async_trait]
 impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
-    type Result = sqlx::Result<Paginate<ContentBasic>>;
+    type Result = sqlx::Result<Paginated<ContentBasic>>;
 
     async fn read<'a, E>(&self, executor: E) -> Self::Result
         where E: Executor<'a, Database=MySql>
@@ -214,13 +216,13 @@ impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
             "{} {} {}",
             include_str!("_sql_files/content/get_content_basic_list.sql"),
             condition_str(conditions),
-            self.sort.statement()
+            self.sort.full_statement()
         );
 
-        if let Some(paginator) = self.paginator {
-            sql.push_str(" limit ?, ?");
-            arguments.add(paginator.skip());
-            arguments.add(paginator.take());
+        if let Some(paginate) = self.paginate {
+            sql.push_str(" limit ?,?");
+            arguments.add(paginate.skip());
+            arguments.add(paginate.take());
         }
 
         let list = sqlx::query_with(sql.as_str(), arguments)
@@ -232,6 +234,6 @@ impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
             .fetch_all(executor)
             .await?;
 
-        Ok(list.raw_into(self.paginator))
+        Ok(list.raw_into(self.paginate))
     }
 }

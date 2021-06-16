@@ -3,7 +3,7 @@ use sqlx::MySqlPool;
 use crate::dao::content::ContentQueryCondition;
 use inspirer_actix_ext::database::{Get, DAO};
 use crate::model::content::ContentBasic;
-use crate::model::Paginate;
+use inspirer_actix_ext::database::statement::pagination::Paginated;
 
 #[derive(Service, FromRequest)]
 pub struct ContentService {
@@ -11,7 +11,7 @@ pub struct ContentService {
 }
 
 impl ContentService {
-    pub async fn list(&self, query_condition: ContentQueryCondition) -> Paginate<ContentBasic> {
+    pub async fn list(&self, query_condition: ContentQueryCondition) -> Paginated<ContentBasic> {
         Get::<ContentBasic>::by(query_condition)
             .run(&self.pool)
             .await

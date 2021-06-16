@@ -44,7 +44,7 @@ pub struct NewContentEntityWithContent<'a> {
     pub entity: NewContentEntity<'a>
 }
 
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Serialize)]
 pub struct ContentBasic {
     pub id: u64,
     pub creator_id: u64,

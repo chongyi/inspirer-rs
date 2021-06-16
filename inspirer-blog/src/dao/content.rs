@@ -1,9 +1,10 @@
 use inspirer_actix_ext::database::{CreateDAO, DAO, ReadDAO, UpdateDAO};
 use inspirer_actix_ext::database::sqlx::{MySql, Executor, Done, Arguments, FromRow};
 use crate::model::content::{NewContent, NewContentEntity, NewContentEntityWithContent, ContentEntityBasic, ContentBasic};
-use crate::model::{Paginator, Pagination};
+use crate::model::{Paginator, Pagination, SortCondition, IntoPaginate, Paginate};
 use sqlx::mysql::{MySqlArguments, MySqlRow};
 use sqlx::Row;
+use crate::dao::condition_str;
 
 #[async_trait]
 impl<'s> CreateDAO<MySql> for NewContent<'s> {
@@ -156,6 +157,19 @@ impl UpdateDAO<MySql> for ContentFromEntity {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, AsRefStr)]
+#[serde(rename_all = "snake_case")]
+pub enum ContentQuerySort {
+    #[strum(serialize = "id")]
+    Id,
+    #[strum(serialize = "created_at")]
+    CreatedAt,
+    #[strum(serialize = "updated_at")]
+    UpdatedAt,
+    #[strum(serialize = "published_at")]
+    PublishedAt
+}
+
 #[derive(Default)]
 pub struct ContentQueryCondition {
     pub id: Option<u64>,
@@ -163,11 +177,12 @@ pub struct ContentQueryCondition {
     pub is_display: Option<bool>,
     pub is_published: Option<bool>,
     pub paginator: Option<Paginator>,
+    pub sort: SortCondition<ContentQuerySort>
 }
 
 #[async_trait]
 impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
-    type Result = sqlx::Result<(Vec<ContentBasic>, Option<Pagination>)>;
+    type Result = sqlx::Result<Paginate<ContentBasic>>;
 
     async fn read<'a, E>(&self, executor: E) -> Self::Result
         where E: Executor<'a, Database=MySql>
@@ -185,16 +200,21 @@ impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
             arguments.add(creator_id);
         }
 
-        let condition_str = if conditions.len() > 0 {
-            format!("where {}", conditions.join(" and "))
-        } else {
-            String::new()
-        };
+        if let Some(is_display) = self.is_display {
+            conditions.push("is_display = ?");
+            arguments.add(is_display);
+        }
+
+        if let Some(is_published) = self.is_published {
+            conditions.push("is_published = ?");
+            arguments.add(is_published);
+        }
 
         let mut sql = format!(
-            "{} {} order by id desc",
+            "{} {} {}",
             include_str!("_sql_files/content/get_content_basic_list.sql"),
-            condition_str
+            condition_str(conditions),
+            self.sort.statement()
         );
 
         if let Some(paginator) = self.paginator {
@@ -207,11 +227,11 @@ impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
             .try_map(|row: MySqlRow| {
                 let content = ContentBasic::from_row(&row)?;
                 let total: i64 = row.try_get("total")?;
-                Ok((content, total as u64))
+                Ok((content, total))
             })
             .fetch_all(executor)
             .await?;
 
-        Ok(Pagination::from_origin_list(list, self.paginator))
+        Ok(list.raw_into(self.paginator))
     }
 }

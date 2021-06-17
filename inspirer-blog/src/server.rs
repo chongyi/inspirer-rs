@@ -5,6 +5,7 @@ use actix_web::{App, HttpServer, web};
 use crate::controller;
 use inspirer_actix_ext::{ModuleContainer, ModuleProvider};
 use inspirer_actix_ext::config::Config;
+use actix_web::middleware::Logger;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerConfig {
@@ -27,7 +28,9 @@ pub async fn start_server(module_provider: ModuleProvider) -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .configure(module_container.clone().module_provider())
+            .wrap(Logger::default())
             .service(controller::index::home)
+            .service(controller::index::item)
     })
         .bind(server_config.listen.as_str())?
         .run()

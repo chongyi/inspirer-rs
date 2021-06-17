@@ -1,5 +1,4 @@
 use actix_web::{ResponseError, HttpResponse};
-use thiserror::Error;
 use actix_web::web::BytesMut;
 use actix_web::http::StatusCode;
 use actix_web::body::Body;
@@ -11,6 +10,8 @@ const UNKNOWN_ERROR_CODE: i32 = 1;
 const DATABASE_OTHER_ERROR: i32 = 1001;
 const DATABASE_RESOURCE_NOT_FOUND: i32 = 1002;
 const DATABASE_CONFLICT: i32 = 1003;
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Serialize, Debug)]
 pub struct ErrorResponse<T> {
@@ -86,7 +87,7 @@ impl AsErrorResponse for sqlx::Error {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("{0}")]
     Anyhow(anyhow::Error),
@@ -126,7 +127,7 @@ impl ResponseError for Error {
     }
 }
 
-#[derive(Error, Debug, Copy, Clone)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 #[repr(i32)]
 pub enum RuntimeError {
     #[error("Unknown server error.")]

@@ -237,3 +237,28 @@ impl ReadDAO<MySql, ContentBasic> for ContentQueryCondition {
         Ok(list.raw_into(self.paginate))
     }
 }
+
+pub enum Key {
+    Id(u64),
+}
+
+#[async_trait]
+impl ReadDAO<MySql, ContentBasic> for Key {
+    type Result = sqlx::Result<ContentBasic>;
+
+    async fn read<'a, E>(&self, executor: E) -> Self::Result
+        where E: Executor<'a, Database=MySql>
+    {
+        let mut argument = MySqlArguments::default();
+        let sql = match self {
+            Key::Id(id) => {
+                argument.add(*id);
+                concat!(include_str!("_sql_files/content/find_contennt_basic.sql"), " where id = ? limit 1")
+            },
+        };
+
+        sqlx::query_as_with(sql, argument)
+            .fetch_one(executor)
+            .await
+    }
+}

@@ -20,6 +20,7 @@ mod controller;
 mod service;
 mod model;
 mod dao;
+mod error;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {

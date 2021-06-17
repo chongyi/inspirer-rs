@@ -1156,6 +1156,7 @@ name = "inspirer-blog"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "anyhow",
  "async-trait",
  "chrono",
  "clap",
@@ -1166,6 +1167,7 @@ dependencies = [
  "serde 1.0.126",
  "sqlx",
  "strum",
+ "thiserror",
 ]
 
 [[package]]

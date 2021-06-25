@@ -25,4 +25,8 @@ impl ContentService {
             .await
             .map_err(Into::into)
     }
+
+    pub async fn create_content(&self) {
+
+    }
 }

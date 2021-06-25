@@ -6,6 +6,8 @@ use crate::controller;
 use inspirer_actix_ext::{ModuleContainer, ModuleProvider};
 use inspirer_actix_ext::config::Config;
 use actix_web::middleware::Logger;
+use inspirer_actix_ext::validator::ValidateConfig;
+use crate::error::Error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerConfig {
@@ -28,6 +30,7 @@ pub async fn start_server(module_provider: ModuleProvider) -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .configure(module_container.clone().module_provider())
+            .app_data(ValidateConfig::default().error_handler(|err, _| Error::from(err).into()))
             .wrap(Logger::default())
             .service(controller::index::home)
             .service(controller::index::item)

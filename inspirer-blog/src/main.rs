@@ -8,6 +8,8 @@ extern crate serde;
 extern crate inspirer_actix_ext;
 #[macro_use]
 extern crate strum;
+#[macro_use]
+extern crate validator;
 
 use std::io;
 use inspirer_actix_ext::ModuleProvider;

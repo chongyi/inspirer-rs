@@ -1,4 +1,5 @@
 [workspace]
 members = [
-    "inspirer-blog"
+    "inspirer-blog",
+    "inspirer-user-center",
 ]

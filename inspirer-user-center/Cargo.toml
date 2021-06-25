@@ -1,7 +1,6 @@
 [package]
-name = "inspirer-blog"
+name = "inspirer-user-center"
 version = "0.1.0"
-authors = ["Chongyi <xpz3847878@163.com>"]
 edition = "2018"
 
 [dependencies]

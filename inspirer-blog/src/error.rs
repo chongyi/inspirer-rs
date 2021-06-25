@@ -1,12 +1,16 @@
-use actix_web::{ResponseError, HttpResponse};
-use actix_web::web::BytesMut;
-use actix_web::http::StatusCode;
+use std::collections::HashMap;
+use std::fmt;
+
+use actix_web::{HttpResponse, ResponseError};
 use actix_web::body::Body;
 use actix_web::dev::Service;
-use std::fmt;
+use actix_web::http::StatusCode;
+use actix_web::web::BytesMut;
 use serde::Serialize;
+use validator::{ValidationErrors, ValidationErrorsKind};
 
 const UNKNOWN_ERROR_CODE: i32 = 1;
+const REQUEST_PARAMS_ERROR: i32 = 2;
 const DATABASE_OTHER_ERROR: i32 = 1001;
 const DATABASE_RESOURCE_NOT_FOUND: i32 = 1002;
 const DATABASE_CONFLICT: i32 = 1003;
@@ -23,30 +27,35 @@ pub struct ErrorResponse<T> {
 }
 
 impl<T> ErrorResponse<T>
-where T: Serialize
+    where T: Serialize
 {
-    pub fn into_response(self) -> HttpResponse {
+    pub fn to_response(&self) -> HttpResponse {
         HttpResponse::build(self.http_status.clone())
             .json(self)
     }
 }
 
 pub trait AsErrorResponse: fmt::Display + Sized {
-    type Data;
+    type Data: Serialize;
 
     fn http_status(&self) -> StatusCode;
     fn code(&self) -> i32;
     fn msg(&self) -> String {
         format!("{}", self)
     }
-    fn data(&self) -> Option<Self::Data>;
-    fn as_error_response(&self) -> ErrorResponse<Self::Data> {
+    fn data(&self) -> Option<&Self::Data> {
+        None
+    }
+    fn as_error_response(&self) -> ErrorResponse<&Self::Data> {
         ErrorResponse {
             http_status: self.http_status(),
             code: self.code(),
             msg: self.msg(),
             data: self.data(),
         }
+    }
+    fn to_response(&self) -> HttpResponse {
+        self.as_error_response().to_response()
     }
 }
 
@@ -82,7 +91,7 @@ impl AsErrorResponse for sqlx::Error {
         }.into()
     }
 
-    fn data(&self) -> Option<Self::Data> {
+    fn data(&self) -> Option<&Self::Data> {
         None
     }
 }
@@ -91,11 +100,19 @@ impl AsErrorResponse for sqlx::Error {
 pub enum Error {
     #[error("{0}")]
     Anyhow(anyhow::Error),
+    #[error("{0}")]
+    ValidateError(inspirer_actix_ext::validator::Error),
 }
 
 impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Self {
         Error::Anyhow(err)
+    }
+}
+
+impl From<inspirer_actix_ext::validator::Error> for Error {
+    fn from(err: inspirer_actix_ext::validator::Error) -> Self {
+        Error::ValidateError(err)
     }
 }
 
@@ -110,6 +127,7 @@ impl ResponseError for Error {
                         .map(|err| err.http_status()))
                     .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
             }
+            Error::ValidateError(err) => err.http_status()
         }
     }
 
@@ -118,12 +136,13 @@ impl ResponseError for Error {
             Error::Anyhow(raw_err) => {
                 None
                     .or_else(|| raw_err.downcast_ref::<RuntimeError>()
-                        .map(|err| err.as_error_response()))
+                        .map(|err| err.to_response()))
                     .or_else(|| raw_err.downcast_ref::<sqlx::Error>()
-                        .map(|err| err.as_error_response()))
-                    .unwrap_or(RuntimeError::UnknownError.as_error_response())
+                        .map(|err| err.to_response()))
+                    .unwrap_or(RuntimeError::UnknownError.to_response())
             }
-        }.into_response()
+            Error::ValidateError(err) => err.to_response()
+        }
     }
 }
 
@@ -147,7 +166,7 @@ impl AsErrorResponse for RuntimeError {
         *self as i32
     }
 
-    fn data(&self) -> Option<Self::Data> {
+    fn data(&self) -> Option<&Self::Data> {
         None
     }
 }
@@ -158,7 +177,26 @@ impl ResponseError for RuntimeError {
     }
 
     fn error_response(&self) -> HttpResponse {
-        self.as_error_response().into_response()
+        self.as_error_response().to_response()
     }
 }
 
+impl<'a> AsErrorResponse for inspirer_actix_ext::validator::Error {
+    type Data = HashMap<&'static str, ValidationErrorsKind>;
+
+    fn http_status(&self) -> StatusCode {
+        self.status_code()
+    }
+
+    fn code(&self) -> i32 {
+        REQUEST_PARAMS_ERROR
+    }
+
+    fn msg(&self) -> String {
+        String::from("Request parameters error.")
+    }
+
+    fn data(&self) -> Option<&Self::Data> {
+        Some(self.errors())
+    }
+}

@@ -10,11 +10,11 @@ use crate::service::user::UserService;
 use crate::config::ApplicationConfig;
 use chrono::{Utc, Duration};
 use inspirer_json_web_token::{Claims, PublicClaims, EncodingKey, decode, DecodingKey, Validation};
+use crate::error::RuntimeError;
 
 #[derive(Service, FromRequest)]
 pub struct AuthService {
     pool: MySqlPool,
-    config: Config,
 }
 
 impl AuthService {
@@ -34,6 +34,19 @@ impl AuthService {
                 }
             }
             None => Err(UserIsNotExists)?
+        }
+    }
+}
+
+#[derive(Service, FromRequest)]
+pub struct AuthTokenService {
+    config: Config,
+}
+
+impl AuthTokenService {
+    pub fn new(config: Config) -> Self {
+        AuthTokenService {
+            config
         }
     }
 
@@ -60,8 +73,9 @@ impl AuthService {
             token,
             &DecodingKey::from_secret(app_config.secret.as_bytes()),
             &Validation::default(),
-        )?;
+        ).map_err(|_| RuntimeError::InvalidToken)?;
 
         Ok(result.claims.private_claims)
     }
 }
+

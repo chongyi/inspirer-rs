@@ -11,6 +11,7 @@ use validator::{ValidationErrors, ValidationErrorsKind};
 
 const UNKNOWN_ERROR_CODE: i32 = 1;
 const REQUEST_PARAMS_ERROR: i32 = 2;
+const UNAUTHORIZED_TOKEN: i32 = 8;
 const DATABASE_OTHER_ERROR: i32 = 1001;
 const DATABASE_RESOURCE_NOT_FOUND: i32 = 1002;
 const DATABASE_CONFLICT: i32 = 1003;
@@ -102,6 +103,8 @@ pub enum Error {
     Anyhow(anyhow::Error),
     #[error("{0}")]
     ValidateError(inspirer_actix_ext::validator::Error),
+    #[error("{0}")]
+    RuntimeError(RuntimeError),
 }
 
 impl From<anyhow::Error> for Error {
@@ -127,7 +130,8 @@ impl ResponseError for Error {
                         .map(|err| err.http_status()))
                     .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
             }
-            Error::ValidateError(err) => err.http_status()
+            Error::ValidateError(err) => err.http_status(),
+            Error::RuntimeError(err) => err.http_status(),
         }
     }
 
@@ -141,7 +145,8 @@ impl ResponseError for Error {
                         .map(|err| err.to_response()))
                     .unwrap_or(RuntimeError::UnknownError.to_response())
             }
-            Error::ValidateError(err) => err.to_response()
+            Error::ValidateError(err) => err.to_response(),
+            Error::RuntimeError(err) => err.to_response(),
         }
     }
 }
@@ -151,6 +156,8 @@ impl ResponseError for Error {
 pub enum RuntimeError {
     #[error("Unknown server error.")]
     UnknownError = UNKNOWN_ERROR_CODE,
+    #[error("Unauthorized, invalid token.")]
+    InvalidToken = UNAUTHORIZED_TOKEN,
     #[error("User is not exists or password error.")]
     UserIsNotExists = 101001,
     #[error("User is not exists or password error.")]
@@ -163,6 +170,7 @@ impl AsErrorResponse for RuntimeError {
     fn http_status(&self) -> StatusCode {
         match self {
             RuntimeError::UnknownError => StatusCode::INTERNAL_SERVER_ERROR,
+            RuntimeError::InvalidToken => StatusCode::UNAUTHORIZED,
             RuntimeError::UserIsNotExists | RuntimeError::PasswordVerifiedError => StatusCode::BAD_REQUEST,
         }
     }

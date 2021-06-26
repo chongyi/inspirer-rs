@@ -23,6 +23,7 @@ mod service;
 mod model;
 mod dao;
 mod error;
+mod config;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {

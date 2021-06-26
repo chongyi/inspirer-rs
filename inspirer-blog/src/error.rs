@@ -151,6 +151,10 @@ impl ResponseError for Error {
 pub enum RuntimeError {
     #[error("Unknown server error.")]
     UnknownError = UNKNOWN_ERROR_CODE,
+    #[error("User is not exists or password error.")]
+    UserIsNotExists = 101001,
+    #[error("User is not exists or password error.")]
+    PasswordVerifiedError = 101002,
 }
 
 impl AsErrorResponse for RuntimeError {
@@ -159,6 +163,7 @@ impl AsErrorResponse for RuntimeError {
     fn http_status(&self) -> StatusCode {
         match self {
             RuntimeError::UnknownError => StatusCode::INTERNAL_SERVER_ERROR,
+            RuntimeError::UserIsNotExists | RuntimeError::PasswordVerifiedError => StatusCode::BAD_REQUEST,
         }
     }
 

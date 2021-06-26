@@ -9,6 +9,7 @@ async-trait = "0.1"
 actix-web = "3"
 sqlx = { version = "0.4.2", features = ["mysql", "chrono"] }
 inspirer-actix-ext = { git = "https://gitee.com/chongyi/inspirer-actix-ext-support.git", features = ["database", "redis", "validator"] }
+inspirer-json-web-token = { git = "https://gitee.com/chongyi/inspirer-actix-ext-support.git", package = "inspirer-json-web-token" }
 chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 clap = "2"
@@ -19,6 +20,8 @@ strum = { version = "0.21", features = ["derive"] }
 anyhow = "1.0"
 thiserror = "1.0"
 validator = "0.13"
+pwhash = "1"
+biscuit = "0.5.0"
 
 [features]
 default = ["runtime-actix-rustls"]

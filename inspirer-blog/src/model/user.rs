@@ -3,6 +3,7 @@ use actix_web::{FromRequest, HttpRequest, Error};
 use std::future::Future;
 use actix_web::dev::Payload;
 use futures::future::{Ready, ok};
+use crate::error::{Result, RuntimeError};
 
 #[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]
 pub struct UserBasic {
@@ -58,5 +59,11 @@ impl UserSession {
 
     pub fn inner(&self) -> Option<&UserTokenPayload> {
         self.inner.as_ref()
+    }
+
+    pub fn user_id(&self) -> Result<u64> {
+        self.inner
+            .map(|inner| inner.id)
+            .ok_or(RuntimeError::InvalidToken.into())
     }
 }

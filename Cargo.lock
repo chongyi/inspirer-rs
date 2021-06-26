@@ -622,7 +622,7 @@ dependencies = [
  "bytes 1.0.1",
  "futures-util",
  "memchr",
- "pin-project-lite 0.2.6",
+ "pin-project-lite 0.2.7",
  "tokio 1.7.1",
 ]
 
@@ -991,7 +991,7 @@ dependencies = [
  "futures-sink",
  "futures-task",
  "memchr",
- "pin-project-lite 0.2.6",
+ "pin-project-lite 0.2.7",
  "pin-utils",
  "proc-macro-hack",
  "proc-macro-nested",
@@ -1175,7 +1175,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "inspirer-actix-ext-core",
  "inspirer-actix-ext-derive",
@@ -1187,7 +1187,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-core"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "actix-web",
  "ahash 0.7.4",
@@ -1201,7 +1201,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-derive"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1211,7 +1211,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-database-sqlx"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "async-trait",
  "inspirer-actix-ext-core",
@@ -1224,7 +1224,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-redis"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "inspirer-actix-ext-core",
  "log",
@@ -1235,7 +1235,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-validator"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "actix-web",
  "futures",
@@ -1261,6 +1261,7 @@ dependencies = [
  "log",
  "pwhash",
  "serde 1.0.126",
+ "serde_json",
  "sqlx",
  "strum",
  "thiserror",
@@ -1270,7 +1271,7 @@ dependencies = [
 [[package]]
 name = "inspirer-json-web-token"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#0aacb756e78a00660f5712d62c0761183416b828"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
 dependencies = [
  "jsonwebtoken",
  "serde 1.0.126",
@@ -1884,9 +1885,9 @@ checksum = "257b64915a082f7811703966789728173279bdebb956b143dbcd23f6f970a777"
 
 [[package]]
 name = "pin-project-lite"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc0e1f259c92177c30a4c9d177246edd0a3568b25756a977d0632cf8fa37e905"
+checksum = "8d31d11c69a6b52a174b42bdc0c30e5e11670f90788b2c471c31c1d17d449443"
 
 [[package]]
 name = "pin-utils"
@@ -2081,7 +2082,7 @@ dependencies = [
  "futures-util",
  "itoa",
  "percent-encoding",
- "pin-project-lite 0.2.6",
+ "pin-project-lite 0.2.7",
  "sha1",
  "tokio 1.7.1",
  "tokio-util 0.6.7",
@@ -2832,7 +2833,7 @@ dependencies = [
  "libc",
  "memchr",
  "mio 0.7.13",
- "pin-project-lite 0.2.6",
+ "pin-project-lite 0.2.7",
  "winapi 0.3.9",
 ]
 
@@ -2893,7 +2894,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "log",
- "pin-project-lite 0.2.6",
+ "pin-project-lite 0.2.7",
  "tokio 1.7.1",
 ]
 
@@ -2914,7 +2915,7 @@ checksum = "09adeb8c97449311ccd28a427f96fb563e7fd31aabf994189879d9da2394b89d"
 dependencies = [
  "cfg-if 1.0.0",
  "log",
- "pin-project-lite 0.2.6",
+ "pin-project-lite 0.2.7",
  "tracing-core",
 ]
 

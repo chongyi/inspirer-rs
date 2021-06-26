@@ -1,14 +1,10 @@
-use actix_web::{get, post, HttpResponse};
-use crate::service::auth::{AuthService, AuthTokenService};
+use actix_web::{get, HttpResponse, post};
 use actix_web::web::Json;
+
 use crate::error::Result;
 use crate::model::user::UserSession;
-
-#[derive(Deserialize)]
-struct LoginPayload {
-    username: String,
-    password: String,
-}
+use crate::request::auth::LoginPayload;
+use crate::service::auth::{AuthService, AuthTokenService};
 
 #[derive(Serialize)]
 struct LoginResult {

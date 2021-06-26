@@ -113,6 +113,12 @@ impl From<anyhow::Error> for Error {
     }
 }
 
+impl From<RuntimeError> for Error {
+    fn from(err: RuntimeError) -> Self {
+        Error::RuntimeError(err)
+    }
+}
+
 impl From<inspirer_actix_ext::validator::Error> for Error {
     fn from(err: inspirer_actix_ext::validator::Error) -> Self {
         Error::ValidateError(err)
@@ -162,6 +168,8 @@ pub enum RuntimeError {
     UserIsNotExists = 101001,
     #[error("User is not exists or password error.")]
     PasswordVerifiedError = 101002,
+    #[error("Create content failed, unknown error.")]
+    CreateContentFailed = 200001,
 }
 
 impl AsErrorResponse for RuntimeError {
@@ -169,7 +177,7 @@ impl AsErrorResponse for RuntimeError {
 
     fn http_status(&self) -> StatusCode {
         match self {
-            RuntimeError::UnknownError => StatusCode::INTERNAL_SERVER_ERROR,
+            RuntimeError::UnknownError | RuntimeError::CreateContentFailed => StatusCode::INTERNAL_SERVER_ERROR,
             RuntimeError::InvalidToken => StatusCode::UNAUTHORIZED,
             RuntimeError::UserIsNotExists | RuntimeError::PasswordVerifiedError => StatusCode::BAD_REQUEST,
         }

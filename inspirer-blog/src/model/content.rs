@@ -57,3 +57,36 @@ pub struct ContentBasic {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+
+/// 用于前端接口读取的内容数据
+#[derive(sqlx::FromRow, Debug, Serialize)]
+pub struct ContentForClient {
+    pub id: u64,
+    pub creator_id: u64,
+    pub creator_name: String,
+    pub title: String,
+    pub keywords: String,
+    pub description: String,
+    pub content: String,
+    pub published_at: DateTime<Utc>,
+}
+
+/// 用于前端接口读取的内容数据
+#[derive(sqlx::FromRow, Debug, Serialize)]
+pub struct ContentForClientBasic {
+    pub id: u64,
+    pub creator_id: u64,
+    pub creator_name: String,
+    pub title: String,
+    pub keywords: String,
+    pub description: String,
+    pub published_at: DateTime<Utc>,
+}
+
+pub struct NewContentMeta<'a> {
+    pub id: u64,
+    pub content_entity_id: u64,
+    pub title: &'a str,
+    pub keywords: &'a str,
+    pub description: &'a str,
+}

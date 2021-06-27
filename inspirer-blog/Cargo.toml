@@ -1,0 +1,33 @@
+[package]
+name = "inspirer-blog"
+version = "0.1.0"
+authors = ["Chongyi <xpz3847878@163.com>"]
+edition = "2018"
+
+[dependencies]
+async-trait = "0.1"
+actix-web = "3"
+sqlx = { version = "0.4.2", features = ["mysql", "chrono"] }
+inspirer-actix-ext = { git = "https://gitee.com/chongyi/inspirer-actix-ext-support.git", features = ["database", "redis", "validator"] }
+inspirer-json-web-token = { git = "https://gitee.com/chongyi/inspirer-actix-ext-support.git", package = "inspirer-json-web-token" }
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
+clap = "2"
+log = "0.4"
+env_logger = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+strum = { version = "0.21", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "1.0"
+validator = "0.13"
+pwhash = "1"
+biscuit = "0.5.0"
+actix-web-httpauth = "0.5.1"
+
+[features]
+default = ["runtime-actix-rustls"]
+runtime-actix-rustls = ["sqlx/runtime-actix-rustls", "inspirer-actix-ext/runtime-actix-rustls"]
+runtime-tokio-rustls = ["sqlx/runtime-tokio-rustls", "inspirer-actix-ext/runtime-tokio-rustls"]
+runtime-actix-native-tls = ["sqlx/runtime-actix-native-tls", "inspirer-actix-ext/runtime-actix-native-tls"]
+runtime-tokio-native-tls = ["sqlx/runtime-tokio-native-tls", "inspirer-actix-ext/runtime-tokio-native-tls"]

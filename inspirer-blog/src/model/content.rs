@@ -48,6 +48,7 @@ pub struct NewContentEntityWithContent<'a> {
 pub struct ContentBasic {
     pub id: u64,
     pub creator_id: u64,
+    pub creator_name: String,
     pub title: String,
     pub keywords: String,
     pub description: String,

@@ -1175,7 +1175,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "inspirer-actix-ext-core",
  "inspirer-actix-ext-derive",
@@ -1187,7 +1187,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-core"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "actix-web",
  "ahash 0.7.4",
@@ -1201,7 +1201,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-ext-derive"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1211,7 +1211,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-database-sqlx"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "async-trait",
  "inspirer-actix-ext-core",
@@ -1224,7 +1224,7 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-module-redis"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "inspirer-actix-ext-core",
  "log",
@@ -1235,11 +1235,12 @@ dependencies = [
 [[package]]
 name = "inspirer-actix-validator"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "actix-web",
  "futures",
  "serde 1.0.126",
+ "serde_qs",
  "validator",
 ]
 
@@ -1262,6 +1263,7 @@ dependencies = [
  "pwhash",
  "serde 1.0.126",
  "serde_json",
+ "serde_qs",
  "sqlx",
  "strum",
  "thiserror",
@@ -1271,7 +1273,7 @@ dependencies = [
 [[package]]
 name = "inspirer-json-web-token"
 version = "0.1.0"
-source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#fc93cc3ca6bb95d598ff7b106f621655e44d8a2b"
+source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
 dependencies = [
  "jsonwebtoken",
  "serde 1.0.126",
@@ -2336,6 +2338,19 @@ dependencies = [
  "itoa",
  "ryu",
  "serde 1.0.126",
+]
+
+[[package]]
+name = "serde_qs"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b22063cd705114614293767c69aa992531f72b0cc8a6b9145801920730fe25e4"
+dependencies = [
+ "actix-web",
+ "futures",
+ "percent-encoding",
+ "serde 1.0.126",
+ "thiserror",
 ]
 
 [[package]]

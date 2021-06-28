@@ -5,6 +5,7 @@ use inspirer_actix_ext::database::{Get, DAO};
 use crate::model::user::UserBasic;
 use anyhow::Result;
 
+#[derive(FromRequest, Service)]
 pub struct UserService {
     pool: MySqlPool
 }

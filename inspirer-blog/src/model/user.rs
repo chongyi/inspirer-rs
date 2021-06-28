@@ -11,6 +11,7 @@ pub struct UserBasic {
     pub user_type: u16,
     pub username: String,
     pub nickname: String,
+    pub avatar: String,
     #[serde(skip_serializing)]
     pub password: String,
 }

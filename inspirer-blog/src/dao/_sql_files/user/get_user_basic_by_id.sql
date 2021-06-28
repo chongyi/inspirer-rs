@@ -1,4 +1,4 @@
-select id, user_type, username, nickname, password
+select id, user_type, username, nickname, avatar, password
 from users
 where id = ?
 limit 1

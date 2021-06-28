@@ -25,6 +25,7 @@ mod dao;
 mod error;
 mod config;
 mod request;
+mod constant;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {

@@ -9,12 +9,7 @@ use actix_web::web::BytesMut;
 use serde::Serialize;
 use validator::{ValidationErrors, ValidationErrorsKind};
 
-const UNKNOWN_ERROR_CODE: i32 = 1;
-const REQUEST_PARAMS_ERROR: i32 = 2;
-const UNAUTHORIZED_TOKEN: i32 = 8;
-const DATABASE_OTHER_ERROR: i32 = 1001;
-const DATABASE_RESOURCE_NOT_FOUND: i32 = 1002;
-const DATABASE_CONFLICT: i32 = 1003;
+use crate::constant::{DATABASE_CONFLICT, DATABASE_OTHER_ERROR, DATABASE_RESOURCE_NOT_FOUND, REQUEST_PARAMS_ERROR, UNAUTHORIZED_TOKEN, UNKNOWN_ERROR_CODE};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 

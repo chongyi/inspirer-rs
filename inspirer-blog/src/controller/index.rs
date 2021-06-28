@@ -6,7 +6,7 @@ use inspirer_actix_ext::validator::{Validate, Validated};
 
 use crate::dao::content::{ContentQueryCondition, Key};
 use crate::error::Result;
-use crate::request::content::{ContentQuerySort, FindContent, QueryContent};
+use crate::request::content::{ContentQuerySort, FindContent, ClientQueryContent};
 use crate::service::content::ContentService;
 
 #[get("/")]
@@ -16,7 +16,7 @@ pub async fn home(srv: ContentService) -> Result<HttpResponse> {
 
     Ok(HttpResponse::Ok()
         .json(srv.list(ContentQueryCondition {
-            paginate: Some(Paginate::new(3)),
+            paginate: Some(Paginate::default()),
             sort,
             ..Default::default()
         }).await?))
@@ -29,7 +29,7 @@ pub async fn get_content(srv: ContentService, find: Validated<Path<FindContent>>
 }
 
 #[get("/content")]
-pub async fn get_content_list(srv: ContentService, query: Validated<Query<QueryContent>>) -> Result<HttpResponse> {
+pub async fn get_content_list(srv: ContentService, query: Validated<Query<ClientQueryContent>>) -> Result<HttpResponse> {
     let mut sort = SortStatement::default();
     sort.push(Sort::Desc(ContentQuerySort::Id));
     sort.push(Sort::Desc(ContentQuerySort::PublishedAt));
@@ -38,10 +38,7 @@ pub async fn get_content_list(srv: ContentService, query: Validated<Query<QueryC
         sort,
         is_display: Some(true),
         is_published: Some(true),
-        paginate: Some(Paginate {
-            page: query.page.unwrap_or(1),
-            per_page: query.per_page.unwrap_or(20),
-        }),
+        paginate: Some(Paginate::new(query.page, query.per_page)),
         ..Default::default()
     };
 

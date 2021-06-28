@@ -184,7 +184,7 @@ impl UpdateDAO<MySql> for ContentFromEntity {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ContentQueryCondition {
     pub id: Option<u64>,
     pub creator_id: Option<u64>,

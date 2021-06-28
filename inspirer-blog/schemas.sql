@@ -54,6 +54,7 @@ create table users
     username   varchar(40)                                 not null,
     password   varchar(120)      default ''                not null,
     nickname   varchar(40)       default ''                null,
+    avatar     varchar(255)      default ''                not null,
     created_at timestamp         default CURRENT_TIMESTAMP not null,
     updated_at timestamp         default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
     constraint users_username_uindex

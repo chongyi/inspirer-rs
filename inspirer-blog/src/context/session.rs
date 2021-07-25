@@ -1,37 +1,10 @@
-use std::ops::Deref;
-use actix_web::{FromRequest, HttpRequest, Error};
-use std::future::Future;
+use actix_web::{Error, FromRequest, HttpRequest};
 use actix_web::dev::Payload;
-use futures::future::{Ready, ok};
+use futures::future::{ok, Ready};
+
+use inspirer_content_common::model::user::UserTokenPayload;
+
 use crate::error::{Result, RuntimeError};
-
-#[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]
-pub struct UserBasic {
-    pub id: u64,
-    pub user_type: u16,
-    pub username: String,
-    pub nickname: String,
-    pub avatar: String,
-    #[serde(skip_serializing)]
-    pub password: String,
-}
-
-/// 用于用户 Json Web Token 的模型
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-pub struct UserTokenPayload {
-    pub id: u64,
-    pub user_type: u16,
-}
-
-
-impl From<&UserBasic> for UserTokenPayload {
-    fn from(user_basic: &UserBasic) -> Self {
-        UserTokenPayload {
-            id: user_basic.id,
-            user_type: user_basic.user_type,
-        }
-    }
-}
 
 #[derive(Serialize)]
 pub struct UserSession {

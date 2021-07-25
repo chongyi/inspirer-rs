@@ -1,8 +1,8 @@
 use inspirer_actix_ext::service::{IntoService, DependencyFactory};
 use sqlx::MySqlPool;
-use crate::dao::content::{ContentQueryCondition, Key, BindContentToContentEntity, BindSource, ContentEntityByKey};
+use inspirer_content_common::dao::content::{ContentQueryCondition, Key, BindContentToContentEntity, BindSource, ContentEntityByKey};
 use inspirer_actix_ext::database::{Get, DAO, CreateDAO, UpdateDAO, DeleteDAO};
-use crate::model::content::{ContentBasic, NewContentEntity, NewContent, NewContentEntityWithContent, NewContentMeta, ContentForClient, ContentForClientBasic};
+use inspirer_content_common::model::content::{ContentBasic, NewContentEntity, NewContent, NewContentEntityWithContent, NewContentMeta, ContentForClient, ContentForClientBasic};
 use inspirer_actix_ext::database::statement::pagination::Paginated;
 use anyhow::Result;
 use crate::request::content::CreateContent;

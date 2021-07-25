@@ -8,8 +8,6 @@ use sqlx::Row;
 
 use crate::dao::condition_str;
 use crate::model::content::{ContentBasic, ContentEntityBasic, ContentForClient, ContentForClientBasic, NewContent, NewContentEntity, NewContentEntityWithContent, NewContentMeta};
-use crate::request::content::ContentQuerySort;
-use chrono::{DateTime, Utc};
 
 /// 创建内容
 ///
@@ -182,6 +180,19 @@ impl UpdateDAO<MySql> for ContentFromEntity {
             .await
             .map(|result| result.rows_affected() > 0)
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, AsRefStr, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum ContentQuerySort {
+    #[strum(serialize = "contents.id")]
+    Id,
+    #[strum(serialize = "contents.created_at")]
+    CreatedAt,
+    #[strum(serialize = "contents.updated_at")]
+    UpdatedAt,
+    #[strum(serialize = "contents.published_at")]
+    PublishedAt,
 }
 
 #[derive(Default, Debug)]

@@ -1,11 +1,14 @@
-use inspirer_actix_ext::validator::Validate;
-use crate::constant::{QUERY_DEFAULT_PAGE, QUERY_DEFAULT_PER_PAGE};
 use inspirer_actix_ext::database::statement::sort::SortStatement;
+use inspirer_actix_ext::validator::Validate;
+
+pub use inspirer_content_common::dao::content::{ContentQuerySort, ContentQueryCondition, Key};
+
+use crate::constant::{QUERY_DEFAULT_PAGE, QUERY_DEFAULT_PER_PAGE};
 
 #[derive(Deserialize, Validate)]
 pub struct FindContent {
     #[validate(range(min = 1))]
-    pub id: u64
+    pub id: u64,
 }
 
 #[derive(Deserialize, Validate)]
@@ -23,7 +26,7 @@ pub struct CreateContent {
 #[derive(Deserialize, Debug)]
 pub struct DeleteOption {
     #[serde(default)]
-    pub force: bool
+    pub force: bool,
 }
 
 #[derive(Deserialize, Validate)]
@@ -39,7 +42,7 @@ impl Default for ClientQueryContent {
     fn default() -> Self {
         ClientQueryContent {
             page: QUERY_DEFAULT_PAGE,
-            per_page: QUERY_DEFAULT_PER_PAGE
+            per_page: QUERY_DEFAULT_PER_PAGE,
         }
     }
 }
@@ -54,7 +57,7 @@ pub struct AdminQueryContent {
     pub is_deleted: bool,
     pub is_published: Option<bool>,
     pub is_display: Option<bool>,
-    pub sorts: Option<SortStatement<ContentQuerySort>>
+    pub sorts: Option<SortStatement<ContentQuerySort>>,
 }
 
 impl Default for AdminQueryContent {
@@ -69,17 +72,3 @@ impl Default for AdminQueryContent {
         }
     }
 }
-
-#[derive(Serialize, Deserialize, Debug, AsRefStr, Clone)]
-#[serde(rename_all = "snake_case")]
-pub enum ContentQuerySort {
-    #[strum(serialize = "contents.id")]
-    Id,
-    #[strum(serialize = "contents.created_at")]
-    CreatedAt,
-    #[strum(serialize = "contents.updated_at")]
-    UpdatedAt,
-    #[strum(serialize = "contents.published_at")]
-    PublishedAt,
-}
-

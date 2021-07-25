@@ -1,19 +1,19 @@
 use std::io;
 
-use actix_web::{App, HttpServer, web, HttpMessage};
+use actix_web::{App, HttpMessage, HttpServer};
+use actix_web::dev::ServiceRequest;
 use actix_web::middleware::Logger;
-use inspirer_actix_ext::{ModuleContainer, ModuleProvider};
+use actix_web::web::{Data, scope};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
+use actix_web_httpauth::middleware::HttpAuthentication;
+use inspirer_actix_ext::ModuleProvider;
 use inspirer_actix_ext::config::Config;
 use inspirer_actix_ext::validator::ValidateConfig;
 
 use crate::config::ServerConfig;
 use crate::controller;
 use crate::error::{Error, RuntimeError};
-use actix_web::web::{scope, Data};
-use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::service::auth::AuthTokenService;
-use actix_web::dev::ServiceRequest;
-use actix_web_httpauth::extractors::bearer::BearerAuth;
 
 pub async fn start_server(module_provider: ModuleProvider) -> io::Result<()> {
     let config = module_provider.get::<Config>().expect("Cannot find configuration object.");

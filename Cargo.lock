@@ -1258,6 +1258,7 @@ dependencies = [
  "env_logger",
  "futures",
  "inspirer-actix-ext",
+ "inspirer-content-common",
  "inspirer-json-web-token",
  "log",
  "pwhash",
@@ -1265,9 +1266,20 @@ dependencies = [
  "serde_json",
  "serde_qs",
  "sqlx",
- "strum",
  "thiserror",
  "validator",
+]
+
+[[package]]
+name = "inspirer-content-common"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "inspirer-actix-ext",
+ "serde 1.0.126",
+ "sqlx",
+ "strum",
 ]
 
 [[package]]

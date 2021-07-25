@@ -3,12 +3,12 @@ use inspirer_actix_ext::config::Config;
 use inspirer_actix_ext::database::sqlx::MySqlPool;
 use inspirer_actix_ext::service::{DependencyFactory, IntoService};
 
-use crate::dao::user::Key;
+use inspirer_content_common::dao::user::Key;
 use crate::error::RuntimeError::{PasswordVerifiedError, UserIsNotExists};
-use crate::model::user::{UserBasic, UserTokenPayload};
+use inspirer_content_common::model::user::{UserBasic, UserTokenPayload};
 use crate::service::user::UserService;
 use crate::config::ApplicationConfig;
-use chrono::{Utc, Duration};
+use chrono::Utc;
 use inspirer_json_web_token::{Claims, PublicClaims, EncodingKey, decode, DecodingKey, Validation};
 use crate::error::RuntimeError;
 

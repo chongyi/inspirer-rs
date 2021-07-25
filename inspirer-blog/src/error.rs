@@ -2,12 +2,9 @@ use std::collections::HashMap;
 use std::fmt;
 
 use actix_web::{HttpResponse, ResponseError};
-use actix_web::body::Body;
-use actix_web::dev::Service;
 use actix_web::http::StatusCode;
-use actix_web::web::BytesMut;
 use serde::Serialize;
-use validator::{ValidationErrors, ValidationErrorsKind};
+use validator::ValidationErrorsKind;
 
 use crate::constant::{DATABASE_CONFLICT, DATABASE_OTHER_ERROR, DATABASE_RESOURCE_NOT_FOUND, REQUEST_PARAMS_ERROR, UNAUTHORIZED_TOKEN, UNKNOWN_ERROR_CODE};
 

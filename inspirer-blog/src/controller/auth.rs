@@ -1,12 +1,11 @@
 use actix_web::{get, HttpResponse, post};
 use actix_web::web::Json;
 
+use crate::context::session::UserSession;
 use crate::error::Result;
-use crate::model::user::UserSession;
-use crate::request::auth::LoginPayload;
+use crate::request::auth::{LoginPayload, Key};
 use crate::service::auth::{AuthService, AuthTokenService};
 use crate::service::user::UserService;
-use crate::dao::user::Key;
 
 #[derive(Serialize)]
 struct LoginResult {

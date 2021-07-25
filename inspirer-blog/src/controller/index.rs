@@ -2,11 +2,10 @@ use actix_web::{get, HttpResponse};
 use actix_web::web::{Path, Query};
 use inspirer_actix_ext::database::statement::pagination::Paginate;
 use inspirer_actix_ext::database::statement::sort::{Sort, SortStatement};
-use inspirer_actix_ext::validator::{Validate, Validated};
+use inspirer_actix_ext::validator::Validated;
 
-use crate::dao::content::{ContentQueryCondition, Key};
 use crate::error::Result;
-use crate::request::content::{ContentQuerySort, FindContent, ClientQueryContent};
+use crate::request::content::{ContentQuerySort, FindContent, ClientQueryContent, ContentQueryCondition, Key};
 use crate::service::content::ContentService;
 
 #[get("/")]

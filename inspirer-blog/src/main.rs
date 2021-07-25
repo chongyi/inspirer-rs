@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate async_trait;
 #[macro_use]
 extern crate log;
@@ -6,9 +5,6 @@ extern crate log;
 extern crate serde;
 #[macro_use]
 extern crate inspirer_actix_ext;
-#[macro_use]
-extern crate strum;
-#[macro_use]
 extern crate validator;
 
 use std::io;
@@ -20,12 +16,11 @@ use clap::{App, Arg};
 mod server;
 mod controller;
 mod service;
-mod model;
-mod dao;
 mod error;
 mod config;
 mod request;
 mod constant;
+mod context;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
@@ -45,8 +40,10 @@ async fn main() -> io::Result<()> {
 
     let mut module_provider = ModuleProvider::new();
 
-    module_provider.register(config_provider(config_file)).await;
-    module_provider.register(database::mysql::register).await;
+    module_provider.register(config_provider(config_file)).await
+        .expect("Load configuration module failed.");
+    module_provider.register(database::mysql::register).await
+        .expect("Load database(MySQL) module failed.");
 
     info!("Start server.");
     server::start_server(module_provider).await

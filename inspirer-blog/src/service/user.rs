@@ -1,8 +1,8 @@
 use inspirer_actix_ext::service::{IntoService, DependencyFactory};
 use inspirer_actix_ext::database::sqlx::MySqlPool;
-use crate::dao::user::Key;
+use inspirer_content_common::dao::user::Key;
 use inspirer_actix_ext::database::{Get, DAO};
-use crate::model::user::UserBasic;
+use inspirer_content_common::model::user::UserBasic;
 use anyhow::Result;
 
 #[derive(FromRequest, Service)]

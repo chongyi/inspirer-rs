@@ -5,6 +5,18 @@ edition = "2018"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
+sqlx = { version = "*", features = ["mysql"] }
+async-trait = "0.1"
+strum = { version = "0.21", features = ["derive"] }
 
 [dev-dependencies]
 serde_qs = "0.8"
+
+[features]
+default = ["runtime-actix-rustls"]
+runtime-actix-native-tls = ["sqlx/runtime-actix-native-tls", ]
+runtime-async-std-native-tls = ["sqlx/runtime-async-std-native-tls"]
+runtime-tokio-native-tls = ["sqlx/runtime-tokio-native-tls"]
+runtime-actix-rustls = ["sqlx/runtime-actix-rustls"]
+runtime-async-std-rustls = ["sqlx/runtime-async-std-rustls"]
+runtime-tokio-rustls = ["sqlx/runtime-tokio-rustls"]

@@ -2,6 +2,7 @@
 members = [
     "inspirer-blog",
     "inspirer-content-common",
+    "inspirer-content",
     "inspirer-user-center",
     "support/query-ext",
     "support/inspirer-brick"

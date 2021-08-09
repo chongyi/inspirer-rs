@@ -1,0 +1,22 @@
+[package]
+name = "inspirer-content"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+sqlx = { version = ">=0.4.2", features = ["mysql", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+strum = { version = "0.21", features = ["derive"] }
+anyhow = "1.0"
+inspirer-query-ext = { path = "../support/query-ext", default-feature = false }
+
+[features]
+default = ["runtime-actix-rustls"]
+runtime-actix-native-tls = ["sqlx/runtime-actix-native-tls", "inspirer-query-ext/runtime-actix-native-tls"]
+runtime-async-std-native-tls = ["sqlx/runtime-async-std-native-tls", "inspirer-query-ext/runtime-async-std-native-tls"]
+runtime-tokio-native-tls = ["sqlx/runtime-tokio-native-tls", "inspirer-query-ext/runtime-tokio-native-tls"]
+runtime-actix-rustls = ["sqlx/runtime-actix-rustls", "inspirer-query-ext/runtime-actix-rustls"]
+runtime-async-std-rustls = ["sqlx/runtime-async-std-rustls", "inspirer-query-ext/runtime-async-std-rustls"]
+runtime-tokio-rustls = ["sqlx/runtime-tokio-rustls", "inspirer-query-ext/runtime-tokio-rustls"]

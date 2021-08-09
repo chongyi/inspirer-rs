@@ -1292,6 +1292,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "inspirer-query-ext"
+version = "0.1.0"
+dependencies = [
+ "serde 1.0.126",
+ "serde_qs",
+]
+
+[[package]]
 name = "inspirer-user-center"
 version = "0.1.0"
 dependencies = [

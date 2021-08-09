@@ -1271,6 +1271,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "inspirer-brick"
+version = "0.1.0"
+
+[[package]]
 name = "inspirer-content-common"
 version = "0.1.0"
 dependencies = [

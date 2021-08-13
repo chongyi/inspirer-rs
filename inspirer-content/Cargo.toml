@@ -11,6 +11,7 @@ serde = { version = "1.0", features = ["derive"] }
 strum = { version = "0.21", features = ["derive"] }
 anyhow = "1.0"
 inspirer-query-ext = { path = "../support/query-ext", default-feature = false }
+thiserror = "1.0"
 
 [features]
 default = ["runtime-actix-rustls"]

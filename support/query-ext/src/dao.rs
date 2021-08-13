@@ -28,7 +28,21 @@ pub trait CreateDAO<D: Database> {
 
 /// 数据读取对象
 ///
-/// 实现该 Trait，则可用于读取数据
+/// 实现该 Trait，则可用于读取数据。不同于其他访问对象，读取数据的访问对象存在第二个需要提供的类型。
+///
+/// 该 Trait 是实现于查询条件构成的结构体上，第二个需要提供的类型用于声明该查询或读取对象查询的目标。
+/// 例如：
+///
+/// ```ignore
+/// impl ReadDAO<MySql, Content> for QueryCondition {
+///     type Result = sqlx::Result<Content>;
+///
+///     async fn read<'a, E>(&self, executor: E) -> Self::Result
+///         where E: Executor<'a, Database=MySql> {
+///         unimplemented!()
+///     }
+/// }
+/// ```
 #[async_trait]
 pub trait ReadDAO<D: Database, T> {
     type Result;

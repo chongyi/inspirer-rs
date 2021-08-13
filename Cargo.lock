@@ -1525,6 +1525,7 @@ dependencies = [
  "serde 1.0.126",
  "sqlx",
  "strum",
+ "thiserror",
 ]
 
 [[package]]

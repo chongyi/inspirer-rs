@@ -29,7 +29,7 @@ create table content_entities
     keywords    varchar(255)    default ''                not null,
     description varchar(255)    default ''                not null,
     content     mediumtext                                not null,
-    created_at  timestamp       default CURRENT_TIMESTAMP not null,
+    updated_at  timestamp       default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
     constraint content_entity_draft_uindex unique (is_draft, previous_id, author_id)
 )
     comment '内容实体表';

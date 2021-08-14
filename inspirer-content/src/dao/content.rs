@@ -1,8 +1,9 @@
-use sqlx::{Done, Executor, MySql};
+use sqlx::{Done, Executor, MySql, FromRow, Error};
 
 use inspirer_query_ext::dao::{CreateDAO, DAO, ReadDAO, UpdateDAO, DeleteDAO};
 
-use crate::model::{ContentEntityMeta, NewContent, NewContentEntity, UpdateContentEntity, BindContentToContentEntity, GetLatestContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId};
+use crate::model::{ContentEntityMeta, NewContent, NewContentEntity, UpdateContentEntity, BindContentToContentEntity, GetLatestContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId, ContentWithEntity, ContentId, ContentBasic, ContentEntity};
+use sqlx::mysql::MySqlRow;
 
 /// 创建内容
 ///
@@ -159,5 +160,28 @@ impl DeleteDAO<MySql> for DeleteContentEntityByContentId {
             .execute(executor)
             .await
             .map(|result| result.rows_affected())
+    }
+}
+
+impl<'r> FromRow<'r, MySqlRow> for ContentWithEntity {
+    fn from_row(row: &'r MySqlRow) -> Result<Self, Error> {
+        Ok(ContentWithEntity {
+            content: ContentBasic::from_row(row)?,
+            entity: ContentEntity::from_row(row)?,
+        })
+    }
+}
+
+#[async_trait]
+impl ReadDAO<MySql, ContentWithEntity> for ContentId {
+    type Result = sqlx::Result<Option<ContentWithEntity>>;
+
+    async fn read<'a, E>(&self, executor: E) -> Self::Result
+        where E: Executor<'a, Database=MySql>
+    {
+        sqlx::query_as(include_str!("_sql_files/content/get_content_with_entity.sql"))
+            .bind(self.0)
+            .fetch_optional(executor)
+            .await
     }
 }

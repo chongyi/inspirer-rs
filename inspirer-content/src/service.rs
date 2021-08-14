@@ -3,7 +3,7 @@ use sqlx::{MySqlPool, Acquire};
 use inspirer_query_ext::dao::{CreateDAO, DAO, Get, UpdateDAO, ReadDAO, DeleteDAO};
 
 use crate::ContentService;
-use crate::model::{ContentEntityMeta, ContentEntityWritable, NewContent, NewContentEntity, UpdateContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId};
+use crate::model::{ContentEntityMeta, ContentEntityWritable, NewContent, NewContentEntity, UpdateContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId, ContentWithEntity, ContentId};
 use crate::model::content::{BindContentToContentEntity, GetLatestContentEntity};
 use crate::error::InspirerContentError;
 
@@ -39,7 +39,7 @@ impl ContentService for MySqlPool {
     async fn override_draft(&self, author_id: u64, content_id: u64, is_draft: bool, entity: ContentEntityWritable<'_>) -> anyhow::Result<u64> {
         let mut conn = self.begin().await?;
 
-        let latest_content_entity_meta = Get::<ContentEntityMeta>::by(GetLatestContentEntity {content_id, is_draft: true})
+        let latest_content_entity_meta = Get::<ContentEntityMeta>::by(GetLatestContentEntity { content_id, is_draft: true })
             .run(&mut conn)
             .await?;
 
@@ -143,5 +143,12 @@ impl ContentService for MySqlPool {
                 .await
                 .map_err(Into::into)
         }
+    }
+
+    async fn get(&self, content_id: u64) -> anyhow::Result<Option<ContentWithEntity>> {
+        Get::<ContentWithEntity>::by(ContentId(content_id))
+            .run(self)
+            .await
+            .map_err(Into::into)
     }
 }

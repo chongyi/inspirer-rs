@@ -5,7 +5,7 @@ extern crate serde;
 #[macro_use]
 extern crate strum;
 
-use crate::model::{ContentEntityWritable, ContentStatusWritable, ContentEntityFull};
+use crate::model::{ContentEntityWritable, ContentStatusWritable, ContentEntityFull, ContentWithEntity};
 use anyhow::Result;
 
 pub mod dao;
@@ -40,4 +40,7 @@ pub trait ContentService {
     ///
     /// 默认为软删除，若强制删除则会清空所有数据，包括与其关联的内容实体
     async fn delete(&self, content_id: u64, force_delete: bool) -> Result<u64>;
+
+    /// 获取内容
+    async fn get(&self, content_id: u64) -> Result<Option<ContentWithEntity>>;
 }

@@ -29,6 +29,15 @@ pub struct ContentEntityWritable<'a> {
     pub content: &'a str,
 }
 
+#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
+pub struct ContentEntity {
+    pub is_draft: bool,
+    pub title: String,
+    pub keywords: String,
+    pub description: String,
+    pub content: String,
+}
+
 #[derive(sqlx::FromRow)]
 pub struct ContentEntityFull {
     pub author_id: u64,
@@ -37,7 +46,7 @@ pub struct ContentEntityFull {
     pub keywords: String,
     pub description: String,
     pub content: String,
-    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -64,6 +73,32 @@ pub struct GetLatestContentEntity {
     pub is_draft: bool,
 }
 
-pub struct DeleteContent (pub u64);
+pub struct DeleteContent(pub u64);
 
-pub struct DeleteContentEntityByContentId (pub u64);
+pub struct DeleteContentEntityByContentId(pub u64);
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ContentWithEntity {
+    #[serde(flatten)]
+    pub content: ContentBasic,
+    #[serde(flatten)]
+    pub entity: ContentEntity,
+}
+
+#[derive(sqlx::FromRow, Clone, Debug, Serialize, Deserialize)]
+pub struct ContentBasic {
+    pub id: u64,
+    pub author_id: u64,
+    #[serde(skip_serializing)]
+    pub is_display: bool,
+    #[serde(skip_serializing)]
+    pub is_deleted: bool,
+    #[serde(skip_serializing)]
+    pub is_published: bool,
+    #[serde(skip_serializing)]
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub published_at: DateTime<Utc>,
+}
+
+pub struct ContentId (pub u64);

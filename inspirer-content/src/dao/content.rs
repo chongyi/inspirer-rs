@@ -1,9 +1,11 @@
-use sqlx::{Executor, MySql, FromRow, Error};
+use sqlx::{Executor, MySql, FromRow, Error, Arguments};
 
 use inspirer_query_ext::dao::{CreateDAO, DAO, ReadDAO, UpdateDAO, DeleteDAO};
 
-use crate::model::{ContentEntityMeta, NewContent, NewContentEntity, UpdateContentEntity, BindContentToContentEntity, GetLatestContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId, ContentWithEntity, ContentId, ContentBasic, ContentEntity};
-use sqlx::mysql::MySqlRow;
+use crate::model::{ContentEntityMeta, NewContent, NewContentEntity, UpdateContentEntity, BindContentToContentEntity, GetLatestContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId, ContentWithEntity, ContentId, ContentBasic, ContentEntity, ContentWithEntitySummary, AdvanceContentQuery, ContentEntitySummary};
+use sqlx::mysql::{MySqlRow, MySqlArguments};
+use inspirer_query_ext::model::{PaginateWrapper, PaginationWrapper, RawPaginationWrapper};
+use inspirer_query_ext::statement::IntoStatement;
 
 /// 创建内容
 ///
@@ -183,5 +185,78 @@ impl ReadDAO<MySql, ContentWithEntity> for ContentId {
             .bind(self.0)
             .fetch_optional(executor)
             .await
+    }
+}
+
+impl<'r> FromRow<'r, MySqlRow> for ContentWithEntitySummary {
+    fn from_row(row: &'r MySqlRow) -> Result<Self, Error> {
+        Ok(ContentWithEntitySummary {
+            content: ContentBasic::from_row(row)?,
+            entity: ContentEntitySummary::from_row(row)?,
+        })
+    }
+}
+
+#[async_trait]
+impl ReadDAO<MySql, ContentWithEntitySummary> for PaginateWrapper<AdvanceContentQuery> {
+    type Result = sqlx::Result<PaginationWrapper<Vec<ContentWithEntitySummary>>>;
+
+    async fn read<'a, E>(&self, executor: E) -> Self::Result
+        where E: Executor<'a, Database=MySql>
+    {
+
+        let mut conditions = vec![];
+        // create query parameters
+        let mut arguments = MySqlArguments::default();
+
+        // sql generate
+        if let Some(ids) = self.id.as_ref() {
+            ids.iter()
+                .for_each(|inner| {
+                    (&mut arguments).add(inner);
+                });
+
+            conditions.push(format!(
+                "id in ({})",
+                std::iter::repeat("?").take(ids.len())
+                    .collect::<Vec<&str>>()
+                    .join(",")
+            ));
+        }
+
+        if let Some(is_deleted) = self.is_deleted {
+            conditions.push("is_deleted = ?".into());
+            arguments.add(is_deleted);
+        }
+
+        if let Some(is_published) = self.is_published {
+            conditions.push("is_published = ?".into());
+            arguments.add(is_published);
+        }
+
+        if let Some(is_display) = self.is_display {
+            conditions.push("is_display = ?".into());
+            arguments.add(is_display);
+        }
+
+        arguments.add(self.skip());
+        arguments.add(self.take());
+
+        let sql = format!(
+            "{} {} {} limit ?, ?",
+            include_str!("_sql_files/content/get_content_list_with_entity_summary.sql"),
+            (!conditions.is_empty())
+                .then(|| {
+                    format!("where {}", conditions.join(" and "))
+                })
+                .unwrap_or(String::new()),
+            self.sort.full_statement(),
+        );
+
+        let result: Vec<RawPaginationWrapper<ContentWithEntitySummary>> = sqlx::query_as_with(sql.as_str(), arguments)
+            .fetch_all(executor)
+            .await?;
+
+        Ok(self.paginate.wrapped_pagination(result))
     }
 }

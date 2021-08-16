@@ -9,6 +9,7 @@ pub mod filter;
 pub mod sort;
 pub mod statement;
 pub mod dao;
+pub mod model;
 
 pub(crate) mod test {
     #[derive(Serialize, Deserialize, AsRefStr, PartialEq, Debug)]

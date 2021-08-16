@@ -8,16 +8,17 @@ name = "inspirer-content-cli"
 path = "src/bin/cli.rs"
 
 [dependencies]
-sqlx = { version = ">=0.4.2", features = ["mysql", "chrono"] }
+sqlx = { version = "0.5", features = ["mysql", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 async-trait = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 strum = { version = "0.21", features = ["derive"] }
 anyhow = "1.0"
-inspirer-query-ext = { path = "../support/query-ext", default-feature = false }
+inspirer-query-ext = { path = "../support/query-ext", default-features = false }
 thiserror = "1.0"
 rustyline = "8"
 structopt = "0.3"
+tokio = { version = "~1.8", features = ["rt", "macros", "rt-multi-thread"] }
 
 [features]
 default = ["runtime-actix-rustls"]

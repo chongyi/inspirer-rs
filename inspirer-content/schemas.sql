@@ -21,7 +21,7 @@ create table content_entities
 (
     id          bigint unsigned auto_increment
         primary key,
-    previous_id bigint unique   default 0                 not null,
+    previous_id bigint unsigned default 0                 not null,
     author_id   bigint unsigned default 0                 not null,
     content_id  bigint unsigned default 0                 not null,
     is_draft    tinyint(1)                                not null comment '是否是草稿',
@@ -30,7 +30,7 @@ create table content_entities
     description varchar(255)    default ''                not null,
     content     mediumtext                                not null,
     updated_at  timestamp       default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
-    constraint content_entity_draft_uindex unique (is_draft, previous_id, author_id)
+    constraint content_entity_draft_uindex unique (is_draft, previous_id, content_id)
 )
     comment '内容实体表';
 

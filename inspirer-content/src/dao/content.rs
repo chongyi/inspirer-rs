@@ -1,4 +1,4 @@
-use sqlx::{Done, Executor, MySql, FromRow, Error};
+use sqlx::{Executor, MySql, FromRow, Error};
 
 use inspirer_query_ext::dao::{CreateDAO, DAO, ReadDAO, UpdateDAO, DeleteDAO};
 

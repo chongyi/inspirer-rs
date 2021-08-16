@@ -21,7 +21,7 @@ pub struct UpdateContentEntity<'a> {
     pub id: u64,
     pub is_draft: bool,
     pub content_id: u64,
-    pub entity: ContentEntityWritable<'a>,
+    pub entity: Option<ContentEntityWritable<'a>>,
 }
 
 pub struct ContentEntityWritable<'a> {

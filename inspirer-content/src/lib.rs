@@ -5,8 +5,9 @@ extern crate serde;
 #[macro_use]
 extern crate strum;
 
-use crate::model::{ContentEntityWritable, ContentStatusWritable, ContentEntityFull, ContentWithEntity};
+use crate::model::{ContentEntityWritable, ContentStatusWritable, ContentEntityFull, ContentWithEntity, AdvanceContentQuery, ContentWithEntitySummary};
 use anyhow::Result;
+use inspirer_query_ext::model::{PaginateWrapper, PaginationWrapper};
 
 pub mod dao;
 pub mod model;
@@ -43,4 +44,7 @@ pub trait ContentService {
 
     /// 获取内容
     async fn get(&self, content_id: u64) -> Result<Option<ContentWithEntity>>;
+
+    /// 获取内容列表
+    async fn list(&self, query: PaginateWrapper<AdvanceContentQuery>) -> Result<PaginationWrapper<Vec<ContentWithEntitySummary>>>;
 }

@@ -3,9 +3,10 @@ use sqlx::{MySqlPool, Acquire};
 use inspirer_query_ext::dao::{CreateDAO, DAO, Get, UpdateDAO, ReadDAO, DeleteDAO};
 
 use crate::ContentService;
-use crate::model::{ContentEntityMeta, ContentEntityWritable, NewContent, NewContentEntity, UpdateContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId, ContentWithEntity, ContentId};
+use crate::model::{ContentEntityMeta, ContentEntityWritable, NewContent, NewContentEntity, UpdateContentEntity, ContentEntityFull, DeleteContent, DeleteContentEntityByContentId, ContentWithEntity, ContentId, AdvanceContentQuery, ContentWithEntitySummary};
 use crate::model::content::{BindContentToContentEntity, GetLatestContentEntity};
 use crate::error::InspirerContentError;
+use inspirer_query_ext::model::{PaginateWrapper, PaginationWrapper};
 
 #[async_trait]
 impl ContentService for MySqlPool {
@@ -52,7 +53,7 @@ impl ContentService for MySqlPool {
                         id: content_entity_meta.id,
                         content_id,
                         is_draft,
-                        entity,
+                        entity: Some(entity),
                     }.update(&mut conn).await?;
                     content_entity_meta.id
                 } else {
@@ -88,17 +89,15 @@ impl ContentService for MySqlPool {
             .await?;
 
         // 更新已存在的草稿内容
-        if let Some(entity) = entity {
-            let result = UpdateContentEntity {
-                id: draft_id,
-                content_id,
-                is_draft: false,
-                entity,
-            }.update(&mut conn).await?;
+        let result = UpdateContentEntity {
+            id: draft_id,
+            content_id,
+            is_draft: false, // 同时将草稿标记取消
+            entity,
+        }.update(&mut conn).await?;
 
-            if !result {
-                Err(InspirerContentError::CannotCreateContentFromDraft)?;
-            }
+        if !result {
+            Err(InspirerContentError::CannotCreateContentFromDraft)?;
         }
 
         // 绑定内容至内容实体
@@ -147,6 +146,13 @@ impl ContentService for MySqlPool {
 
     async fn get(&self, content_id: u64) -> anyhow::Result<Option<ContentWithEntity>> {
         Get::<ContentWithEntity>::by(ContentId(content_id))
+            .run(self)
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn list(&self, query: PaginateWrapper<AdvanceContentQuery>) -> anyhow::Result<PaginationWrapper<Vec<ContentWithEntitySummary>>> {
+        Get::<ContentWithEntitySummary>::by(query)
             .run(self)
             .await
             .map_err(Into::into)

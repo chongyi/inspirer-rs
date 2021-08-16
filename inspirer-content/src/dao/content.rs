@@ -96,14 +96,25 @@ impl<'s> UpdateDAO<MySql> for UpdateContentEntity<'s> {
     async fn update<'a, E>(&self, executor: E) -> Self::Result
         where E: Executor<'a, Database=MySql>
     {
-        sqlx::query(include_str!("_sql_files/content/update_entity.sql"))
-            .bind(self.content_id)
-            .bind(self.is_draft)
-            .bind(self.entity.title)
-            .bind(self.entity.keywords)
-            .bind(self.entity.description)
-            .bind(self.entity.content)
-            .bind(self.id)
+        let mut arguments = MySqlArguments::default();
+
+        arguments.add(self.content_id);
+        arguments.add(self.is_draft);
+
+        let sql = match &self.entity {
+            Some(entity) => {
+                arguments.add(entity.title);
+                arguments.add(entity.keywords);
+                arguments.add(entity.description);
+                arguments.add(entity.content);
+                include_str!("_sql_files/content/update_entity.sql")
+            },
+            None => include_str!("_sql_files/content/update_entity_meta.sql")
+        };
+
+        arguments.add(self.id);
+
+        sqlx::query_with(sql, arguments)
             .execute(executor)
             .await
             .map(|result| result.rows_affected() > 0)
@@ -204,7 +215,6 @@ impl ReadDAO<MySql, ContentWithEntitySummary> for PaginateWrapper<AdvanceContent
     async fn read<'a, E>(&self, executor: E) -> Self::Result
         where E: Executor<'a, Database=MySql>
     {
-
         let mut conditions = vec![];
         // create query parameters
         let mut arguments = MySqlArguments::default();
@@ -253,10 +263,9 @@ impl ReadDAO<MySql, ContentWithEntitySummary> for PaginateWrapper<AdvanceContent
             self.sort.full_statement(),
         );
 
-        let result: Vec<RawPaginationWrapper<ContentWithEntitySummary>> = sqlx::query_as_with(sql.as_str(), arguments)
+        sqlx::query_as_with(sql.as_str(), arguments)
             .fetch_all(executor)
-            .await?;
-
-        Ok(self.paginate.wrapped_pagination(result))
+            .await
+            .map(|result| self.paginate.wrapped_pagination(result))
     }
 }

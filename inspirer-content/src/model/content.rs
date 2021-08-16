@@ -157,3 +157,9 @@ impl Default for AdvanceContentQuery {
         }
     }
 }
+
+impl Into<AdvanceContentQuery> for SimpleContentQuery {
+    fn into(self) -> AdvanceContentQuery {
+        AdvanceContentQuery::default()
+    }
+}

@@ -24,7 +24,9 @@ thiserror = "1.0"
 rustyline = "8"
 structopt = "0.3"
 tokio = { version = "~1.8", features = ["rt", "macros", "rt-multi-thread"] }
-axum = { version = "0.1" }
+axum = { version = "0.1", features = ["multipart"] }
+log = "0.4"
+multer = { version = "2" }
 
 [features]
 default = ["runtime-actix-rustls"]

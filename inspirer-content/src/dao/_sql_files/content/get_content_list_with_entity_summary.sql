@@ -8,7 +8,8 @@ select contents.id,
        published_at,
        ce.title,
        ce.keywords,
-       ce.description
+       ce.description,
+       count(*) over () total
 from contents
          left join content_entities ce on contents.content_entity_id = ce.id
 

@@ -123,13 +123,18 @@ pub struct ContentId(pub u64);
 #[derive(Deserialize, Serialize, Debug, AsRefStr)]
 #[serde(rename_all = "snake_case")]
 pub enum ContentSortField {
+    #[strum(serialize = "contents.id")]
     Id,
+    #[strum(serialize = "contents.created_at")]
     CreatedAt,
+    #[strum(serialize = "contents.updated_at")]
     UpdatedAt,
+    #[strum(serialize = "contents.published_at")]
     PublishedAt,
 }
 
 /// 基本内容查询逻辑
+#[derive(Default)]
 pub struct SimpleContentQuery;
 
 /// 高级内容查询逻辑

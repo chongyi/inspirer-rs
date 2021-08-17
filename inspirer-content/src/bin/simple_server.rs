@@ -41,13 +41,16 @@ async fn main() -> anyhow::Result<()> {
         opt.port,
         opt.username.as_str(),
         opt.password.as_str(),
-        opt.database.as_str()
+        opt.database.as_str(),
     ).await?;
 
     let app = route(
         "/content",
-        post(service_server::create),
-    ).layer(AddExtensionLayer::new(pool));
+        post(service_server::create)
+            .get(service_server::list_simple),
+    )
+        .route("/content/:id", get(service_server::find))
+        .layer(AddExtensionLayer::new(pool));
 
     axum::Server::bind(&SocketAddr::from_str(opt.listen.as_str()).unwrap())
         .serve(app.into_make_service())

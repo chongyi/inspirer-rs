@@ -31,12 +31,29 @@ impl<Q> Deref for PaginateWrapper<Q> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(default)]
 pub struct Paginate {
     pub page: u64,
     pub per_page: u64,
 }
 
+impl Default for Paginate {
+    fn default() -> Self {
+        Paginate {
+            page: 1,
+            per_page: 20
+        }
+    }
+}
+
 impl Paginate {
+    pub fn wrap<Q>(self, query: Q) -> PaginateWrapper<Q> {
+        PaginateWrapper {
+            paginate: self,
+            query
+        }
+    }
+
     pub fn wrapped_pagination<T>(&self, raw_paginations: Vec<RawPaginationWrapper<T>>) -> PaginationWrapper<Vec<T>>
         where T: Serialize
     {

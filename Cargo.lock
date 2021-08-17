@@ -1699,6 +1699,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "inspirer-helper"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.4",
+ "uuid",
+]
+
+[[package]]
 name = "inspirer-json-web-token"
 version = "0.1.0"
 source = "git+https://gitee.com/chongyi/inspirer-actix-ext-support.git#b98e3ec44ec6b47fd27b4c6f952aae1682f77377"
@@ -3984,6 +3992,16 @@ name = "utf8parse"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "936e4b492acfd135421d8dca4b1aa80a7bfc26e702ef3af710e0752684df5372"
+
+[[package]]
+name = "uuid"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom 0.2.3",
+ "serde 1.0.126",
+]
 
 [[package]]
 name = "validator"

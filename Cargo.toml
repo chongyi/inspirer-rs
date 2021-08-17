@@ -6,4 +6,5 @@ members = [
     "inspirer-user-center",
     "support/query-ext",
     "support/inspirer-brick",
+    "support/inspirer-helper",
 ]

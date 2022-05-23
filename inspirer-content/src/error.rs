@@ -1,7 +1,6 @@
-use thiserror::Error;
+pub type InspirerContentResult<T, E = Error> = Result<T, E>;
 
-#[derive(Error, Debug)]
-pub enum InspirerContentError {
-    #[error("Cannot create content from draft, save to entity failed.")]
-    CannotCreateContentFromDraft
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+
 }

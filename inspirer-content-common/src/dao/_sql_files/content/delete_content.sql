@@ -1,1 +1,0 @@
-update contents set is_deleted = 1, deleted_at = current_timestamp() where id = ?

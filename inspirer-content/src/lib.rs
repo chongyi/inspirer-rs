@@ -3,6 +3,8 @@ pub mod manager;
 pub mod error;
 mod dao;
 pub mod model;
+pub mod service;
+pub mod enumerate;
 
 #[cfg(test)]
 mod tests {

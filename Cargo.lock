@@ -500,6 +500,7 @@ dependencies = [
  "chrono",
  "sea-orm",
  "serde",
+ "serde_json",
  "thiserror",
  "tracing",
  "uuid",

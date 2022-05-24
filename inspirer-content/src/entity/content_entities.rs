@@ -6,17 +6,20 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "content_entities")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Vec<u8>,
+    pub id: Uuid,
     pub entity: Json,
     pub updated_at: DateTimeUtc,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {}
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(belongs_to = "super::contents::Entity", from = "Column::Id", to = "super::contents::Column::Id")]
+    Content,
+}
 
-impl RelationTrait for Relation {
-    fn def(&self) -> RelationDef {
-        panic!("No RelationDef")
+impl Related<super::contents::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Content.def()
     }
 }
 

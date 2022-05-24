@@ -2,12 +2,16 @@
 
 use sea_orm::entity::prelude::*;
 
+use crate::enumerate::content::ContentType;
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "contents")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Vec<u8>,
-    pub content_type: u32,
+    pub id: Uuid,
+    #[sea_orm(unique)]
+    pub content_name: Option<String>,
+    pub content_type: ContentType,
     pub title: String,
     pub keywords: String,
     pub description: String,
@@ -18,12 +22,15 @@ pub struct Model {
     pub published_at: Option<DateTimeUtc>,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {}
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_one = "super::content_entities::Entity")]
+    Entity,
+}
 
-impl RelationTrait for Relation {
-    fn def(&self) -> RelationDef {
-        panic!("No RelationDef")
+impl Related<super::content_entities::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Entity.def()
     }
 }
 

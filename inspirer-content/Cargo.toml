@@ -8,6 +8,7 @@ async-trait = "0.1.53"
 chrono = { version = "0.4.19", features = ["serde"] }
 sea-orm = { version = "0.8.0", features = ["sqlx-mysql", "runtime-tokio-rustls", "macros", "sqlx-dep"] }
 serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
 thiserror = "1.0.31"
 tracing = "0.1.34"
 uuid = { version = "0.8", features = ["v1", "v4", "serde"] }

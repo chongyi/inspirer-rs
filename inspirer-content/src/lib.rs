@@ -5,6 +5,7 @@ mod dao;
 pub mod model;
 pub mod service;
 pub mod enumerate;
+pub mod util;
 
 #[cfg(test)]
 mod tests {

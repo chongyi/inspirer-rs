@@ -1,5 +1,6 @@
-use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, QueryOrder, PaginatorTrait};
-use serde::Deserialize;
+use sea_orm::{
+    ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -8,22 +9,20 @@ use crate::{
     enumerate::content::ContentType,
     error::InspirerContentResult,
     model::{
-        content::NewContent,
+        content::{GetListCondition, NewContent},
         paginate::{Paginated, Pagination},
     },
 };
 
-#[derive(Debug, Deserialize, Clone, PartialEq, Default)]
-#[serde(default)]
-pub struct GetListCondition {
-    pub with_hidden: bool,
-    pub with_unpublish: bool,
-}
-
 #[async_trait::async_trait]
 pub trait ContentDao {
-    async fn create_content(&self, new_content: &NewContent) -> InspirerContentResult<Uuid>;
-    async fn create_content_entity(&self, new_content: &NewContent) -> InspirerContentResult<Uuid>;
+    async fn create_content(&self, id: Uuid, new_content: &NewContent)
+        -> InspirerContentResult<()>;
+    async fn create_content_entity(
+        &self,
+        id: Uuid,
+        new_content: &NewContent,
+    ) -> InspirerContentResult<()>;
     async fn get_list(
         &self,
         condition: GetListCondition,
@@ -41,9 +40,13 @@ pub trait ContentDao {
 
 #[async_trait::async_trait]
 impl<T: ConnectionTrait> ContentDao for T {
-    async fn create_content(&self, new_content: &NewContent) -> InspirerContentResult<Uuid> {
+    async fn create_content(
+        &self,
+        id: Uuid,
+        new_content: &NewContent,
+    ) -> InspirerContentResult<()> {
         let model = contents::ActiveModel {
-            id: Set(new_content.meta.id),
+            id: Set(id),
             title: Set(new_content.meta.title.clone()),
             keywords: Set(new_content.meta.keywords.clone()),
             description: Set(new_content.meta.description.clone()),
@@ -54,12 +57,16 @@ impl<T: ConnectionTrait> ContentDao for T {
 
         contents::Entity::insert(model).exec(self).await?;
 
-        Ok(new_content.meta.id)
+        Ok(())
     }
 
-    async fn create_content_entity(&self, new_content: &NewContent) -> InspirerContentResult<Uuid> {
+    async fn create_content_entity(
+        &self,
+        id: Uuid,
+        new_content: &NewContent,
+    ) -> InspirerContentResult<()> {
         let model = content_entities::ActiveModel {
-            id: Set(new_content.meta.id),
+            id: Set(id),
             entity: Set(serde_json::to_value(&new_content.entity)
                 .map_err(crate::error::Error::FormatError)?),
             ..Default::default()
@@ -67,10 +74,14 @@ impl<T: ConnectionTrait> ContentDao for T {
 
         content_entities::Entity::insert(model).exec(self).await?;
 
-        Ok(new_content.meta.id)
+        Ok(())
     }
 
-    async fn get_list(&self, condition: GetListCondition, pagination: Pagination) -> InspirerContentResult<Paginated<contents::Model>> {
+    async fn get_list(
+        &self,
+        condition: GetListCondition,
+        pagination: Pagination,
+    ) -> InspirerContentResult<Paginated<contents::Model>> {
         let mut selector = contents::Entity::find();
 
         if !condition.with_hidden {
@@ -81,17 +92,19 @@ impl<T: ConnectionTrait> ContentDao for T {
             selector = selector.filter(contents::Column::IsPublish.eq(true));
         }
 
-        let paginator = selector.order_by_desc(contents::Column::CreatedAt)
+        let paginator = selector
+            .order_by_desc(contents::Column::PublishedAt)
+            .order_by_desc(contents::Column::CreatedAt)
             .paginate(self, pagination.page_size);
 
-        let data = paginator.fetch_page(pagination.page).await?;
+        let data = paginator.fetch_page(pagination.page - 1).await?;
 
         Ok(Paginated {
             data,
             page: pagination.page,
             page_size: pagination.page_size,
             total: paginator.num_items().await?,
-            last_page: paginator.num_pages().await?
+            last_page: paginator.num_pages().await?,
         })
     }
 

@@ -1,37 +1,46 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
+pub use crate::entity::contents::Model as ContentModel;
+pub use crate::entity::content_entities::Model as ContentEntityModel;
 #[derive(Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct NewContent {
     #[serde(flatten)]
-    pub meta: NewContentMeta,
+    pub meta: ContentMeta,
     pub entity: ContentEntity,
 }
 
 #[derive(Debug, Deserialize, Default, Serialize)]
 #[serde(default)]
-pub struct NewContentMeta {
-    pub id: Uuid,
+pub struct ContentMeta {
     pub title: String,
     pub keywords: String,
     pub description: String,
     pub name: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(tag = "type", content = "data")]
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(tag = "type", content = "data", rename_all = "kebab-case")]
 pub enum ContentEntity {
-    Post(PostContent)
+    Post(String),
+    Page(String),
 }
 
 impl Default for ContentEntity {
     fn default() -> Self {
-        ContentEntity::Post(PostContent::default())
+        ContentEntity::Post(String::new())
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
-pub struct PostContent {
-    pub content: String,
+#[derive(Debug, Deserialize, Clone, PartialEq, Default)]
+#[serde(default)]
+pub struct GetListCondition {
+    pub with_hidden: bool,
+    pub with_unpublish: bool,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct Content {
+    #[serde(flatten)]
+    pub meta: ContentModel,
+    pub entity: ContentEntity
 }

@@ -15,7 +15,7 @@ fn main() {
             .unwrap_or(false);
 
         if daemonize {
-            let daemon = Daemon::new()
+            let daemon = daemonize_me::Daemon::new()
                 .start();
 
             match daemon {

@@ -1,5 +1,3 @@
-use std::process::ExitCode;
-
 mod controller;
 mod error;
 mod request;
@@ -24,7 +22,7 @@ fn main() {
                 Ok(_) => (),
                 Err(e) => {
                     eprintln!("Error: {}", e);
-                    std::process::exit(ExitCode::FAILURE);
+                    std::process::exit(1);
                 }
             }
         }
@@ -33,5 +31,5 @@ fn main() {
 
     server::run().unwrap();
 
-    std::process::exit(ExitCode::SUCCESS);
+    std::process::exit(0);
 }

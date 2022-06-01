@@ -387,6 +387,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "daemonize-me"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b79373c44d0d32d795b1a29b5ecba172639d3db9826cc3db387833079bcf38b0"
+dependencies = [
+ "libc",
+ "nix",
+ "thiserror",
+]
+
+[[package]]
 name = "darling"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -803,6 +814,7 @@ dependencies = [
  "axum-macros",
  "chrono",
  "clap",
+ "daemonize-me",
  "dotenv",
  "inspirer-content",
  "serde",

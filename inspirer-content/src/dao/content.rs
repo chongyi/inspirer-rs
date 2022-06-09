@@ -92,6 +92,10 @@ impl<T: ConnectionTrait> ContentDao for T {
             selector = selector.filter(contents::Column::IsPublish.eq(true));
         }
 
+        if condition.without_page {
+            selector = selector.filter(contents::Column::ContentType.ne(ContentType::Page));
+        }
+
         let paginator = selector
             .order_by_desc(contents::Column::PublishedAt)
             .order_by_desc(contents::Column::CreatedAt)

@@ -27,6 +27,7 @@ pub async fn get_content_list(
             GetListCondition {
                 with_hidden: false,
                 with_unpublish: false,
+                without_page: true,
             },
             pagination,
         )

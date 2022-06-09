@@ -2,5 +2,6 @@
 
 pub mod prelude;
 
-pub mod content_entities;
 pub mod contents;
+pub mod content_entities;
+pub mod users;

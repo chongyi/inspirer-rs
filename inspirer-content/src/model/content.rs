@@ -36,6 +36,7 @@ impl Default for ContentEntity {
 pub struct GetListCondition {
     pub with_hidden: bool,
     pub with_unpublish: bool,
+    pub without_page: bool,
 }
 
 #[derive(Debug, Serialize, Clone)]

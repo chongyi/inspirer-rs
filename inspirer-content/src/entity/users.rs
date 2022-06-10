@@ -7,27 +7,31 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "users")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Vec<u8>,
+    pub id: Uuid,
     #[sea_orm(unique)]
     pub username: String,
     pub nickname: String,
     pub avatar: String,
-    pub user_profile: Option<Json>,
+    pub user_profile: Json,
     #[sea_orm(column_type = "Custom(\"VARBINARY(500)\".to_owned())")]
-    pub public_key: String,
+    pub public_key: Vec<u8>,
     #[sea_orm(unique)]
     pub public_key_fingerprint: Vec<u8>,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {}
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_many = "super::contents::Entity")]
+    Content,
+}
 
-impl RelationTrait for Relation {
-    fn def(&self) -> RelationDef {
-        panic!("No RelationDef")
+impl Related<super::contents::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Content.def()
     }
 }
+
 
 impl ActiveModelBehavior for ActiveModel {}

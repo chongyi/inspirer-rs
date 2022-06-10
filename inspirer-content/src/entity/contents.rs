@@ -10,6 +10,8 @@ use crate::enumerate::content::ContentType;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    pub owner_id: Uuid,
+    pub authors: Json,
     #[sea_orm(unique)]
     pub content_name: Option<String>,
     pub content_type: ContentType,
@@ -27,11 +29,19 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_one = "super::content_entities::Entity")]
     Entity,
+    #[sea_orm(belongs_to = "super::users::Entity", from = "Column::OwnerId", to = "super::users::Column::Id")]
+    Owner,
 }
 
 impl Related<super::content_entities::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Entity.def()
+    }
+}
+
+impl Related<super::users::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Owner.def()
     }
 }
 

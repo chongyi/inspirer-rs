@@ -18,6 +18,7 @@ pub trait UserDao {
         &self,
         fingerprint: Vec<u8>,
     ) -> InspirerContentResult<Option<users::Model>>;
+    async fn get_user_by_username(&self, username: String) -> InspirerContentResult<Option<users::Model>>;
 }
 
 #[async_trait::async_trait]
@@ -57,6 +58,14 @@ impl<T: ConnectionTrait> UserDao for T {
     ) -> InspirerContentResult<Option<users::Model>> {
         users::Entity::find()
             .filter(users::Column::PublicKeyFingerprint.eq(fingerprint))
+            .one(self)
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn get_user_by_username(&self, username: String) -> InspirerContentResult<Option<users::Model>> {
+        users::Entity::find()
+            .filter(users::Column::Nickname.eq(username))
             .one(self)
             .await
             .map_err(Into::into)

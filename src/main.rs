@@ -1,3 +1,6 @@
+use clap::Parser;
+
+mod cli;
 mod controller;
 mod error;
 mod request;
@@ -6,30 +9,11 @@ mod route;
 mod server;
 
 fn main() {
+    let cli = cli::Cli::parse();
+
     dotenv::dotenv().expect("Initialize dotenv error.");
 
-    #[cfg(target_family = "unix")]
-    {
-        let daemonize = std::env::var("DAEMONIZE")
-            .map(|s| s == "true" || s == "1")
-            .unwrap_or(false);
-
-        if daemonize {
-            let daemon = daemonize_me::Daemon::new()
-                .start();
-
-            match daemon {
-                Ok(_) => (),
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        }
-    
-    }
-
-    server::run().unwrap();
+    cli.run();
 
     std::process::exit(0);
 }

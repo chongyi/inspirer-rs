@@ -6,19 +6,27 @@ use clap::Parser;
 use inspirer_content::manager::{Manager, ManagerConfigBuilder};
 use tracing_subscriber::EnvFilter;
 
-use crate::route::create_routes;
+use crate::{cli::Cli, route::create_routes};
 
-#[derive(Parser, Debug)]
-#[clap(version, about)]
-pub struct Args {
-    #[clap(short, long)]
-    listen: Option<SocketAddr>,
-    #[clap(short = 'D', long)]
-    daemon: bool,
-}
+pub fn run(args: Cli) -> Result<()> {
+    #[cfg(target_family = "unix")]
+    {
+        let daemonize = std::env::var("DAEMONIZE")
+            .map(|s| s == "true" || s == "1")
+            .unwrap_or(false);
 
-pub fn run() -> Result<()> {
-    let args = Args::parse();
+        if daemonize {
+            let daemon = daemonize_me::Daemon::new().start();
+
+            match daemon {
+                Ok(_) => (),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
 
     // 日志初始化
     tracing_subscriber::fmt()
@@ -32,7 +40,7 @@ pub fn run() -> Result<()> {
     rt.block_on(async move { start_server(args).await })
 }
 
-async fn start_server(args: Args) -> Result<()> {
+async fn start_server(args: Cli) -> Result<()> {
     let manager = Manager::create_from_config(
         ManagerConfigBuilder::default()
             .database_url(std::env::var("DATABASE_URL").expect("未找到数据库配置"))

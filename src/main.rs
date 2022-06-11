@@ -7,6 +7,9 @@ mod request;
 mod response;
 mod route;
 mod server;
+mod middleware;
+mod session;
+mod manager;
 
 fn main() {
     let cli = cli::Cli::parse();

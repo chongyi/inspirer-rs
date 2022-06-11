@@ -6,7 +6,7 @@ use clap::Parser;
 use inspirer_content::manager::{Manager, ManagerConfigBuilder};
 use tracing_subscriber::EnvFilter;
 
-use crate::{cli::Cli, route::create_routes};
+use crate::{cli::Cli, route::create_routes, manager::create_manager};
 
 pub fn run(args: Cli) -> Result<()> {
     #[cfg(target_family = "unix")]
@@ -41,12 +41,7 @@ pub fn run(args: Cli) -> Result<()> {
 }
 
 async fn start_server(args: Cli) -> Result<()> {
-    let manager = Manager::create_from_config(
-        ManagerConfigBuilder::default()
-            .database_url(std::env::var("DATABASE_URL").expect("未找到数据库配置"))
-            .build()?,
-    )
-    .await?;
+    let manager = create_manager().await?;
 
     axum::Server::bind(&args.listen.unwrap_or("0.0.0.0:8088".parse()?))
         .serve(

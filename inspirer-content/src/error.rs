@@ -16,6 +16,10 @@ pub enum Error {
     GenerateIdError(#[from] uuid::Error),
     #[error("ID格式非法")]
     ConvertIdError,
+    #[error(transparent)]
+    RingUnspecifiedError(#[from] ring::error::Unspecified),
+    #[error("密钥格式化错误")]
+    RingKeyPairFormatError,
 }
 
 impl From<DbErr> for Error {

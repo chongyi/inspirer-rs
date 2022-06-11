@@ -1,0 +1,23 @@
+[package]
+name = "inspirer-content"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1.53"
+base64ct = { version = "1.5.0", features = ["std"] }
+bs62 = "0.1.4"
+chrono = { version = "0.4.19", features = ["serde"] }
+der = { version = "0.6.0", features = ["std", "pem"] }
+derive_builder = "0.11.2"
+lazy_static = "1.4.0"
+mac_address = "1.1.3"
+regex = "1.5.6"
+ring = { version = "0.16.20", features = ["std"] }
+sea-orm = { version = "0.8.0", features = ["sqlx-mysql", "runtime-tokio-rustls", "macros", "sqlx-dep"] }
+serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
+sha2 = "0.10.2"
+thiserror = "1.0.31"
+tracing = "0.1.34"
+uuid = { version = "0.8", features = ["v1", "v4", "serde"] }

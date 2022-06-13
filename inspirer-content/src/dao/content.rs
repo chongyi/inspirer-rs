@@ -16,8 +16,12 @@ use crate::{
 
 #[async_trait::async_trait]
 pub trait ContentDao {
-    async fn create_content(&self, id: Uuid, new_content: &NewContent)
-        -> InspirerContentResult<()>;
+    async fn create_content(
+        &self,
+        id: Uuid,
+        owner_id: Uuid,
+        new_content: &NewContent,
+    ) -> InspirerContentResult<()>;
     async fn create_content_entity(
         &self,
         id: Uuid,
@@ -43,10 +47,12 @@ impl<T: ConnectionTrait> ContentDao for T {
     async fn create_content(
         &self,
         id: Uuid,
+        owner_id: Uuid,
         new_content: &NewContent,
     ) -> InspirerContentResult<()> {
         let model = contents::ActiveModel {
             id: Set(id),
+            owner_id: Set(owner_id),
             title: Set(new_content.meta.title.clone()),
             keywords: Set(new_content.meta.keywords.clone()),
             description: Set(new_content.meta.description.clone()),

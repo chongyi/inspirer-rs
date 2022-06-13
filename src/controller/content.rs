@@ -15,7 +15,12 @@ use inspirer_content::{
 
 use crate::{
     error::InspirerResult,
-    response::content::{ContentBase, ContentWithEntity},
+    request::content::CreateContent,
+    response::{
+        content::{ContentBase, ContentWithEntity},
+        CreatedDataStringId,
+    },
+    session::SessionInfo,
 };
 
 pub async fn get_content_list(
@@ -54,4 +59,17 @@ pub async fn find_content(
         base: ContentBase::from(content_raw),
         entity,
     }))
+}
+
+pub async fn create_content(
+    Extension(manager): Extension<Manager>,
+    session: SessionInfo,
+    Json(payload): Json<CreateContent>,
+) -> InspirerResult<Json<CreatedDataStringId>> {
+    manager
+        .create_content(session.uuid(), payload)
+        .await
+        .map_err(Into::into)
+        .map(CreatedDataStringId::from_uuid)
+        .map(Json)
 }

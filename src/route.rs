@@ -14,4 +14,8 @@ pub fn create_routes() -> Router {
             "/profile",
             get(controller::auth::get_profile).layer(middleware::from_fn(auth)),
         )
+        .route(
+            "/content",
+            post(controller::content::create_content).layer(middleware::from_fn(auth)),
+        )
 }

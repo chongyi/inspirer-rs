@@ -1,10 +1,8 @@
 use bs62::num_traits::ToPrimitive;
 use chrono::Utc;
 use mac_address::get_mac_address;
-use uuid::{
-    v1::{Context, Timestamp},
-    Uuid,
-};
+use uuid::v1::{Context, Timestamp};
+pub use uuid::Uuid;
 
 use crate::error::{Error, InspirerContentResult};
 

@@ -14,13 +14,15 @@ pub enum UserManageCommands {
         username: String,
         #[clap(short, long)]
         nickname: Option<String>,
+        #[clap(short, long)]
+        password: Option<String>,
     },
 }
 
 impl UserManage {
     pub async fn run(self, manager: Manager) {
         match self.commands {
-            UserManageCommands::Create { username, nickname } => {
+            UserManageCommands::Create { username, nickname, password } => {
                 println!("=> Create user");
                 println!("-> Username = {username}");
                 
@@ -28,6 +30,7 @@ impl UserManage {
                     .create_user_simple(model::user::NewUser {
                         username,
                         nickname: nickname.unwrap_or_default(),
+                        password: password.unwrap_or_default(),
                         avatar: Default::default(),
                     })
                     .await

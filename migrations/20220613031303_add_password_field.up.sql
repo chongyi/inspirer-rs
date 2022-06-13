@@ -1,0 +1,1 @@
+alter table users add column password varchar(200) not null default '' after username;

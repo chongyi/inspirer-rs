@@ -20,6 +20,10 @@ pub enum Error {
     RingUnspecifiedError(#[from] ring::error::Unspecified),
     #[error("密钥格式化错误")]
     RingKeyPairFormatError,
+    #[error(transparent)]
+    PasswordHashError(#[from] argon2::password_hash::Error),
+    #[error("用户不存在或密码错误")]
+    UserNotFoundOrPasswordError,
 }
 
 impl From<DbErr> for Error {

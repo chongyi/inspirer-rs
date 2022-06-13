@@ -3,6 +3,7 @@ use std::fmt::Display;
 use serde::Serialize;
 
 pub mod content;
+pub mod auth;
 
 #[derive(Debug, Serialize)]
 pub struct ErrorMessage {

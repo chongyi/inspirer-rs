@@ -10,6 +10,7 @@ pub struct Manager {
 
 #[derive(Debug, Builder, Default)]
 pub struct ManagerConfig {
+    /// 数据库地址
     database_url: String,
 }
 
@@ -20,5 +21,5 @@ impl Manager {
 
         tracing::info!("Created inspirer content manager module");
         Ok(Manager { database })
-    }
+    }    
 }

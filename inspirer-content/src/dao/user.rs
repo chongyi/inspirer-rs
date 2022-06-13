@@ -33,6 +33,7 @@ impl<T: ConnectionTrait> UserDao for T {
         let model = users::ActiveModel {
             id: Set(id),
             username: Set(new_user.username.clone()),
+            password: Set(new_user.password.clone()),
             nickname: Set(new_user.nickname.clone()),
             avatar: Set(new_user.avatar.clone()),
             public_key: Set(public_key),

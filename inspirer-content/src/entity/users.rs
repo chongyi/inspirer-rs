@@ -10,6 +10,7 @@ pub struct Model {
     pub id: Uuid,
     #[sea_orm(unique)]
     pub username: String,
+    pub password: String,
     pub nickname: String,
     pub avatar: String,
     pub user_profile: Json,

@@ -23,7 +23,7 @@ use crate::{
     session::SessionInfo,
 };
 
-pub async fn get_content_list(
+pub async fn get_content_list_simple(
     Query(pagination): Query<Pagination>,
     Extension(manager): Extension<Manager>,
 ) -> InspirerResult<Json<Paginated<ContentBase>>> {
@@ -71,5 +71,26 @@ pub async fn create_content(
         .await
         .map_err(Into::into)
         .map(CreatedDataStringId::from_uuid)
+        .map(Json)
+}
+
+/// 获取内容列表（需要授权登录）
+pub async fn get_content_list(
+    Extension(manager): Extension<Manager>,
+    // session: SessionInfo,
+    Query(pagination): Query<Pagination>,
+) -> InspirerResult<Json<Paginated<ContentBase>>> {
+    manager
+        .get_list(
+            GetListCondition {
+                with_hidden: false,
+                with_unpublish: false,
+                without_page: true,
+            },
+            pagination,
+        )
+        .await
+        .map(|res| res.map(|data| data.into_iter().map(ContentBase::from).collect()))
+        .map_err(Into::into)
         .map(Json)
 }

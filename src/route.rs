@@ -7,15 +7,22 @@ use axum::{
 
 pub fn create_routes() -> Router {
     Router::new()
-        .route("/contents", get(controller::content::get_content_list))
+        .route(
+            "/contents",
+            get(controller::content::get_content_list_simple),
+        )
         .route("/content/:id", get(controller::content::find_content))
         .route("/login", post(controller::auth::login))
-        .route(
-            "/profile",
-            get(controller::auth::get_profile).layer(middleware::from_fn(auth)),
-        )
+        .nest("/security", secure_routes())
+}
+
+pub fn secure_routes() -> Router {
+    Router::new()
+        .route("/profile", get(controller::auth::get_profile))
         .route(
             "/content",
-            post(controller::content::create_content).layer(middleware::from_fn(auth)),
+            get(controller::content::get_content_list).post(controller::content::create_content),
         )
+        .route("/content/:id", get(controller::content::find_content))
+        .route_layer(middleware::from_fn(auth))
 }

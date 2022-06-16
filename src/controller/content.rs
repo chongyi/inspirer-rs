@@ -17,7 +17,7 @@ use crate::{
     error::InspirerResult,
     request::content::CreateContent,
     response::{
-        content::{ContentBase, ContentWithEntity},
+        content::{ContentBase, ContentFull, ContentFullWithEntity, ContentWithEntity},
         CreatedDataStringId,
     },
     session::SessionInfo,
@@ -79,18 +79,34 @@ pub async fn get_content_list(
     Extension(manager): Extension<Manager>,
     // session: SessionInfo,
     Query(pagination): Query<Pagination>,
-) -> InspirerResult<Json<Paginated<ContentBase>>> {
+) -> InspirerResult<Json<Paginated<ContentFull>>> {
     manager
         .get_list(
             GetListCondition {
-                with_hidden: false,
-                with_unpublish: false,
-                without_page: true,
+                with_hidden: true,
+                with_unpublish: true,
+                without_page: false,
             },
             pagination,
         )
         .await
-        .map(|res| res.map(|data| data.into_iter().map(ContentBase::from).collect()))
+        .map(|res| res.map(|data| data.into_iter().map(ContentFull::from).collect()))
         .map_err(Into::into)
         .map(Json)
+}
+
+pub async fn get_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    session: SessionInfo,
+) -> InspirerResult<Json<ContentFullWithEntity>> {
+    manager
+        .find_content_by_id(base62_to_uuid(&id)?)
+        .await
+        .map(|content| ContentFullWithEntity {
+            content: ContentFull::from(content.meta),
+            entity: content.entity,
+        })
+        .map(Json)
+        .map_err(Into::into)
 }

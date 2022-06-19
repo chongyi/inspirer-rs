@@ -34,3 +34,34 @@ pub struct ContentWithEntity {
     pub base: ContentBase,
     pub entity: ContentEntity,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ContentFull {
+    #[serde(flatten)]
+    pub base:ContentBase,
+    pub content_type: u32,
+    pub is_publish: bool,
+    pub is_display: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl From<ContentModel> for ContentFull {
+    fn from(content_raw: ContentModel) -> Self {
+        ContentFull {
+            content_type: content_raw.content_type as u32,
+            is_display: content_raw.is_display,
+            is_publish: content_raw.is_publish,
+            created_at: content_raw.created_at,
+            updated_at: content_raw.updated_at,
+            base: content_raw.into(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ContentFullWithEntity {
+    #[serde(flatten)]
+    pub content: ContentFull,
+    pub entity: ContentEntity,
+}

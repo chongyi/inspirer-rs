@@ -1,5 +1,6 @@
 use sea_orm::{
-    ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait, QueryFilter,
+    QueryOrder, Set,
 };
 use uuid::Uuid;
 
@@ -7,17 +8,21 @@ use crate::{
     entity::content_entities,
     entity::contents,
     enumerate::content::ContentType,
-    error::InspirerContentResult,
+    error::{Error, InspirerContentResult},
     model::{
-        content::{GetListCondition, NewContent},
+        content::{GetListCondition, NewContent, UpdateContent},
         paginate::{Paginated, Pagination},
     },
 };
 
 #[async_trait::async_trait]
 pub trait ContentDao {
-    async fn create_content(&self, id: Uuid, new_content: &NewContent)
-        -> InspirerContentResult<()>;
+    async fn create_content(
+        &self,
+        id: Uuid,
+        owner_id: Uuid,
+        new_content: &NewContent,
+    ) -> InspirerContentResult<()>;
     async fn create_content_entity(
         &self,
         id: Uuid,
@@ -36,6 +41,18 @@ pub trait ContentDao {
         &self,
         name: String,
     ) -> InspirerContentResult<Option<(contents::Model, Option<content_entities::Model>)>>;
+    async fn update_content(
+        &self,
+        id: Uuid,
+        update_content: &UpdateContent,
+    ) -> InspirerContentResult<()>;
+    async fn update_content_entity(
+        &self,
+        id: Uuid,
+        update_content: &UpdateContent,
+    ) -> InspirerContentResult<()>;
+    async fn delete_content(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn delete_content_entity(&self, id: Uuid) -> InspirerContentResult<()>;
 }
 
 #[async_trait::async_trait]
@@ -43,10 +60,12 @@ impl<T: ConnectionTrait> ContentDao for T {
     async fn create_content(
         &self,
         id: Uuid,
+        owner_id: Uuid,
         new_content: &NewContent,
     ) -> InspirerContentResult<()> {
         let model = contents::ActiveModel {
             id: Set(id),
+            owner_id: Set(owner_id),
             title: Set(new_content.meta.title.clone()),
             keywords: Set(new_content.meta.keywords.clone()),
             description: Set(new_content.meta.description.clone()),
@@ -133,5 +152,90 @@ impl<T: ConnectionTrait> ContentDao for T {
             .one(self)
             .await
             .map_err(Into::into)
+    }
+
+    async fn update_content(
+        &self,
+        id: Uuid,
+        update_content: &UpdateContent,
+    ) -> InspirerContentResult<()> {
+        if update_content.meta.title.is_none()
+            && update_content.meta.description.is_none()
+            && update_content.meta.keywords.is_none()
+            && update_content.meta.name.is_none()
+            && update_content.entity.is_none()
+        {
+            return Ok(());
+        }
+
+        let model = contents::Entity::find_by_id(id)
+            .one(self)
+            .await?
+            .ok_or(Error::ContentNotFound)?;
+
+        let mut active_model: contents::ActiveModel = model.into();
+
+        if let Some(title) = &update_content.meta.title {
+            active_model.title = Set(title.clone());
+        }
+
+        if let Some(description) = &update_content.meta.description {
+            active_model.description = Set(description.clone());
+        }
+
+        if let Some(keywords) = &update_content.meta.keywords {
+            active_model.keywords = Set(keywords.clone());
+        }
+
+        if let Some(name) = &update_content.meta.name {
+            active_model.content_name = Set(Some(name.clone()));
+        }
+
+        if let Some(entity) = &update_content.entity {
+            active_model.content_type = Set(entity.into());
+        }
+
+        active_model.update(self).await?;
+
+        Ok(())
+    }
+
+    async fn update_content_entity(
+        &self,
+        id: Uuid,
+        update_content: &UpdateContent,
+    ) -> InspirerContentResult<()> {
+        if update_content.entity.is_none() {
+            return Ok(());
+        }
+
+        let model = content_entities::Entity::find_by_id(id)
+            .one(self)
+            .await?
+            .ok_or(Error::ContentNotFound)?;
+        let mut active_model: content_entities::ActiveModel = model.into();
+
+        if let Some(entity) = &update_content.entity {
+            active_model.entity =
+                Set(serde_json::to_value(entity).map_err(crate::error::Error::FormatError)?);
+        }
+
+        active_model.update(self).await?;
+
+        Ok(())
+    }
+
+    async fn delete_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        contents::Entity::delete_by_id(id).exec(self).await?;
+
+        Ok(())
+    }
+
+    async fn delete_content_entity(&self, id: Uuid) -> InspirerContentResult<()> {
+        content_entities::Entity::delete_by_id(id)
+            .exec(self)
+            .await?;
+
+        Ok(())
     }
 }

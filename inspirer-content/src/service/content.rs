@@ -8,8 +8,9 @@ use crate::{
     manager::Manager,
     model::{
         content::{Content, GetListCondition, NewContent},
-        paginate::{Pagination, Paginated},
-    }, util::uuid::generate_v1_uuid,
+        paginate::{Paginated, Pagination},
+    },
+    util::uuid::generate_v1_uuid,
 };
 
 #[async_trait::async_trait]
@@ -21,7 +22,11 @@ pub trait ContentService {
     ) -> InspirerContentResult<Paginated<contents::Model>>;
     async fn find_content_by_id(&self, id: Uuid) -> InspirerContentResult<Content>;
     async fn find_content_by_name(&self, name: String) -> InspirerContentResult<Content>;
-    async fn create_content(&self, new_content: NewContent) -> InspirerContentResult<Uuid>;
+    async fn create_content(
+        &self,
+        owner_id: Uuid,
+        new_content: NewContent,
+    ) -> InspirerContentResult<Uuid>;
 }
 
 #[async_trait::async_trait]
@@ -39,14 +44,22 @@ impl ContentService for Manager {
     async fn find_content_by_name(&self, name: String) -> InspirerContentResult<Content> {
         convert_content(self.database.find_content_by_name(name).await?)
     }
-    async fn create_content(&self, new_content: NewContent) -> InspirerContentResult<Uuid> {
+    async fn create_content(
+        &self,
+        owner_id: Uuid,
+        new_content: NewContent,
+    ) -> InspirerContentResult<Uuid> {
         let id = generate_v1_uuid()?;
 
-        self.database.transaction::<_, (), Error>(|trx| Box::pin(async move {
-            trx.create_content(id, &new_content).await?;
-            trx.create_content_entity(id, &new_content).await?;
-            Ok(())
-        })).await?;
+        self.database
+            .transaction::<_, (), Error>(|trx| {
+                Box::pin(async move {
+                    trx.create_content(id, owner_id, &new_content).await?;
+                    trx.create_content_entity(id, &new_content).await?;
+                    Ok(())
+                })
+            })
+            .await?;
 
         Ok(id)
     }

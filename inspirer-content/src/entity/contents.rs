@@ -20,8 +20,8 @@ pub struct Model {
     pub description: String,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
-    pub is_publish: i8,
-    pub is_display: i8,
+    pub is_publish: bool,
+    pub is_display: bool,
     pub published_at: Option<DateTimeUtc>,
 }
 

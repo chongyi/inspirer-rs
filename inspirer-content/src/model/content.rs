@@ -21,9 +21,13 @@ pub struct ContentMeta {
 #[derive(Debug, Deserialize, Default, Serialize)]
 #[serde(default)]
 pub struct UpdateContentMeta {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub keywords: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
@@ -32,6 +36,7 @@ pub struct UpdateContentMeta {
 pub struct UpdateContent {
     #[serde(flatten)]
     pub meta: UpdateContentMeta,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub entity: Option<ContentEntity>,
 }
 

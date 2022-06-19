@@ -18,6 +18,23 @@ pub struct ContentMeta {
     pub name: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Default, Serialize)]
+#[serde(default)]
+pub struct UpdateContentMeta {
+    pub title: Option<String>,
+    pub keywords: Option<String>,
+    pub description: Option<String>,
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default, Serialize)]
+#[serde(default)]
+pub struct UpdateContent {
+    #[serde(flatten)]
+    pub meta: UpdateContentMeta,
+    pub entity: Option<ContentEntity>,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(tag = "type", content = "data", rename_all = "kebab-case")]
 pub enum ContentEntity {

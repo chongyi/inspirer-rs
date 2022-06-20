@@ -1,0 +1,1 @@
+drop table if exists content_update_logs;

@@ -1,7 +1,7 @@
 use axum::extract::{FromRequest, RequestParts};
 use chrono::{Duration, Utc};
 use inspirer_content::util::uuid::Uuid;
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation, errors::ErrorKind as TokenErrorKind};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
@@ -79,7 +79,10 @@ impl Claims {
             ),
             &Validation::default(),
         )
-        .or(Err(InspirerError::ParseTokenError))?;
+        .map_err(|err| match err.into_kind() {
+            TokenErrorKind::ExpiredSignature => InspirerError::Unauthorized,
+            _ => InspirerError::ParseTokenError
+        })?;
 
         Ok(token.claims)
     }

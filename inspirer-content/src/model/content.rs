@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-pub use crate::entity::contents::Model as ContentModel;
 pub use crate::entity::content_entities::Model as ContentEntityModel;
+pub use crate::entity::contents::Model as ContentModel;
+use serde::{Deserialize, Serialize};
 #[derive(Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct NewContent {
@@ -65,5 +65,20 @@ pub struct GetListCondition {
 pub struct Content {
     #[serde(flatten)]
     pub meta: ContentModel,
-    pub entity: ContentEntity
+    pub entity: ContentEntity,
+}
+
+impl From<NewContent> for UpdateContent {
+    fn from(new_content: NewContent) -> Self {
+        let NewContent { meta, entity } = new_content;
+        UpdateContent {
+            meta: UpdateContentMeta {
+                title: Some(meta.title),
+                keywords: Some(meta.keywords),
+                description: Some(meta.description),
+                name: meta.name,
+            },
+            entity: Some(entity),
+        }
+    }
 }

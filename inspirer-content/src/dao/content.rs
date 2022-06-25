@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::{
     entity::content_entities,
-    entity::contents,
+    entity::{contents, content_update_logs},
     enumerate::content::ContentType,
     error::{Error, InspirerContentResult},
     model::{
@@ -235,6 +235,40 @@ impl<T: ConnectionTrait> ContentDao for T {
         content_entities::Entity::delete_by_id(id)
             .exec(self)
             .await?;
+
+        Ok(())
+    }
+}
+
+#[async_trait::async_trait]
+pub trait ContentUpdateLogDao {
+    async fn create_content_update_log(
+        &self,
+        id: Uuid,
+        user_id: Uuid,
+        content_id: Uuid,
+        update_content: UpdateContent,
+    ) -> InspirerContentResult<()>;
+}
+
+#[async_trait::async_trait]
+impl<T: ConnectionTrait> ContentUpdateLogDao for T {
+    async fn create_content_update_log(
+        &self,
+        id: Uuid,
+        user_id: Uuid,
+        content_id: Uuid,
+        update_content: UpdateContent,
+    ) -> InspirerContentResult<()> {
+        let model = content_update_logs::ActiveModel {
+            id: Set(id),
+            user_id: Set(user_id),
+            content_id: Set(content_id),
+            update_data: Set(serde_json::to_value(update_content).map_err(crate::error::Error::FormatError)?),
+            ..Default::default()
+        };
+
+        content_update_logs::Entity::insert(model).exec(self).await?;
 
         Ok(())
     }

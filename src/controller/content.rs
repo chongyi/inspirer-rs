@@ -15,7 +15,7 @@ use inspirer_content::{
 
 use crate::{
     error::InspirerResult,
-    request::content::CreateContent,
+    request::content::{CreateContent, UpdateContent},
     response::{
         content::{ContentBase, ContentFull, ContentFullWithEntity, ContentWithEntity},
         CreatedDataStringId,
@@ -109,4 +109,17 @@ pub async fn get_content(
         })
         .map(Json)
         .map_err(Into::into)
+}
+
+pub async fn update_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    Json(payload): Json<UpdateContent>,
+    session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager
+        .update_content(session.uuid(), base62_to_uuid(&id)?, payload)
+        .await?;
+
+    Ok(Json(()))
 }

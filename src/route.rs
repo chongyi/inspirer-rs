@@ -23,6 +23,9 @@ pub fn secure_routes() -> Router {
             "/content",
             get(controller::content::get_content_list).post(controller::content::create_content),
         )
-        .route("/content/:id", get(controller::content::get_content))
+        .route(
+            "/content/:id",
+            get(controller::content::get_content).put(controller::content::update_content),
+        )
         .route_layer(middleware::from_fn(auth))
 }

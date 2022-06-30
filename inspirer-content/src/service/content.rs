@@ -1,4 +1,5 @@
 use sea_orm::TransactionTrait;
+use strum::VariantNames;
 use uuid::Uuid;
 
 use crate::{
@@ -7,14 +8,15 @@ use crate::{
     error::{Error, InspirerContentResult},
     manager::Manager,
     model::{
-        content::{Content, GetListCondition, NewContent, UpdateContent},
+        content::{Content, GetListCondition, NewContent, UpdateContent, ContentConfig},
         paginate::{Paginated, Pagination},
     },
-    util::uuid::generate_v1_uuid,
+    util::uuid::generate_v1_uuid, enumerate::content::ContentType,
 };
 
 #[async_trait::async_trait]
 pub trait ContentService {
+    async fn get_content_service_config(&self) -> InspirerContentResult<ContentConfig>;
     async fn get_list(
         &self,
         condition: GetListCondition,
@@ -26,7 +28,7 @@ pub trait ContentService {
         &self,
         owner_id: Uuid,
         new_content: NewContent,
-    ) -> InspirerContentResult<Uuid>;
+    ) -> InspirerContentResult<Content>;
     async fn update_content(
         &self,
         user_id: Uuid,
@@ -54,7 +56,7 @@ impl ContentService for Manager {
         &self,
         owner_id: Uuid,
         new_content: NewContent,
-    ) -> InspirerContentResult<Uuid> {
+    ) -> InspirerContentResult<Content> {
         let id = generate_v1_uuid()?;
         let update_log_id = generate_v1_uuid()?;
 
@@ -70,7 +72,7 @@ impl ContentService for Manager {
             })
             .await?;
 
-        Ok(id)
+        self.find_content_by_id(id).await
     }
     async fn update_content(
         &self,
@@ -91,6 +93,12 @@ impl ContentService for Manager {
         }).await?;
 
         Ok(())
+    }
+
+    async fn get_content_service_config(&self) -> InspirerContentResult<ContentConfig> {
+        Ok(ContentConfig {
+            content_support_type: ContentType::VARIANTS
+        })
     }
 }
 

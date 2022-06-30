@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
-use inspirer_content::{model::content::{ContentEntity, ContentModel}, util::uuid::uuid_to_base62};
+use inspirer_content::{model::content::{Content, ContentEntity, ContentModel}, util::uuid::uuid_to_base62};
 use serde::Serialize;
+
+pub use inspirer_content::model::content::ContentConfig;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ContentBase {
@@ -33,6 +35,15 @@ pub struct ContentWithEntity {
     #[serde(flatten)]
     pub base: ContentBase,
     pub entity: ContentEntity,
+}
+
+impl From<Content> for ContentWithEntity {
+    fn from(Content { meta, entity }: Content) -> Self {
+        ContentWithEntity {
+            base: ContentBase::from(meta),
+            entity,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

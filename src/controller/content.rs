@@ -10,14 +10,13 @@ use inspirer_content::{
         paginate::{Paginated, Pagination},
     },
     service::content::ContentService,
-    util::uuid::base62_to_uuid,
+    util::uuid::base62_to_uuid, enumerate::content::ContentType,
 };
-
 use crate::{
     error::InspirerResult,
     request::content::{CreateContent, UpdateContent},
     response::{
-        content::{ContentBase, ContentFull, ContentFullWithEntity, ContentWithEntity},
+        content::{ContentBase, ContentFull, ContentFullWithEntity, ContentWithEntity, ContentConfig},
         CreatedDataStringId,
     },
     session::SessionInfo,
@@ -46,31 +45,25 @@ pub async fn find_content(
     Path((id,)): Path<(String,)>,
     Extension(manager): Extension<Manager>,
 ) -> InspirerResult<Json<ContentWithEntity>> {
-    let Content {
-        meta: content_raw,
-        entity,
-    } = match manager.find_content_by_name(id.clone()).await {
+    let content = match manager.find_content_by_name(id.clone()).await {
         Ok(res) => res,
         Err(Error::ContentNotFound) => manager.find_content_by_id(base62_to_uuid(&id)?).await?,
         Err(err) => Err(err)?,
     };
 
-    Ok(Json(ContentWithEntity {
-        base: ContentBase::from(content_raw),
-        entity,
-    }))
+    Ok(Json(ContentWithEntity::from(content)))
 }
 
 pub async fn create_content(
     Extension(manager): Extension<Manager>,
     session: SessionInfo,
     Json(payload): Json<CreateContent>,
-) -> InspirerResult<Json<CreatedDataStringId>> {
+) -> InspirerResult<Json<ContentWithEntity>> {
     manager
         .create_content(session.uuid(), payload)
         .await
         .map_err(Into::into)
-        .map(CreatedDataStringId::from_uuid)
+        .map(ContentWithEntity::from)
         .map(Json)
 }
 
@@ -122,4 +115,8 @@ pub async fn update_content(
         .await?;
 
     Ok(Json(()))
+}
+
+pub async fn get_config(Extension(manager): Extension<Manager>) -> InspirerResult<Json<ContentConfig>> {
+    Ok(Json(manager.get_content_service_config().await?))
 }

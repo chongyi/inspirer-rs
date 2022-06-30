@@ -82,3 +82,8 @@ impl From<NewContent> for UpdateContent {
         }
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct ContentConfig {
+    pub content_support_type: &'static [&'static str],
+}

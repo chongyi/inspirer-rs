@@ -1,6 +1,8 @@
 pub use crate::entity::content_entities::Model as ContentEntityModel;
 pub use crate::entity::contents::Model as ContentModel;
 use serde::{Deserialize, Serialize};
+
+use super::Order;
 #[derive(Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct NewContent {
@@ -59,6 +61,23 @@ pub struct GetListCondition {
     pub with_hidden: bool,
     pub with_unpublish: bool,
     pub without_page: bool,
+    pub sort: Vec<Order<SortField>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SortField {
+    PublishedAt,
+    CreatedAt,
+}
+
+impl Into<crate::entity::contents::Column> for SortField {
+    fn into(self) -> crate::entity::contents::Column {
+        match self {
+            SortField::CreatedAt => crate::entity::contents::Column::CreatedAt,
+            SortField::PublishedAt => crate::entity::contents::Column::PublishedAt,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Clone)]

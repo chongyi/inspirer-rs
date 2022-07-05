@@ -1,5 +1,8 @@
 use chrono::{DateTime, Utc};
-use inspirer_content::{model::content::{Content, ContentEntity, ContentModel}, util::uuid::uuid_to_base62};
+use inspirer_content::{
+    model::content::{Content, ContentEntity, ContentModel},
+    util::uuid::uuid_to_base62,
+};
 use serde::Serialize;
 
 pub use inspirer_content::model::content::ContentConfig;
@@ -19,9 +22,7 @@ impl From<ContentModel> for ContentBase {
         let id = uuid_to_base62(content_raw.id);
         ContentBase {
             id: id.clone(),
-            name: content_raw
-                .content_name
-                .unwrap_or(id),
+            name: content_raw.content_name.unwrap_or("".into()),
             title: content_raw.title,
             keywords: content_raw.keywords,
             description: content_raw.description,
@@ -49,7 +50,7 @@ impl From<Content> for ContentWithEntity {
 #[derive(Debug, Clone, Serialize)]
 pub struct ContentFull {
     #[serde(flatten)]
-    pub base:ContentBase,
+    pub base: ContentBase,
     pub content_type: u32,
     pub is_publish: bool,
     pub is_display: bool,

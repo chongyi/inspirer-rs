@@ -1,25 +1,29 @@
+use crate::{
+    error::InspirerResult,
+    request::content::{CreateContent, UpdateContent},
+    response::{
+        content::{
+            ContentBase, ContentConfig, ContentFull, ContentFullWithEntity, ContentWithEntity,
+        },
+        CreatedDataStringId,
+    },
+    session::SessionInfo,
+};
 use axum::{
     extract::{Path, Query},
     Extension, Json,
 };
 use inspirer_content::{
+    enumerate::content::ContentType,
     error::Error,
     manager::Manager,
     model::{
-        content::{Content, GetListCondition},
+        content::{Content, GetListCondition, SortField},
         paginate::{Paginated, Pagination},
+        Order,
     },
     service::content::ContentService,
-    util::uuid::base62_to_uuid, enumerate::content::ContentType,
-};
-use crate::{
-    error::InspirerResult,
-    request::content::{CreateContent, UpdateContent},
-    response::{
-        content::{ContentBase, ContentFull, ContentFullWithEntity, ContentWithEntity, ContentConfig},
-        CreatedDataStringId,
-    },
-    session::SessionInfo,
+    util::uuid::base62_to_uuid,
 };
 
 pub async fn get_content_list_simple(
@@ -32,6 +36,10 @@ pub async fn get_content_list_simple(
                 with_hidden: false,
                 with_unpublish: false,
                 without_page: true,
+                sort: vec![
+                    Order::Desc(SortField::PublishedAt),
+                    Order::Desc(SortField::CreatedAt),
+                ],
             },
             pagination,
         )
@@ -79,6 +87,9 @@ pub async fn get_content_list(
                 with_hidden: true,
                 with_unpublish: true,
                 without_page: false,
+                sort: vec![
+                    Order::Desc(SortField::CreatedAt),
+                ]
             },
             pagination,
         )
@@ -117,6 +128,8 @@ pub async fn update_content(
     Ok(Json(()))
 }
 
-pub async fn get_config(Extension(manager): Extension<Manager>) -> InspirerResult<Json<ContentConfig>> {
+pub async fn get_config(
+    Extension(manager): Extension<Manager>,
+) -> InspirerResult<Json<ContentConfig>> {
     Ok(Json(manager.get_content_service_config().await?))
 }

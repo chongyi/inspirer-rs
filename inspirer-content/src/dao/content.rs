@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::{
     entity::content_entities,
-    entity::{contents, content_update_logs},
+    entity::{content_update_logs, contents},
     enumerate::content::ContentType,
     error::{Error, InspirerContentResult},
     model::{
@@ -115,10 +115,16 @@ impl<T: ConnectionTrait> ContentDao for T {
             selector = selector.filter(contents::Column::ContentType.ne(ContentType::Page));
         }
 
-        let paginator = selector
-            .order_by_desc(contents::Column::PublishedAt)
-            .order_by_desc(contents::Column::CreatedAt)
-            .paginate(self, pagination.page_size);
+        if condition.sort.len() > 0 {
+            for sort in condition.sort.iter() {
+                selector = selector.order_by(
+                    Into::<contents::Column>::into(sort.inner()),
+                    sort.into_order(),
+                );
+            }
+        }
+
+        let paginator = selector.paginate(self, pagination.page_size);
 
         let data = paginator.fetch_page(pagination.page - 1).await?;
 
@@ -264,11 +270,15 @@ impl<T: ConnectionTrait> ContentUpdateLogDao for T {
             id: Set(id),
             user_id: Set(user_id),
             content_id: Set(content_id),
-            update_data: Set(serde_json::to_value(update_content).map_err(crate::error::Error::FormatError)?),
+            update_data: Set(
+                serde_json::to_value(update_content).map_err(crate::error::Error::FormatError)?
+            ),
             ..Default::default()
         };
 
-        content_update_logs::Entity::insert(model).exec(self).await?;
+        content_update_logs::Entity::insert(model)
+            .exec(self)
+            .await?;
 
         Ok(())
     }

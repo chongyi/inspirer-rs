@@ -5,13 +5,14 @@ use uuid::Uuid;
 use crate::{
     dao::content::{ContentDao, ContentUpdateLogDao},
     entity::{content_entities, contents},
+    enumerate::content::ContentType,
     error::{Error, InspirerContentResult},
     manager::Manager,
     model::{
-        content::{Content, GetListCondition, NewContent, UpdateContent, ContentConfig},
+        content::{Content, ContentConfig, GetListCondition, NewContent, UpdateContent},
         paginate::{Paginated, Pagination},
     },
-    util::uuid::generate_v1_uuid, enumerate::content::ContentType,
+    util::uuid::generate_v1_uuid,
 };
 
 #[async_trait::async_trait]
@@ -35,6 +36,8 @@ pub trait ContentService {
         content_id: Uuid,
         update_content: UpdateContent,
     ) -> InspirerContentResult<()>;
+    async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()>;
 }
 
 #[async_trait::async_trait]
@@ -82,23 +85,40 @@ impl ContentService for Manager {
     ) -> InspirerContentResult<()> {
         let update_log_id = generate_v1_uuid()?;
 
-        self.database.transaction::<_, (), Error>(|trx| {
-            Box::pin(async move {
-                trx.update_content(content_id, &update_content).await?;
-                trx.update_content_entity(content_id, &update_content).await?;
-                trx.create_content_update_log(update_log_id, user_id, content_id, update_content).await?;
+        self.database
+            .transaction::<_, (), Error>(|trx| {
+                Box::pin(async move {
+                    trx.update_content(content_id, &update_content).await?;
+                    trx.update_content_entity(content_id, &update_content)
+                        .await?;
+                    trx.create_content_update_log(
+                        update_log_id,
+                        user_id,
+                        content_id,
+                        update_content,
+                    )
+                    .await?;
 
-                Ok(())
+                    Ok(())
+                })
             })
-        }).await?;
+            .await?;
 
         Ok(())
     }
 
     async fn get_content_service_config(&self) -> InspirerContentResult<ContentConfig> {
         Ok(ContentConfig {
-            content_support_type: ContentType::VARIANTS
+            content_support_type: ContentType::VARIANTS,
         })
+    }
+
+    async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        self.database.publish_content(id).await
+    }
+    
+    async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        self.database.unpublish_content(id).await
     }
 }
 

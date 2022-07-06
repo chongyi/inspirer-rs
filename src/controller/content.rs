@@ -87,9 +87,7 @@ pub async fn get_content_list(
                 with_hidden: true,
                 with_unpublish: true,
                 without_page: false,
-                sort: vec![
-                    Order::Desc(SortField::CreatedAt),
-                ]
+                sort: vec![Order::Desc(SortField::CreatedAt)],
             },
             pagination,
         )
@@ -124,6 +122,26 @@ pub async fn update_content(
     manager
         .update_content(session.uuid(), base62_to_uuid(&id)?, payload)
         .await?;
+
+    Ok(Json(()))
+}
+
+pub async fn publish_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    _session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager.publish_content(base62_to_uuid(&id)?).await?;
+
+    Ok(Json(()))
+}
+
+pub async fn unpublish_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    _session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager.unpublish_content(base62_to_uuid(&id)?).await?;
 
     Ok(Json(()))
 }

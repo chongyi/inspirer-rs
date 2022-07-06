@@ -1,6 +1,6 @@
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait,
+    QueryFilter, QueryOrder, Set,
 };
 use uuid::Uuid;
 
@@ -53,6 +53,8 @@ pub trait ContentDao {
     ) -> InspirerContentResult<()>;
     async fn delete_content(&self, id: Uuid) -> InspirerContentResult<()>;
     async fn delete_content_entity(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()>;
 }
 
 #[async_trait::async_trait]
@@ -239,6 +241,30 @@ impl<T: ConnectionTrait> ContentDao for T {
 
     async fn delete_content_entity(&self, id: Uuid) -> InspirerContentResult<()> {
         content_entities::Entity::delete_by_id(id)
+            .exec(self)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        contents::Entity::update_many()
+            .filter(contents::Column::Id.eq(id))
+            .col_expr(contents::Column::IsPublish, Expr::value(true))
+            .col_expr(
+                contents::Column::PublishedAt,
+                Expr::value(chrono::Utc::now()),
+            )
+            .exec(self)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        contents::Entity::update_many()
+            .filter(contents::Column::Id.eq(id))
+            .col_expr(contents::Column::IsPublish, Expr::value(false))
             .exec(self)
             .await?;
 

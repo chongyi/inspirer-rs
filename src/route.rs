@@ -19,7 +19,10 @@ pub fn create_routes() -> Router {
 pub fn secure_routes() -> Router {
     Router::new()
         .route("/profile", get(controller::auth::get_profile))
-        .route("/content-service-config", get(controller::content::get_config))
+        .route(
+            "/content-service-config",
+            get(controller::content::get_config),
+        )
         .route(
             "/content",
             get(controller::content::get_content_list).post(controller::content::create_content),
@@ -27,6 +30,11 @@ pub fn secure_routes() -> Router {
         .route(
             "/content/:id",
             get(controller::content::get_content).put(controller::content::update_content),
+        )
+        .route(
+            "/content/:id/publish",
+            post(controller::content::publish_content)
+                .delete(controller::content::unpublish_content),
         )
         .route_layer(middleware::from_fn(auth))
 }

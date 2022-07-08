@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::{
     dao::content::{ContentDao, ContentUpdateLogDao},
-    entity::{content_entities, contents},
+    entity::{content_entities, contents, users},
     enumerate::content::ContentType,
     error::{Error, InspirerContentResult},
     manager::Manager,
@@ -22,7 +22,7 @@ pub trait ContentService {
         &self,
         condition: GetListCondition,
         pagination: Pagination,
-    ) -> InspirerContentResult<Paginated<contents::Model>>;
+    ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>>;
     async fn find_content_by_id(&self, id: Uuid) -> InspirerContentResult<Content>;
     async fn find_content_by_name(&self, name: String) -> InspirerContentResult<Content>;
     async fn create_content(
@@ -46,7 +46,7 @@ impl ContentService for Manager {
         &self,
         condition: GetListCondition,
         pagination: Pagination,
-    ) -> InspirerContentResult<Paginated<contents::Model>> {
+    ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>> {
         self.database.get_list(condition, pagination).await
     }
     async fn find_content_by_id(&self, id: Uuid) -> InspirerContentResult<Content> {

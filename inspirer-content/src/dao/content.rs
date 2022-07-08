@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 use crate::{
     entity::content_entities,
+    entity::users,
     entity::{content_update_logs, contents},
     enumerate::content::ContentType,
     error::{Error, InspirerContentResult},
@@ -32,7 +33,7 @@ pub trait ContentDao {
         &self,
         condition: GetListCondition,
         pagination: Pagination,
-    ) -> InspirerContentResult<Paginated<contents::Model>>;
+    ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>>;
     async fn find_content_by_id(
         &self,
         id: Uuid,
@@ -102,8 +103,8 @@ impl<T: ConnectionTrait> ContentDao for T {
         &self,
         condition: GetListCondition,
         pagination: Pagination,
-    ) -> InspirerContentResult<Paginated<contents::Model>> {
-        let mut selector = contents::Entity::find();
+    ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>> {
+        let mut selector = contents::Entity::find().find_also_related(users::Entity);
 
         if !condition.with_hidden {
             selector = selector.filter(contents::Column::IsDisplay.eq(true));

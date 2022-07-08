@@ -20,9 +20,12 @@ pub struct Model {
     pub description: String,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
+    pub modified_at: DateTimeUtc,
     pub is_publish: bool,
     pub is_display: bool,
+    pub is_deleted: bool,
     pub published_at: Option<DateTimeUtc>,
+    pub deleted_at: Option<DateTimeUtc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

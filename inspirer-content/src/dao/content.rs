@@ -54,6 +54,8 @@ pub trait ContentDao {
     ) -> InspirerContentResult<()>;
     async fn delete_content(&self, id: Uuid) -> InspirerContentResult<()>;
     async fn delete_content_entity(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn force_delete_content(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn revert_deleted_content(&self, id: Uuid) -> InspirerContentResult<()>;
     async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()>;
     async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()>;
 }
@@ -104,7 +106,9 @@ impl<T: ConnectionTrait> ContentDao for T {
         condition: GetListCondition,
         pagination: Pagination,
     ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>> {
-        let mut selector = contents::Entity::find().find_also_related(users::Entity);
+        let mut selector = contents::Entity::find()
+            .find_also_related(users::Entity)
+            .filter(contents::Column::IsDeleted.eq(condition.list_deleted));
 
         if !condition.with_hidden {
             selector = selector.filter(contents::Column::IsDisplay.eq(true));
@@ -204,6 +208,7 @@ impl<T: ConnectionTrait> ContentDao for T {
             active_model.content_type = Set(entity.into());
         }
 
+        active_model.modified_at = Set(chrono::Utc::now());
         active_model.update(self).await?;
 
         Ok(())
@@ -235,13 +240,34 @@ impl<T: ConnectionTrait> ContentDao for T {
     }
 
     async fn delete_content(&self, id: Uuid) -> InspirerContentResult<()> {
-        contents::Entity::delete_by_id(id).exec(self).await?;
+        contents::Entity::update_many()
+            .filter(contents::Column::Id.eq(id))
+            .col_expr(contents::Column::IsDeleted, Expr::value(true))
+            .col_expr(contents::Column::DeletedAt, Expr::value(chrono::Utc::now()))
+            .exec(self)
+            .await?;
 
         Ok(())
     }
 
     async fn delete_content_entity(&self, id: Uuid) -> InspirerContentResult<()> {
         content_entities::Entity::delete_by_id(id)
+            .exec(self)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn force_delete_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        contents::Entity::delete_by_id(id).exec(self).await?;
+
+        Ok(())
+    }
+
+    async fn revert_deleted_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        contents::Entity::update_many()
+            .filter(contents::Column::Id.eq(id))
+            .col_expr(contents::Column::IsDeleted, Expr::value(false))
             .exec(self)
             .await?;
 

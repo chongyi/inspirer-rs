@@ -62,6 +62,7 @@ pub struct GetListCondition {
     pub with_hidden: bool,
     pub with_unpublish: bool,
     pub without_page: bool,
+    pub list_deleted: bool,
     pub sort: Vec<Order<SortField>>,
 }
 

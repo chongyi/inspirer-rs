@@ -36,6 +36,7 @@ pub async fn get_content_list_simple(
                 with_hidden: false,
                 with_unpublish: false,
                 without_page: true,
+                list_deleted: false,
                 sort: vec![
                     Order::Desc(SortField::PublishedAt),
                     Order::Desc(SortField::CreatedAt),
@@ -87,6 +88,7 @@ pub async fn get_content_list(
                 with_hidden: true,
                 with_unpublish: true,
                 without_page: false,
+                list_deleted: false,
                 sort: vec![Order::Desc(SortField::CreatedAt)],
             },
             pagination,

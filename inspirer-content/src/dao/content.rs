@@ -265,11 +265,16 @@ impl<T: ConnectionTrait> ContentDao for T {
     }
 
     async fn revert_deleted_content(&self, id: Uuid) -> InspirerContentResult<()> {
-        contents::Entity::update_many()
-            .filter(contents::Column::Id.eq(id))
-            .col_expr(contents::Column::IsDeleted, Expr::value(false))
-            .exec(self)
-            .await?;
+        let model = contents::Entity::find_by_id(id)
+            .one(self)
+            .await?
+            .ok_or(Error::ContentNotFound)?;
+        let mut active_model: contents::ActiveModel = model.into();
+
+        active_model.is_deleted = Set(false);
+        active_model.deleted_at = Set(None);
+
+        active_model.update(self).await?;
 
         Ok(())
     }

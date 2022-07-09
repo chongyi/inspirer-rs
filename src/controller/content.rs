@@ -1,9 +1,10 @@
 use crate::{
     error::InspirerResult,
-    request::content::{CreateContent, UpdateContent},
+    request::content::{CreateContent, ForceDelete, UpdateContent},
     response::{
         content::{
             ContentBase, ContentConfig, ContentFull, ContentFullWithEntity, ContentWithEntity,
+            DeletedContent,
         },
         CreatedDataStringId,
     },
@@ -99,6 +100,27 @@ pub async fn get_content_list(
         .map(Json)
 }
 
+pub async fn get_deleted_content_list(
+    Extension(manager): Extension<Manager>,
+    Query(pagination): Query<Pagination>,
+) -> InspirerResult<Json<Paginated<DeletedContent>>> {
+    manager
+        .get_deleted_content_list(
+            GetListCondition {
+                with_hidden: true,
+                with_unpublish: true,
+                without_page: false,
+                list_deleted: true,
+                sort: vec![Order::Desc(SortField::DeletedAt)],
+            },
+            pagination,
+        )
+        .await
+        .map(|res| res.map(|data| data.into_iter().map(DeletedContent::from).collect()))
+        .map_err(Into::into)
+        .map(Json)
+}
+
 pub async fn get_content(
     Extension(manager): Extension<Manager>,
     Path((id,)): Path<(String,)>,
@@ -144,6 +166,28 @@ pub async fn unpublish_content(
     _session: SessionInfo,
 ) -> InspirerResult<Json<()>> {
     manager.unpublish_content(base62_to_uuid(&id)?).await?;
+
+    Ok(Json(()))
+}
+
+pub async fn delete_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    Query(force_delete): Query<ForceDelete>,
+    _session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager
+        .delete_content(base62_to_uuid(&id)?, force_delete.force_delete)
+        .await?;
+
+    Ok(Json(()))
+}
+
+pub async fn revert_deleted_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+) -> InspirerResult<Json<()>> {
+    manager.revert_deleted_content(base62_to_uuid(&id)?).await?;
 
     Ok(Json(()))
 }

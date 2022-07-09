@@ -71,6 +71,7 @@ pub struct GetListCondition {
 pub enum SortField {
     PublishedAt,
     CreatedAt,
+    DeletedAt,
 }
 
 impl Into<crate::entity::contents::Column> for SortField {
@@ -78,6 +79,7 @@ impl Into<crate::entity::contents::Column> for SortField {
         match self {
             SortField::CreatedAt => crate::entity::contents::Column::CreatedAt,
             SortField::PublishedAt => crate::entity::contents::Column::PublishedAt,
+            SortField::DeletedAt => crate::entity::contents::Column::DeletedAt,
         }
     }
 }

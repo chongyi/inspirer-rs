@@ -23,6 +23,14 @@ pub trait ContentService {
         condition: GetListCondition,
         pagination: Pagination,
     ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>>;
+    async fn get_deleted_content_list(
+        &self,
+        mut condition: GetListCondition,
+        pagination: Pagination,
+    ) -> InspirerContentResult<Paginated<(contents::Model, Option<users::Model>)>> {
+        condition.list_deleted = true;
+        self.get_list(condition, pagination).await
+    }
     async fn find_content_by_id(&self, id: Uuid) -> InspirerContentResult<Content>;
     async fn find_content_by_name(&self, name: String) -> InspirerContentResult<Content>;
     async fn create_content(
@@ -38,6 +46,8 @@ pub trait ContentService {
     ) -> InspirerContentResult<()>;
     async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()>;
     async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()>;
+    async fn delete_content(&self, id: Uuid, force: bool) -> InspirerContentResult<()>;
+    async fn revert_deleted_content(&self, id: Uuid) -> InspirerContentResult<()>;
 }
 
 #[async_trait::async_trait]
@@ -116,9 +126,31 @@ impl ContentService for Manager {
     async fn publish_content(&self, id: Uuid) -> InspirerContentResult<()> {
         self.database.publish_content(id).await
     }
-    
+
     async fn unpublish_content(&self, id: Uuid) -> InspirerContentResult<()> {
         self.database.unpublish_content(id).await
+    }
+
+    async fn delete_content(&self, id: Uuid, force: bool) -> InspirerContentResult<()> {
+        if force {
+            self.database
+                .transaction::<_, (), Error>(|trx| {
+                    Box::pin(async move {
+                        trx.force_delete_content(id).await?;
+                        trx.delete_content_entity(id).await?;
+                        Ok(())
+                    })
+                })
+                .await?;
+        } else {
+            self.database.delete_content(id).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn revert_deleted_content(&self, id: Uuid) -> InspirerContentResult<()> {
+        self.database.revert_deleted_content(id).await
     }
 }
 

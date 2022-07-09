@@ -79,6 +79,23 @@ pub struct ContentFull {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct DeletedContent {
+    #[serde(flatten)]
+    content: ContentFull,
+    deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<(ContentModel, Option<UserModel>)> for DeletedContent {
+    fn from((content_raw, owner): (ContentModel, Option<UserModel>)) -> Self {
+        let deleted_at = content_raw.deleted_at.clone();
+        DeletedContent {
+            content: (content_raw, owner).into(),
+            deleted_at,
+        }
+    }
+}
+
 impl From<ContentModel> for ContentFull {
     fn from(content_raw: ContentModel) -> Self {
         ContentFull {

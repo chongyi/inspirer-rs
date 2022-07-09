@@ -1,11 +1,13 @@
 pub mod content {
     use sea_orm::{DeriveActiveEnum, EnumIter};
     use serde::Serialize;
+    use strum::{EnumString, EnumVariantNames};
 
     use crate::model::content::ContentEntity;
 
-    #[derive(Debug, Clone, Copy, PartialEq, EnumIter, DeriveActiveEnum, Serialize)]
+    #[derive(Debug, Clone, Copy, PartialEq, EnumIter, DeriveActiveEnum, Serialize, EnumString, EnumVariantNames)]
     #[sea_orm(rs_type = "u32", db_type = "Unsigned")]
+    #[strum(serialize_all = "kebab-case")]
     #[repr(u32)]
     pub enum ContentType {
         #[sea_orm(num_value = 1)]

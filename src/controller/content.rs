@@ -1,26 +1,30 @@
+use crate::{
+    error::InspirerResult,
+    request::content::{CreateContent, ForceDelete, UpdateContent},
+    response::{
+        content::{
+            ContentBase, ContentConfig, ContentFull, ContentFullWithEntity, ContentWithEntity,
+            DeletedContent,
+        },
+        CreatedDataStringId,
+    },
+    session::SessionInfo,
+};
 use axum::{
     extract::{Path, Query},
     Extension, Json,
 };
 use inspirer_content::{
+    enumerate::content::ContentType,
     error::Error,
     manager::Manager,
     model::{
-        content::{Content, GetListCondition},
+        content::{Content, GetListCondition, SortField},
         paginate::{Paginated, Pagination},
+        Order,
     },
     service::content::ContentService,
     util::uuid::base62_to_uuid,
-};
-
-use crate::{
-    error::InspirerResult,
-    request::content::CreateContent,
-    response::{
-        content::{ContentBase, ContentFull, ContentFullWithEntity, ContentWithEntity},
-        CreatedDataStringId,
-    },
-    session::SessionInfo,
 };
 
 pub async fn get_content_list_simple(
@@ -33,6 +37,11 @@ pub async fn get_content_list_simple(
                 with_hidden: false,
                 with_unpublish: false,
                 without_page: true,
+                list_deleted: false,
+                sort: vec![
+                    Order::Desc(SortField::PublishedAt),
+                    Order::Desc(SortField::CreatedAt),
+                ],
             },
             pagination,
         )
@@ -46,31 +55,25 @@ pub async fn find_content(
     Path((id,)): Path<(String,)>,
     Extension(manager): Extension<Manager>,
 ) -> InspirerResult<Json<ContentWithEntity>> {
-    let Content {
-        meta: content_raw,
-        entity,
-    } = match manager.find_content_by_name(id.clone()).await {
+    let content = match manager.find_content_by_name(id.clone()).await {
         Ok(res) => res,
         Err(Error::ContentNotFound) => manager.find_content_by_id(base62_to_uuid(&id)?).await?,
         Err(err) => Err(err)?,
     };
 
-    Ok(Json(ContentWithEntity {
-        base: ContentBase::from(content_raw),
-        entity,
-    }))
+    Ok(Json(ContentWithEntity::from(content)))
 }
 
 pub async fn create_content(
     Extension(manager): Extension<Manager>,
     session: SessionInfo,
     Json(payload): Json<CreateContent>,
-) -> InspirerResult<Json<CreatedDataStringId>> {
+) -> InspirerResult<Json<ContentWithEntity>> {
     manager
         .create_content(session.uuid(), payload)
         .await
         .map_err(Into::into)
-        .map(CreatedDataStringId::from_uuid)
+        .map(ContentWithEntity::from)
         .map(Json)
 }
 
@@ -86,11 +89,34 @@ pub async fn get_content_list(
                 with_hidden: true,
                 with_unpublish: true,
                 without_page: false,
+                list_deleted: false,
+                sort: vec![Order::Desc(SortField::CreatedAt)],
             },
             pagination,
         )
         .await
         .map(|res| res.map(|data| data.into_iter().map(ContentFull::from).collect()))
+        .map_err(Into::into)
+        .map(Json)
+}
+
+pub async fn get_deleted_content_list(
+    Extension(manager): Extension<Manager>,
+    Query(pagination): Query<Pagination>,
+) -> InspirerResult<Json<Paginated<DeletedContent>>> {
+    manager
+        .get_deleted_content_list(
+            GetListCondition {
+                with_hidden: true,
+                with_unpublish: true,
+                without_page: false,
+                list_deleted: true,
+                sort: vec![Order::Desc(SortField::DeletedAt)],
+            },
+            pagination,
+        )
+        .await
+        .map(|res| res.map(|data| data.into_iter().map(DeletedContent::from).collect()))
         .map_err(Into::into)
         .map(Json)
 }
@@ -109,4 +135,65 @@ pub async fn get_content(
         })
         .map(Json)
         .map_err(Into::into)
+}
+
+pub async fn update_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    Json(payload): Json<UpdateContent>,
+    session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager
+        .update_content(session.uuid(), base62_to_uuid(&id)?, payload)
+        .await?;
+
+    Ok(Json(()))
+}
+
+pub async fn publish_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    _session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager.publish_content(base62_to_uuid(&id)?).await?;
+
+    Ok(Json(()))
+}
+
+pub async fn unpublish_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    _session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager.unpublish_content(base62_to_uuid(&id)?).await?;
+
+    Ok(Json(()))
+}
+
+pub async fn delete_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    Query(force_delete): Query<ForceDelete>,
+    _session: SessionInfo,
+) -> InspirerResult<Json<()>> {
+    manager
+        .delete_content(base62_to_uuid(&id)?, force_delete.force_delete)
+        .await?;
+
+    Ok(Json(()))
+}
+
+pub async fn revert_deleted_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+) -> InspirerResult<Json<()>> {
+    manager.revert_deleted_content(base62_to_uuid(&id)?).await?;
+
+    Ok(Json(()))
+}
+
+pub async fn get_config(
+    Extension(manager): Extension<Manager>,
+) -> InspirerResult<Json<ContentConfig>> {
+    Ok(Json(manager.get_content_service_config().await?))
 }

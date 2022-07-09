@@ -1,6 +1,9 @@
-use serde::{Deserialize, Serialize};
-pub use crate::entity::contents::Model as ContentModel;
 pub use crate::entity::content_entities::Model as ContentEntityModel;
+pub use crate::entity::contents::Model as ContentModel;
+use crate::model::user::UserModel;
+use serde::{Deserialize, Serialize};
+
+use super::Order;
 #[derive(Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct NewContent {
@@ -59,11 +62,51 @@ pub struct GetListCondition {
     pub with_hidden: bool,
     pub with_unpublish: bool,
     pub without_page: bool,
+    pub list_deleted: bool,
+    pub sort: Vec<Order<SortField>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SortField {
+    PublishedAt,
+    CreatedAt,
+    DeletedAt,
+}
+
+impl Into<crate::entity::contents::Column> for SortField {
+    fn into(self) -> crate::entity::contents::Column {
+        match self {
+            SortField::CreatedAt => crate::entity::contents::Column::CreatedAt,
+            SortField::PublishedAt => crate::entity::contents::Column::PublishedAt,
+            SortField::DeletedAt => crate::entity::contents::Column::DeletedAt,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct Content {
     #[serde(flatten)]
     pub meta: ContentModel,
-    pub entity: ContentEntity
+    pub entity: ContentEntity,
+}
+
+impl From<NewContent> for UpdateContent {
+    fn from(new_content: NewContent) -> Self {
+        let NewContent { meta, entity } = new_content;
+        UpdateContent {
+            meta: UpdateContentMeta {
+                title: Some(meta.title),
+                keywords: Some(meta.keywords),
+                description: Some(meta.description),
+                name: meta.name,
+            },
+            entity: Some(entity),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ContentConfig {
+    pub content_support_type: &'static [&'static str],
 }

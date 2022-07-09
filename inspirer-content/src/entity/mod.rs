@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod content_update_logs;
 pub mod contents;
 pub mod content_entities;
 pub mod users;

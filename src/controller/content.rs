@@ -197,3 +197,53 @@ pub async fn get_config(
 ) -> InspirerResult<Json<ContentConfig>> {
     Ok(Json(manager.get_content_service_config().await?))
 }
+
+pub async fn create_content(
+    Extension(manager): Extension<Manager>,
+    session: SessionInfo,
+    Json(payload): Json<CreateContent>,
+) -> InspirerResult<Json<CreatedDataStringId>> {
+    manager
+        .create_content(session.uuid(), payload)
+        .await
+        .map_err(Into::into)
+        .map(CreatedDataStringId::from_uuid)
+        .map(Json)
+}
+
+/// 获取内容列表（需要授权登录）
+pub async fn get_content_list(
+    Extension(manager): Extension<Manager>,
+    // session: SessionInfo,
+    Query(pagination): Query<Pagination>,
+) -> InspirerResult<Json<Paginated<ContentFull>>> {
+    manager
+        .get_list(
+            GetListCondition {
+                with_hidden: true,
+                with_unpublish: true,
+                without_page: false,
+            },
+            pagination,
+        )
+        .await
+        .map(|res| res.map(|data| data.into_iter().map(ContentFull::from).collect()))
+        .map_err(Into::into)
+        .map(Json)
+}
+
+pub async fn get_content(
+    Extension(manager): Extension<Manager>,
+    Path((id,)): Path<(String,)>,
+    session: SessionInfo,
+) -> InspirerResult<Json<ContentFullWithEntity>> {
+    manager
+        .find_content_by_id(base62_to_uuid(&id)?)
+        .await
+        .map(|content| ContentFullWithEntity {
+            content: ContentFull::from(content.meta),
+            entity: content.entity,
+        })
+        .map(Json)
+        .map_err(Into::into)
+}

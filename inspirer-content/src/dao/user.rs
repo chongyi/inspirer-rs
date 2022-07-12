@@ -66,7 +66,7 @@ impl<T: ConnectionTrait> UserDao for T {
 
     async fn get_user_by_username(&self, username: String) -> InspirerContentResult<Option<users::Model>> {
         users::Entity::find()
-            .filter(users::Column::Nickname.eq(username))
+            .filter(users::Column::Username.eq(username))
             .one(self)
             .await
             .map_err(Into::into)

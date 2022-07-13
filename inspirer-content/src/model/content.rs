@@ -1,6 +1,5 @@
 pub use crate::entity::content_entities::Model as ContentEntityModel;
 pub use crate::entity::contents::Model as ContentModel;
-use crate::model::user::UserModel;
 use serde::{Deserialize, Serialize};
 
 use super::Order;

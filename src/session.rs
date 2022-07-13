@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{InspirerError, InspirerResult};
 
+/// 默认过期时间为 24 小时
 const DEFAULT_TOKEN_EXPIRATION: i64 = 1440;
 
 lazy_static! {

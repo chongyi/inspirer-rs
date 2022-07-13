@@ -70,8 +70,8 @@ impl ContentService for Manager {
         owner_id: Uuid,
         new_content: NewContent,
     ) -> InspirerContentResult<Content> {
-        let id = generate_v1_uuid()?;
-        let update_log_id = generate_v1_uuid()?;
+        let id = generate_v1_uuid();
+        let update_log_id = generate_v1_uuid();
 
         self.database
             .transaction::<_, (), Error>(|trx| {
@@ -93,7 +93,7 @@ impl ContentService for Manager {
         content_id: Uuid,
         update_content: UpdateContent,
     ) -> InspirerContentResult<()> {
-        let update_log_id = generate_v1_uuid()?;
+        let update_log_id = generate_v1_uuid();
 
         self.database
             .transaction::<_, (), Error>(|trx| {

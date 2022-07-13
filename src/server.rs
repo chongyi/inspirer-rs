@@ -1,9 +1,5 @@
-use std::{fs::read_dir, net::SocketAddr, path::PathBuf};
-
 use anyhow::Result;
 use axum::Extension;
-use clap::Parser;
-use inspirer_content::manager::{Manager, ManagerConfigBuilder};
 use tracing_subscriber::EnvFilter;
 
 use crate::{cli::Cli, route::create_routes, manager::create_manager};

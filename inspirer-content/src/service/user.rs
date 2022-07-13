@@ -35,7 +35,7 @@ impl UserService for Manager {
         mut new_user: NewUser,
     ) -> InspirerContentResult<(Uuid, String)> {
         // 生成 ID
-        let id = generate_v1_uuid()?;
+        let id = generate_v1_uuid();
 
         // 生成私钥公钥
         let key_pair = generate_pkcs8_keypair()?;

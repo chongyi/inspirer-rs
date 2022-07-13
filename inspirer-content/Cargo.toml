@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-argon2 = { version = "0.4.0", features = ["std"] }
-async-trait = "0.1.53"
-base64ct = { version = "1.5.0", features = ["std"] }
+argon2 = { version = "0.4.1", features = ["std"] }
+async-trait = "0.1.56"
+base64ct = { version = "1.5.1", features = ["std"] }
 bs62 = "0.1.4"
 chrono = { version = "0.4.19", features = ["serde"] }
 der = { version = "0.6.0", features = ["std", "pem"] }
@@ -14,14 +14,15 @@ derive_builder = "0.11.2"
 lazy_static = "1.4.0"
 mac_address = "1.1.3"
 num_enum = "0.5.7"
+once_cell = "1.13.0"
 rand_core = { version = "0.6.3", features = ["std"] }
-regex = "1.5.6"
+regex = "1.6.0"
 ring = { version = "0.16.20", features = ["std"] }
-sea-orm = { version = "0.8.0", features = ["sqlx-mysql", "runtime-tokio-rustls", "macros", "sqlx-dep"] }
-serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
+sea-orm = { version = "0.9.0", features = ["sqlx-mysql", "runtime-tokio-rustls", "macros", "sqlx-dep"] }
+serde = { version = "1.0.139", features = ["derive"] }
+serde_json = "1.0.82"
 sha2 = "0.10.2"
 strum = { version = "0.24.1", features = ["derive"] }
 thiserror = "1.0.31"
-tracing = "0.1.34"
-uuid = { version = "0.8", features = ["v1", "v4", "serde"] }
+tracing = "0.1.35"
+uuid = { version = "1.1.2", features = ["v1", "v4", "serde"] }

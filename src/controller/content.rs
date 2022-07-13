@@ -6,7 +6,6 @@ use crate::{
             ContentBase, ContentConfig, ContentFull, ContentFullWithEntity, ContentWithEntity,
             DeletedContent,
         },
-        CreatedDataStringId,
     },
     session::SessionInfo,
 };
@@ -15,11 +14,10 @@ use axum::{
     Extension, Json,
 };
 use inspirer_content::{
-    enumerate::content::ContentType,
     error::Error,
     manager::Manager,
     model::{
-        content::{Content, GetListCondition, SortField},
+        content::{GetListCondition, SortField},
         paginate::{Paginated, Pagination},
         Order,
     },
@@ -124,7 +122,7 @@ pub async fn get_deleted_content_list(
 pub async fn get_content(
     Extension(manager): Extension<Manager>,
     Path((id,)): Path<(String,)>,
-    session: SessionInfo,
+    _session: SessionInfo,
 ) -> InspirerResult<Json<ContentFullWithEntity>> {
     manager
         .find_content_by_id(base62_to_uuid(&id)?)

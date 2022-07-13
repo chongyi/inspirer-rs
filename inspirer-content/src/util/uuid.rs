@@ -2,25 +2,24 @@ use bs62::num_traits::ToPrimitive;
 use chrono::Utc;
 use mac_address::get_mac_address;
 use uuid::v1::{Context, Timestamp};
+use once_cell::sync::Lazy;
 pub use uuid::Uuid;
 
 use crate::error::{Error, InspirerContentResult};
 
-lazy_static::lazy_static! {
-    static ref CLOCK_SEQUENCE: Context = {
-        Context::new(0)
-    };
+static MAC_ADDRESS: Lazy<[u8; 6]> = Lazy::new(|| {
+    get_mac_address()
+    .expect("获取 MAC 地址信息失败")
+    .expect("无法获取到有效的 MAC 地址")
+    .bytes()
+});
 
-    static ref MAC_ADDRESS: [u8; 6] = {
-        get_mac_address()
-            .expect("获取 MAC 地址信息失败")
-            .expect("无法获取到有效的 MAC 地址")
-            .bytes()
-    };
-}
+static CLOCK_SEQUENCE: Lazy<Context> = Lazy::new(|| {
+    Context::new(0)
+});
 
 /// 生成 UUID v1
-pub fn generate_v1_uuid() -> InspirerContentResult<Uuid, uuid::Error> {
+pub fn generate_v1_uuid() -> Uuid {
     let now = Utc::now();
     let ctx: &Context = &CLOCK_SEQUENCE;
 
@@ -30,7 +29,7 @@ pub fn generate_v1_uuid() -> InspirerContentResult<Uuid, uuid::Error> {
             now.timestamp() as u64,
             now.timestamp_subsec_nanos() as u32,
         ),
-        MAC_ADDRESS.as_ref(),
+        &MAC_ADDRESS,
     )
 }
 

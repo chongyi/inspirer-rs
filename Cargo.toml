@@ -22,7 +22,7 @@ jsonwebtoken = "8.1.1"
 lazy_static = "1.4.0"
 serde = { version = "1.0.139", features = ["derive"] }
 thiserror = "1.0.31"
-tokio = { version = "1.19.2", features = ["rt", "macros", "rt-multi-thread", "signal"] }
+tokio = { version = "1.20.4", features = ["rt", "macros", "rt-multi-thread", "signal"] }
 tracing = "0.1.35"
 tracing-subscriber = { version = "0.3.14", features = ["env-filter"] }
 
